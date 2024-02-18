@@ -310,7 +310,7 @@ if (GLFW_VULKAN_STATIC)
 endif ()
 
 #--------------------------------------------------------------------
-# Export GLFW library dependencies
+# Export GLFWWrapper library dependencies
 #--------------------------------------------------------------------
 foreach (arg ${glfw_PKG_DEPS})
     set(GLFW_PKG_DEPS "${GLFW_PKG_DEPS} ${arg}")

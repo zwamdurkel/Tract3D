@@ -1,8 +1,6 @@
-#pragma once
-
+#include "path.h"
 #include <cstdio>
 #include <algorithm>
-#include <string>
 #include <unistd.h>
 
 #ifdef _WIN32
@@ -11,7 +9,7 @@
 
 #endif
 
-std::string getPath() {
+std::string getFullExecutablePath() {
     char pBuf[256];
     size_t len = sizeof(pBuf);
 #ifdef _WIN32
@@ -23,6 +21,17 @@ std::string getPath() {
 #endif
     std::string path(pBuf);
     std::replace(path.begin(), path.end(), '\\', '/');
+    return path;
+}
+
+std::string getPath() {
+    auto path = getFullExecutablePath();
     path.erase(path.find_last_of('/') + 1);
+    return path;
+}
+
+std::string getExec() {
+    auto path = getFullExecutablePath();
+    path.erase(0, path.find_last_of('/') + 1);
     return path;
 }

@@ -1,19 +1,32 @@
 #pragma once
 
-#include <glad/glad.h>
+#include "../glad/glad.h"
 
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <logger.h>
+#include "../../src/logger.h"
+
+/*
+ * Taken from the LearnOpenGL repository. This helper class takes care of initializing a shader program.
+ * https://github.com/JoeyDeVries/LearnOpenGL
+ *
+ * Some modifications have been made.
+ */
 
 class Shader {
 public:
-    unsigned int ID;
+    unsigned int ID{};
+
+    Shader() = default;
 
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
     Shader(const std::string &vertexPath, const std::string &fragmentPath) {
+        build(vertexPath, fragmentPath);
+    }
+
+    void build(const std::string &vertexPath, const std::string &fragmentPath) {
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;
         std::string fragmentCode;
