@@ -30,6 +30,14 @@ cmake ..
 make
 ```
 
+## Installer
+
+To make an installer for the application (Windows, NSIS), first build the project, then go to the build directory and run the `cpack` command.
+```
+cd build
+cpack
+```
+
 ## Running
 
 The program can be launched in two ways:
