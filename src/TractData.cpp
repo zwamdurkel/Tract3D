@@ -7,7 +7,7 @@
 #include <cmath>
 #include "logger.h"
 
-std::vector<std::string> TractData::readline(std::ifstream &file) {
+std::vector<std::string> TractData::readline(std::ifstream& file) {
     std::string input;
     getline(file, input);
     std::stringstream ss(input);
@@ -21,7 +21,7 @@ std::vector<std::string> TractData::readline(std::ifstream &file) {
     return strings;
 }
 
-void TractData::parse(const char *filePath) {
+void TractData::parse(const char* filePath) {
     std::ifstream file;
     file.open(filePath, std::ios::binary);
     std::vector<std::string> line;
@@ -29,14 +29,14 @@ void TractData::parse(const char *filePath) {
     // read key value pairs until END keyword
     do {
         line = readline(file);
-        for (int i = 0; i < line.size(); i++)
-            Debug("reading: " << line[i] << " ");
+        for (const std::string& i: line)
+            Debug("reading: " << i << " ");
 
         //find number of tracts
         if (line[0] == "count:") {
             try {
                 count = std::stoi(line[1]);
-            } catch (const std::invalid_argument &ex) {
+            } catch (const std::invalid_argument& ex) {
                 Error("Cannot convert count to valid integer");
             }
         }
@@ -55,22 +55,16 @@ void TractData::parse(const char *filePath) {
         tracts.reserve(count);
     }
     float f[3];
+    Tract t;
     while (!std::isinf(f[0])) { // read all coordinates from binary data until we encounter (inf,inf,inf)
-        Tract t;
-        file.read((char *) &f, 12);//read float triplet (3*4 = 12 bytes)
+        file.read((char*) &f, 12);//read float triplet (3*4 = 12 bytes)
 
-        while (!std::isnan(f[0])) { // keep adding coordinates to a tract until we encounter (NaN,NaN,NaN)
-            if (std::isinf(f[0])) {
-                break;
-            }
-
-            t.vertices.push_back(f[0]);
-            t.vertices.push_back(f[1]);
-            t.vertices.push_back(f[2]);
-
-            file.read((char *) &f, 12);//read float triplet (3*4 = 12 bytes)
+        if (std::isnan(f[0])) {
+            tracts.push_back(t);
+            t.vertices.clear();
+        } else {
+            t.vertices.insert(t.vertices.end(), f, f + 3);
         }
-        tracts.push_back(t);
     }
 
     data = std::move(tracts);
