@@ -17,5 +17,5 @@ private:
 public:
     std::vector<Tract> data;
 
-    void parse(const char* filePath);
+    bool parse(const char* filePath);
 };

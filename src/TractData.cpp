@@ -21,9 +21,15 @@ std::vector<std::string> TractData::readline(std::ifstream& file) {
     return strings;
 }
 
-void TractData::parse(const char* filePath) {
+bool TractData::parse(const char* filePath) {
     std::ifstream file;
     file.open(filePath, std::ios::binary);
+
+    if (!file.is_open()) {
+        Error("File did not open");
+        return false;
+    }
+
     std::vector<std::string> line;
     int count = -1;
     // read key value pairs until END keyword
@@ -38,11 +44,14 @@ void TractData::parse(const char* filePath) {
                 count = std::stoi(line[1]);
             } catch (const std::invalid_argument& ex) {
                 Error("Cannot convert count to valid integer");
+                return false;
             }
         }
         //check datatype
         if (line[0] == "datatype:" && line[1] != "Float32LE") {
-            Error("unsupported datatype, correct data interpretation not guaranteed");
+            Error("Unsupported datatype " << line[1]
+                                          << ", expected Float32LE, correct data interpretation not guaranteed");
+            return false;
         }
 
     } while (line[0] != "END");
@@ -63,9 +72,12 @@ void TractData::parse(const char* filePath) {
             tracts.push_back(t);
             t.vertices.clear();
         } else {
-            t.vertices.insert(t.vertices.end(), f, f + 3);
+            t.vertices.push_back(f[0]);
+            t.vertices.push_back(f[1]);
+            t.vertices.push_back(f[2]);
         }
     }
 
     data = std::move(tracts);
+    return true;
 }
