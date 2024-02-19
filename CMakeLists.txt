@@ -14,7 +14,7 @@ endif (WIN32)
 
 set(ICON data/main.rc)
 # Add new files like this: target_sources(${NAME} PRIVATE main.cpp file1.cpp file2.cpp)
-target_sources(${NAME} PRIVATE ${ICON} src/main.cpp src/GLFWWrapper.cpp src/ImGuiWrapper.cpp src/path.cpp)
+target_sources(${NAME} PRIVATE ${ICON} src/main.cpp src/GLFWWrapper.cpp src/ImGuiWrapper.cpp src/path.cpp src/TractData.cpp)
 
 # Copy Shaders to build directory
 file(GLOB SHADERS
