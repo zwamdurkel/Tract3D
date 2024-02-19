@@ -2,7 +2,11 @@
 
 ## About
 
-TODO
+The aim of our software is to allow users to view `.tck` files, which represent white matter tracts
+derived from diffusion MRI, and analyze these tracts with the help of various effects.
+The user will be able to experience a dynamic animation of particles flowing along these white matter
+tracts, position the camera along the path of these streamlines and apply a selection of expanding views and
+visual enhancements that aid in analyzing and understanding the structures of these white matter tracts.
 
 ## External tools
 
@@ -32,7 +36,9 @@ make
 
 ## Installer
 
-To make an installer for the application (Windows, NSIS), first build the project, then go to the build directory and run the `cpack` command.
+To make an installer for the application (Windows, NSIS), first build the project, then go to the build directory and
+run the `cpack` command.
+
 ```
 cd build
 cpack
