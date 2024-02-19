@@ -13,10 +13,11 @@
 #include "path.h"
 #include "GLFWWrapper.h"
 #include "ImGuiWrapper.h"
+#include "TractData.h"
 
 void run();
 
-void processInput(GLFWwindow *window);
+void processInput(GLFWwindow* window);
 
 int main() {
 #ifdef _WIN32
@@ -60,7 +61,7 @@ void run() {
 
     Info("Successfully initialized window");
 
-    GLFWwindow *window = glfw.getWindow();
+    GLFWwindow* window = glfw.getWindow();
 
     Info("Starting render");
     while (!glfwWindowShouldClose(window)) {
@@ -81,7 +82,7 @@ void run() {
 }
 
 // Close window if ESC is pressed.
-void processInput(GLFWwindow *window) {
+void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
