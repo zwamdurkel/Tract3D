@@ -10,7 +10,7 @@
 
 class ImGuiWrapper : AbstractWrapper {
 public:
-    ImGuiWrapper(RenderSettings &settings, GLFWwindow *window) : AbstractWrapper(settings), window(window) {}
+    ImGuiWrapper(RenderSettings& settings, GLFWwindow* window) : AbstractWrapper(settings), window(window) {}
 
     void init() override;
 
@@ -19,5 +19,5 @@ public:
     void cleanup() override;
 
 private:
-    GLFWwindow *window;
+    GLFWwindow* window;
 };

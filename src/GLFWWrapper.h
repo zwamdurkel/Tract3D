@@ -6,9 +6,9 @@
 
 class GLFWWrapper : AbstractWrapper {
 public:
-    explicit GLFWWrapper(RenderSettings &settings) : AbstractWrapper(settings) {}
+    explicit GLFWWrapper(RenderSettings& settings) : AbstractWrapper(settings) {}
 
-    GLFWwindow *getWindow() {
+    GLFWwindow* getWindow() {
         return window;
     }
 
@@ -19,7 +19,7 @@ public:
     void cleanup() override;
 
 private:
-    GLFWwindow *window;
+    GLFWwindow* window;
     Shader shader;
     unsigned int VAO, VBO, EBO;
 };

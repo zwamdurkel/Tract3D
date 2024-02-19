@@ -4,7 +4,7 @@
 void ImGuiWrapper::init() {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO &io = ImGui::GetIO();
+    ImGuiIO& io = ImGui::GetIO();
 //    (void) io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
@@ -15,7 +15,7 @@ void ImGuiWrapper::init() {
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    const char *glsl_version = "#version 420";
+    const char* glsl_version = "#version 420";
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
@@ -41,7 +41,7 @@ void ImGuiWrapper::use() {
         ImGui::Checkbox("Another Window", &settings.show_another_window);
 
         ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float *) &settings.clear_color); // Edit 3 floats representing a color
+        ImGui::ColorEdit3("clear color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button(
                 "Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
@@ -49,7 +49,7 @@ void ImGuiWrapper::use() {
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
 
-        ImGuiIO &io = ImGui::GetIO();
+        ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
