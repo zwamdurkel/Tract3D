@@ -1,6 +1,7 @@
 #include "GLFWWrapper.h"
 #include "learnopengl/shader_s.h"
 #include "path.h"
+#include "logger.h"
 
 const unsigned int INITIAL_WIDTH = 800;
 const unsigned int INITIAL_HEIGHT = 600;
@@ -75,7 +76,11 @@ void GLFWWrapper::use() {
     glClearColor(settings.clear_color.x, settings.clear_color.y, settings.clear_color.z, settings.clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
 
+
     shader.use();
+    shader.setMat4("uViewMatrix", settings.camera->GetViewMatrix());
+    shader.setMat4("uProjectionMatrix", settings.camera->GetProjectionMatrix());
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 }
