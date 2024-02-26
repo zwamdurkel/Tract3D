@@ -5,8 +5,9 @@ set(CMAKE_CXX_STANDARD 23)
 add_executable(${NAME})
 # Run as GUI application
 if (WIN32)
-    target_link_options(${NAME} PRIVATE -mwindows -static)
+    target_link_options(${NAME} PRIVATE -mwindows -static -Wl,-allow-multiple-definition)
 endif (WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 # ----------------
 # Set up our stuff
@@ -49,30 +50,39 @@ target_sources(${NAME} PRIVATE external/glad/glad.c)
 # Include `./include/` subdirectory for GLAD headers.
 target_include_directories(${NAME} PRIVATE external)
 
-# GLFWWrapper
-# We only care about using GLFWWrapper, no docs, tests or examples.
+# GLFW
+# We only care about using GLFW, no docs, tests or examples.
 set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-# Add GLFWWrapper subdirectory. We build glfw from source and link.
+# Add GLFW subdirectory. We build glfw from source and link.
 add_subdirectory(external/glfw-3.3.9)
-# Link GLFWWrapper library.
-target_link_libraries(${NAME} glfw)
+# Link GLFW library.
+target_link_libraries(${NAME} PRIVATE glfw)
 
-# ImGuiWrapper
-target_include_directories(${NAME} PRIVATE external/imgui-1.90.3 external/imgui-1.90.3/backends)
+# ImGui
 file(GLOB IMGUI
         "external/imgui-1.90.3/*.cpp"
-        "external/imgui-1.90.3/*.h"
+        #        "external/imgui-1.90.3/*.h"
         "external/imgui-1.90.3/backends/*.cpp"
-        "external/imgui-1.90.3/backends/*.h"
+        #        "external/imgui-1.90.3/backends/*.h"
         "external/imgui-1.90.3/misc/cpp/*.cpp"
-        "external/imgui-1.90.3/misc/cpp/*.h"
+        #        "external/imgui-1.90.3/misc/cpp/*.h"
 )
-target_sources(${NAME} PRIVATE ${IMGUI})
+add_library(imgui SHARED ${IMGUI})
+if (WIN32)
+    target_link_options(imgui PRIVATE -static -static-libgcc -static-libstdc++)
+    add_custom_command(TARGET imgui POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:imgui> $<TARGET_FILE_DIR:${NAME}>
+            COMMAND_EXPAND_LISTS
+    )
+endif (WIN32)
+target_include_directories(imgui PUBLIC external/imgui-1.90.3 external/imgui-1.90.3/backends)
+target_link_libraries(imgui PRIVATE glfw)
+target_link_libraries(${NAME} PRIVATE imgui)
 
 # ----------------
 # Installer Config
@@ -82,6 +92,7 @@ target_sources(${NAME} PRIVATE ${IMGUI})
 install(TARGETS ${NAME} DESTINATION bin)
 install(FILES ${SHADERS} DESTINATION bin)
 install(FILES $<TARGET_RUNTIME_DLLS:${NAME}> DESTINATION bin)
+install(FILES $<TARGET_RUNTIME_DLLS:imgui> DESTINATION bin)
 
 # Settings
 set(FULL_NAME "Tract Track 3D")
