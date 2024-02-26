@@ -18,7 +18,7 @@
 
 void run();
 
-void processInput(GLFWwindow* window, Camera* cam, float deltaTime);
+void processInput(GLFWwindow* window);
 
 int main() {
 #ifdef _WIN32
@@ -51,19 +51,15 @@ int main() {
 }
 
 void run() {
-    RenderSettings settings;
-    Camera* camera = new Camera(glm::vec3(0.0f, 0.0f, 3.0f));
-    settings.camera = camera;
-    float deltaTime;
-    float lastFrameTime = 0;
+    RenderSettings& settings = RenderSettings::getInstance();
     Info("Attempting to initialize window");
 
     Info("Creating GLFW Wrapper");
-    GLFWWrapper glfw(settings);
+    GLFWWrapper glfw;
     Info("Initializing GLFW");
     glfw.init();
     Info("Creating ImGUI wrapper");
-    ImGuiWrapper imgui(settings, glfw.getWindow());
+    ImGuiWrapper imgui(glfw.getWindow());
     Info("Initializing ImGUI");
     imgui.init();
 
@@ -74,11 +70,8 @@ void run() {
     Info("Starting render");
     while (!glfwWindowShouldClose(window)) {
         //timing stuff
-        float currentFrameTime = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrameTime - lastFrameTime;
-        lastFrameTime = currentFrameTime;
 
-        processInput(window, camera, deltaTime);
+        processInput(window);
 
         glfw.use();
         imgui.use();
@@ -91,25 +84,31 @@ void run() {
     Info("Attempting to clean up before closing");
     imgui.cleanup();
     glfw.cleanup();
-    delete camera;
     Info("Cleaned up successfully, exiting...");
 }
 
 // Close window if ESC is pressed.
-void processInput(GLFWwindow* window, Camera* cam, float deltaTime) {
+void processInput(GLFWwindow* window) {
+    static float lastFrameTime;
+    float currentFrameTime = glfwGetTime();
+    float deltaTime = currentFrameTime - lastFrameTime;;
+    lastFrameTime = currentFrameTime;
+
+    static Camera& cam = RenderSettings::getInstance().camera;
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cam->ProcessKeyboard(FORWARD, deltaTime);
+        cam.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cam->ProcessKeyboard(BACKWARD, deltaTime);
+        cam.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cam->ProcessKeyboard(LEFT, deltaTime);
+        cam.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cam->ProcessKeyboard(RIGHT, deltaTime);
+        cam.ProcessKeyboard(RIGHT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        cam->ProcessKeyboard(UP, deltaTime);
+        cam.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        cam->ProcessKeyboard(DOWN, deltaTime);
+        cam.ProcessKeyboard(DOWN, deltaTime);
 }

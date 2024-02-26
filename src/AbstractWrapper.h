@@ -4,7 +4,7 @@
 
 class AbstractWrapper {
 public:
-    explicit AbstractWrapper(RenderSettings& settings) : settings(settings) {};
+    explicit AbstractWrapper() = default;
 
     // Initialize everything needed to use this tool.
     virtual void init() = 0;
@@ -16,5 +16,5 @@ public:
     virtual void cleanup() = 0;
 
 protected:
-    RenderSettings& settings;
+    RenderSettings& settings = RenderSettings::getInstance();
 };

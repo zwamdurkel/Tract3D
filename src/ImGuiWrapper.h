@@ -10,7 +10,7 @@
 
 class ImGuiWrapper : AbstractWrapper {
 public:
-    ImGuiWrapper(RenderSettings& settings, GLFWwindow* window) : AbstractWrapper(settings), window(window) {}
+    explicit ImGuiWrapper(GLFWwindow* window) : window(window) {}
 
     void init() override;
 

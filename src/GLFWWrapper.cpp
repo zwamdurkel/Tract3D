@@ -31,6 +31,9 @@ void GLFWWrapper::init() {
     // Update on resize:
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
         glViewport(0, 0, width, height);
+        RenderSettings& settings = RenderSettings::getInstance();
+        settings.camera.windowWidth = width;
+        settings.camera.windowHeight = height;
     });
 
     glEnable(GL_MULTISAMPLE);
@@ -78,8 +81,8 @@ void GLFWWrapper::use() {
 
 
     shader.use();
-    shader.setMat4("uViewMatrix", settings.camera->GetViewMatrix());
-    shader.setMat4("uProjectionMatrix", settings.camera->GetProjectionMatrix());
+    shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
+    shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
 
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);

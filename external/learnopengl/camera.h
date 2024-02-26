@@ -41,6 +41,7 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+    int windowWidth = 4, windowHeight = 3;
 
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
@@ -69,7 +70,7 @@ public:
     }
 
     glm::mat4 GetProjectionMatrix() {
-        glm::mat4 mat = glm::perspective(90.0f, 16.0f / 9.0f, 0.2f, 100.0f);
+        glm::mat4 mat = glm::perspective(90.0f, (float) windowWidth / (float) windowHeight, 0.2f, 100.0f);
         return mat;
     }
 

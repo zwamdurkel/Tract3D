@@ -6,7 +6,7 @@
 
 class GLFWWrapper : AbstractWrapper {
 public:
-    explicit GLFWWrapper(RenderSettings& settings) : AbstractWrapper(settings) {}
+    GLFWWrapper() = default;
 
     GLFWwindow* getWindow() {
         return window;
