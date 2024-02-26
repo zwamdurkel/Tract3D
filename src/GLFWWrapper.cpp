@@ -6,6 +6,11 @@
 const unsigned int INITIAL_WIDTH = 800;
 const unsigned int INITIAL_HEIGHT = 600;
 
+//stuff for mouse location
+float lastX;
+float lastY;
+bool firstMouse = true;
+
 void GLFWWrapper::init() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -23,6 +28,8 @@ void GLFWWrapper::init() {
 
     glfwMakeContextCurrent(window);
 
+    glfwSwapInterval(0);
+
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         Error("Failed to initialize GLAD");
         exit(-1);
@@ -34,6 +41,27 @@ void GLFWWrapper::init() {
         RenderSettings& settings = RenderSettings::getInstance();
         settings.camera.windowWidth = width;
         settings.camera.windowHeight = height;
+    });
+    
+    //mouse movement callback
+    glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xposIn, double yposIn) {
+        RenderSettings& settings = RenderSettings::getInstance();
+        float xpos = static_cast<float>(xposIn);
+        float ypos = static_cast<float>(yposIn);
+
+        if (firstMouse) {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
+        }
+
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+        lastX = xpos;
+        lastY = ypos;
+
+        settings.camera.ProcessMouseMovement(xoffset, yoffset);
     });
 
     glEnable(GL_MULTISAMPLE);
