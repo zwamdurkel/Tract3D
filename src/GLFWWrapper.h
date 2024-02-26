@@ -21,6 +21,8 @@ public:
 private:
     GLFWwindow* window;
     Shader shader;
-    unsigned int VAO, VBO, EBO;
+    unsigned int VAO, VBO, VCO;
+    int tractsize;
+    std::vector<int> tractsizes, tractfirst;
 };
 

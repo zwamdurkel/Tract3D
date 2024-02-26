@@ -41,9 +41,9 @@ int main() {
 #endif
 
     // Run program :)
-    TractData td;
-    td.parse("whole_brain.tck");
-    Tract t = td.data[0];
+//    TractData td;
+//    td.parse("whole_brain.tck", true);
+//    Tract t = td.data[0];
 
     run();
 

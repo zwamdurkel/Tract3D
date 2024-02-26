@@ -21,7 +21,7 @@ std::vector<std::string> TractData::readline(std::ifstream& file) {
     return strings;
 }
 
-bool TractData::parse(const char* filePath) {
+bool TractData::parse(const char* filePath, bool tractStop) {
     std::ifstream file;
     file.open(filePath, std::ios::binary);
 
@@ -65,19 +65,31 @@ bool TractData::parse(const char* filePath) {
     }
     float f[3];
     Tract t;
+    int vertCount = 0;
+    int firstCount = 0;
     while (!std::isinf(f[0])) { // read all coordinates from binary data until we encounter (inf,inf,inf)
         file.read((char*) &f, 12);//read float triplet (3*4 = 12 bytes)
-
         if (std::isnan(f[0])) {
-            tracts.push_back(t);
-            t.vertices.clear();
+            sizes.push_back(vertCount);
+            first.push_back(firstCount-vertCount);
+            vertCount = 0;
+            if (tractStop) {
+                tracts.push_back(t);
+                t.vertices.clear();
+            } else {
+                continue;
+            }
         } else {
+            vertCount++;
+            firstCount++;
             t.vertices.push_back(f[0]);
             t.vertices.push_back(f[1]);
             t.vertices.push_back(f[2]);
         }
     }
-
+    if (!tractStop) {
+        tracts.push_back(t);
+    }
     data = std::move(tracts);
     return true;
 }

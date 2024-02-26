@@ -2,6 +2,7 @@
 #include "learnopengl/shader_s.h"
 #include "path.h"
 #include "logger.h"
+#include "TractData.h"
 
 const unsigned int INITIAL_WIDTH = 800;
 const unsigned int INITIAL_HEIGHT = 600;
@@ -43,7 +44,7 @@ void GLFWWrapper::init() {
         settings.camera.windowHeight = height;
     });
     
-    //mouse movement callback
+    // mouse movement callback
     glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xposIn, double yposIn) {
         RenderSettings& settings = RenderSettings::getInstance();
         float xpos = static_cast<float>(xposIn);
@@ -66,16 +67,21 @@ void GLFWWrapper::init() {
 
     glEnable(GL_MULTISAMPLE);
 
-    float vertices[] = {
-            // positions         // colors
-            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,   // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,   // bottom left
-            0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f    // top
-    };
-    unsigned int indices[] = {
-            0, 1, 2,   // first triangle
-//            1, 2, 3    // second triangle
-    };
+    // Run program :)
+    TractData td;
+    td.parse("whole_brain.tck", true);
+//    std::vector<float> vertices = td.data[0].vertices;
+    std::vector<float> vertices;
+    int count = 0;
+    for (int i = 0; i < 2; i++) {
+        vertices.insert(vertices.begin(), td.data[i].vertices.begin(), td.data[i].vertices.end());
+        count += td.data[i].vertices.size();
+        tractsizes.push_back(td.data[i].vertices.size());
+        tractfirst.push_back(count - td.data[i].vertices.size());
+    }
+    tractsize = tractsizes.size();
+//    tractsizes = td.sizes;
+//    tractfirst = td.first;
 
     auto path = getPath();
 
@@ -84,23 +90,23 @@ void GLFWWrapper::init() {
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    glGenBuffers(1, &VCO);
 
     // 1. bind Vertex Array Object
     glBindVertexArray(VAO);
     // 2. copy our vertices array in a buffer for OpenGL to use
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    // 2. copy our indices array in a buffer for OpenGL to use
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    // 4. then set our vertex attributes pointers
+    glBufferData(GL_ARRAY_BUFFER, tractsize, (void*) &vertices[0], GL_STATIC_DRAW);
+    // 3. then set our vertex attributes pointers
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
-    // color attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*) (3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+//    // 4. copy our vertices array in a buffer for OpenGL to use
+//    glBindBuffer(GL_ARRAY_BUFFER, VCO);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+//    // color attribute
+//    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
+//    glEnableVertexAttribArray(1);
 }
 
 void GLFWWrapper::use() {
@@ -113,7 +119,7 @@ void GLFWWrapper::use() {
     shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
 
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+    glMultiDrawArrays(GL_LINE_STRIP, (int*) &tractfirst[0], (int*) &tractsizes[0], tractsize);
 }
 
 void GLFWWrapper::cleanup() {
