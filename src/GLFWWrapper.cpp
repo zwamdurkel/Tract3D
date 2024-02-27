@@ -63,6 +63,7 @@ void GLFWWrapper::init() {
         settings.camera.ProcessMouseMovement(xoffset, yoffset);
     });
 
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
 
     // Run program :)
@@ -78,14 +79,14 @@ void GLFWWrapper::init() {
 
     // Color Array
     std::vector<float> colors;
-    for (int i : td.tractSizes) {
+    for (int i: td.tractSizes) {
         int first = round(i / (sizeof(rainbow) / sizeof(float) / 3));
         int last = i - (first * (sizeof(rainbow) / sizeof(float) / 3 - 1));
         for (int j = 0; j < (sizeof(rainbow) / sizeof(float) - 3); j += 3) {
             for (int k = 0; k < first; k++) {
                 colors.push_back(rainbow[j]);
-                colors.push_back(rainbow[j+1]);
-                colors.push_back(rainbow[j+2]);
+                colors.push_back(rainbow[j + 1]);
+                colors.push_back(rainbow[j + 2]);
             }
         }
         for (int k = 0; k < last; k++) {
@@ -120,7 +121,7 @@ void GLFWWrapper::init() {
 void GLFWWrapper::use() {
     // Clear and set Clear Color
     glClearColor(settings.clear_color.x, settings.clear_color.y, settings.clear_color.z, settings.clear_color.w);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     // Define Shaders
     shader.use();
