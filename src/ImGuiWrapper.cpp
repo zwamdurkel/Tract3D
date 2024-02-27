@@ -44,8 +44,14 @@ void ImGuiWrapper::use() {
         ImGui::ColorEdit3("clear color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button(
-                "Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+                "Button")) {                           // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++;
+            if (counter % 2 == 0) {
+                glEnable(GL_MULTISAMPLE);
+            } else {
+                glDisable(GL_MULTISAMPLE);
+            }
+        }
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
 

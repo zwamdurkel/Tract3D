@@ -7,6 +7,7 @@ add_executable(${NAME})
 if (WIN32)
     target_link_options(${NAME} PRIVATE -mwindows -static)
 endif (WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 # ----------------
 # Set up our stuff

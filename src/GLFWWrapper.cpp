@@ -28,6 +28,9 @@ void GLFWWrapper::init() {
     }
 
     glfwMakeContextCurrent(window);
+    // Disable vsync
+    glfwSwapInterval(0);
+
 
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         Error("Failed to initialize GLAD");
@@ -65,6 +68,12 @@ void GLFWWrapper::init() {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
+//    glEnable(GL_LINE_SMOOTH);
+//    glEnable(GL_BLEND);
+//
+//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+
 
     // Run program :)
     // Import vertex and fragment shaders
@@ -130,6 +139,7 @@ void GLFWWrapper::use() {
 
     // Draw all tracts using a line strip primitive per tract
     glBindVertexArray(VAO);
+//    glLineWidth(300);
     glMultiDrawArrays(GL_LINE_STRIP, (int*) &td.tractIndices[0], (int*) &td.tractSizes[0], (int) td.tractSizes.size());
 }
 
