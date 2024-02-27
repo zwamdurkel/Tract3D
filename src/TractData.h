@@ -16,8 +16,8 @@ private:
 
 public:
     std::vector<Tract> data;
-    std::vector<int> sizes;
-    std::vector<int> first;
+    std::vector<int> tractSizes;
+    std::vector<int> tractIndices;
 
     bool parse(const char* filePath, bool tractStop);
 };

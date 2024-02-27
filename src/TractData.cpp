@@ -70,8 +70,8 @@ bool TractData::parse(const char* filePath, bool tractStop) {
     while (!std::isinf(f[0])) { // read all coordinates from binary data until we encounter (inf,inf,inf)
         file.read((char*) &f, 12);//read float triplet (3*4 = 12 bytes)
         if (std::isnan(f[0])) {
-            sizes.push_back(vertCount);
-            first.push_back(firstCount-vertCount);
+            tractSizes.push_back(vertCount);
+            tractIndices.push_back(firstCount-vertCount);
             vertCount = 0;
             if (tractStop) {
                 tracts.push_back(t);
