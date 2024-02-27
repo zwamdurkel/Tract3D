@@ -70,7 +70,7 @@ public:
     }
 
     glm::mat4 GetProjectionMatrix() {
-        glm::mat4 mat = glm::perspective(90.0f, (float) windowWidth / (float) windowHeight, 0.2f, 100.0f);
+        glm::mat4 mat = glm::perspective(90.0f, (float) windowWidth / (float) windowHeight, 0.2f, 150.0f);
         return mat;
     }
 
