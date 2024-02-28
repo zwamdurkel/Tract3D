@@ -67,6 +67,14 @@ void GLFWWrapper::init() {
             settings.camera.ProcessMouseMovement(xoffset, yoffset);
     });
 
+    // Hide cursor while Panning
+    glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods) {
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    });
+
     // Mouse scroll callback
     glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
         RenderSettings& settings = RenderSettings::getInstance();
