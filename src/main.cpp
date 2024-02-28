@@ -74,7 +74,9 @@ void run() {
 
     // Import vertex and fragment shaders
     auto path = getPath();
-    Shader shader = Shader(path + "basic.vsh", path + "basic.fsh", path + "basic.geom");
+
+    Shader shader = Shader(path + "tubes.vsh", path + "tubes.fsh", path + "tubes.geom");//draw the tubes (rip gpu)
+    //Shader shader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
 
     Info("Starting render");
     while (!glfwWindowShouldClose(window)) {
