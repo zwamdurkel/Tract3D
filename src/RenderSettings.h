@@ -4,8 +4,20 @@
 #include "learnopengl/camera.h"
 #include <vector>
 
+// Forward declarations to use pointer to wrapper classes.
+class AbstractWrapper;
+
+class GLFWWrapper;
+
+class ImGuiWrapper;
+
+class TractDataWrapper;
+
 class RenderSettings {
 public:
+    GLFWWrapper* glfw = nullptr;
+    ImGuiWrapper* imgui = nullptr;
+    std::vector<TractDataWrapper*> datasets;
     bool show_demo_window = false;
     bool show_another_window = false;
     bool MSAA = true;

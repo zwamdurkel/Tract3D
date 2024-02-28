@@ -3,18 +3,23 @@
 
 #include <windows.h>
 
+// Tell GPU drivers to use Dedicated GPU instead of iGPU (mostly for laptops)
+extern "C" {
+__declspec(dllexport) DWORD NvOptimusEnablement = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
 #endif
 
 #include <iostream>
-#include <cmath>
 #include <glad/glad.h> // this is important
 #include <GLFW/glfw3.h>
 #include "logger.h"
 #include "path.h"
 #include "GLFWWrapper.h"
 #include "ImGuiWrapper.h"
-#include "TractData.h"
+#include "TractDataWrapper.h"
 #include "learnopengl/camera.h"
+#include "learnopengl/shader_s.h"
 
 void run();
 
@@ -63,13 +68,26 @@ void run() {
 
     GLFWwindow* window = glfw.getWindow();
 
+    TractDataWrapper td("whole_brain.tck");
+
+    settings.datasets.push_back(&td);
+
+    // Import vertex and fragment shaders
+    auto path = getPath();
+    Shader shader = Shader(path + "basic.vsh", path + "basic.fsh");
+
     Info("Starting render");
     while (!glfwWindowShouldClose(window)) {
-        //timing stuff
-
         processInput(window);
 
+        shader.use();
+        shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
+        shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
+
         glfw.draw();
+        for (auto dataset: settings.datasets) {
+            dataset->draw();
+        }
         imgui.draw();
 
         glfwSwapBuffers(window);

@@ -3,6 +3,7 @@
 #include "TractDataWrapper.h"
 
 void ImGuiWrapper::init() {
+    settings.imgui = this;
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
@@ -40,7 +41,9 @@ void ImGuiWrapper::draw() {
                         &settings.show_demo_window);      // Edit bools storing our window open/close state
         ImGui::Checkbox("Another Window", &settings.show_another_window);
 
-        ImGui::SliderInt("Tract Count", &settings.show_tract_count[0], 1, settings.tract_count[0]);
+        for (auto dataset: settings.datasets) {
+            ImGui::SliderInt("Tract Count", &dataset->showTractCount, 1, dataset->tractCount);
+        }
         ImGui::ColorEdit3("clear color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
