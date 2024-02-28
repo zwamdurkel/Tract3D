@@ -73,6 +73,15 @@ void GLFWWrapper::init() {
         settings.camera.ProcessMouseScroll(yoffset);
     });
 
+    // Keep rendering while resizing
+    glfwSetWindowRefreshCallback(window, [](GLFWwindow* window) {
+        RenderSettings& settings = RenderSettings::getInstance();
+        settings.glfw->draw();
+        settings.imgui->draw();
+
+        glfwSwapBuffers(window);
+    });
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
     // Used for drawing lines from one buffer.
