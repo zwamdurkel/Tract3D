@@ -20,7 +20,7 @@ enum Camera_Movement {
 // Default camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 2.5f;
+const float SPEED = 20.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 45.0f;
 
@@ -70,7 +70,7 @@ public:
     }
 
     glm::mat4 GetProjectionMatrix() {
-        glm::mat4 mat = glm::perspective(90.0f, (float) windowWidth / (float) windowHeight, 0.2f, 100.0f);
+        glm::mat4 mat = glm::perspective(90.0f, (float) windowWidth / (float) windowHeight, 0.2f, 150.0f);
         return mat;
     }
 
