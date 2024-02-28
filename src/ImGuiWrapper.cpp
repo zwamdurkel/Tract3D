@@ -1,5 +1,6 @@
 #include "ImGuiWrapper.h"
 #include "logger.h"
+#include "TractDataWrapper.h"
 
 void ImGuiWrapper::init() {
     IMGUI_CHECKVERSION();
@@ -42,17 +43,12 @@ void ImGuiWrapper::draw() {
         ImGui::SliderInt("Tract Count", &settings.show_tract_count[0], 1, settings.tract_count[0]);
         ImGui::ColorEdit3("clear color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
-        if (ImGui::Button(
-                "Button")) {                           // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-            if (counter % 2 == 0) {
-                glEnable(GL_MULTISAMPLE);
-            } else {
-                glDisable(GL_MULTISAMPLE);
-            }
+        if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
+            settings.MSAA ? glEnable(GL_MULTISAMPLE) : glDisable(GL_MULTISAMPLE);
         }
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
+        if (ImGui::Checkbox("V-Sync", &settings.vsync)) {
+            glfwSwapInterval((int) settings.vsync);
+        }
 
         ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);

@@ -8,6 +8,8 @@ class RenderSettings {
 public:
     bool show_demo_window = false;
     bool show_another_window = false;
+    bool MSAA = true;
+    bool vsync = true;
     // vector that determines how many tracts to show per file
     std::vector<int> show_tract_count = {1};
     // vector that stores the total number of tracts per file
