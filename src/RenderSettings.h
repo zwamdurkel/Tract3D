@@ -12,7 +12,7 @@ public:
     std::vector<int> show_tract_count = {1};
     // vector that stores the total number of tracts per file
     std::vector<int> tract_count = {1};
-    ImVec4 clear_color = ImVec4(0.2f, 0.7f, 0.6f, 1.0f);
+    ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     Camera camera = Camera(glm::vec3(0.0f, -25.0f, 100.0f));
 
     // Singleton logic

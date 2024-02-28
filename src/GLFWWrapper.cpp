@@ -62,7 +62,14 @@ void GLFWWrapper::init() {
         lastX = xpos;
         lastY = ypos;
 
-        settings.camera.ProcessMouseMovement(xoffset, yoffset);
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT))
+            settings.camera.ProcessMouseMovement(xoffset, yoffset);
+    });
+
+    // Mouse scroll callback
+    glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
+        RenderSettings& settings = RenderSettings::getInstance();
+        settings.camera.ProcessMouseScroll(yoffset);
     });
 
     glEnable(GL_DEPTH_TEST);
