@@ -17,7 +17,9 @@ private:
 public:
     std::vector<Tract> data;
     std::vector<int> tractSizes;
-    std::vector<int> tractIndices;
+    std::vector<unsigned int> tractIndices;
+    // tractEndIndex[i] stores the index of the last vertex of the i'th tract in tractIndices
+    std::vector<int> tractEndIndex;
 
     bool parse(const char* filePath, bool tractStop);
 };

@@ -28,7 +28,6 @@ void ImGuiWrapper::use() {
         ImGui::ShowDemoWindow(&settings.show_demo_window);
 
     {
-        static float f = 0.0f;
         static int counter = 0;
 
         ImGui::Begin(
@@ -40,7 +39,7 @@ void ImGuiWrapper::use() {
                         &settings.show_demo_window);      // Edit bools storing our window open/close state
         ImGui::Checkbox("Another Window", &settings.show_another_window);
 
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::SliderInt("Tract Count", &settings.show_tract_count[0], 1, settings.tract_count[0]);
         ImGui::ColorEdit3("clear color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
         if (ImGui::Button(

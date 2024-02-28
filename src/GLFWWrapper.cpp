@@ -31,7 +31,6 @@ void GLFWWrapper::init() {
     // Disable vsync
     glfwSwapInterval(0);
 
-
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         Error("Failed to initialize GLAD");
         exit(-1);
@@ -68,14 +67,10 @@ void GLFWWrapper::init() {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_MULTISAMPLE);
-//    glEnable(GL_LINE_SMOOTH);
-//    glEnable(GL_BLEND);
-//
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+    // Used for drawing lines from one buffer.
+    glEnable(GL_PRIMITIVE_RESTART);
+    glPrimitiveRestartIndex(0xFFFFFFFF);
 
-
-    // Run program :)
     // Import vertex and fragment shaders
     auto path = getPath();
     Info(path);
@@ -85,6 +80,10 @@ void GLFWWrapper::init() {
     // Parse dataset into a single vertex array
     td.parse("whole_brain.tck", false);
     std::vector<float> vertices = td.data[0].vertices;
+
+    // Set the number of tracts we have in the settings
+    settings.tract_count[0] = td.tractEndIndex.size();
+    settings.show_tract_count[0] = td.tractEndIndex.size();
 
     // Color Array
     std::vector<float> colors;
@@ -108,6 +107,7 @@ void GLFWWrapper::init() {
     // Generate buffers. VAO = Vertex Array Object, VBO = Vertex Buffer Object, VCO = Vertex Color Object
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
     glGenBuffers(1, &VCO);
 
     // Bind Vertex Array Object
@@ -119,6 +119,9 @@ void GLFWWrapper::init() {
     // Position Attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * td.tractIndices.size(), &td.tractIndices[0], GL_STATIC_DRAW);
+
     // Copy Colors Array to a Buffer for OpenGL
     glBindBuffer(GL_ARRAY_BUFFER, VCO);
     glBufferData(GL_ARRAY_BUFFER, (long) (colors.size() * sizeof(float)), (void*) &colors[0], GL_STATIC_DRAW);
@@ -139,8 +142,8 @@ void GLFWWrapper::use() {
 
     // Draw all tracts using a line strip primitive per tract
     glBindVertexArray(VAO);
-//    glLineWidth(300);
-    glMultiDrawArrays(GL_LINE_STRIP, (int*) &td.tractIndices[0], (int*) &td.tractSizes[0], (int) td.tractSizes.size());
+    glDrawElements(GL_LINE_STRIP, (int) td.tractEndIndex[settings.show_tract_count[0] - 1], GL_UNSIGNED_INT,
+                   (GLvoid*) 0);
 }
 
 void GLFWWrapper::cleanup() {

@@ -71,7 +71,9 @@ bool TractData::parse(const char* filePath, bool tractStop) {
         file.read((char*) &f, 12);//read float triplet (3*4 = 12 bytes)
         if (std::isnan(f[0])) {
             tractSizes.push_back(vertCount);
-            tractIndices.push_back(firstCount-vertCount);
+            tractEndIndex.push_back((int) tractIndices.size());
+            // 0xFFFFFFFF is the primitive restart value, i.e, the renderer will see this as the start of a new line.
+            tractIndices.push_back(0xFFFFFFFF);
             vertCount = 0;
             if (tractStop) {
                 tracts.push_back(t);
@@ -80,6 +82,7 @@ bool TractData::parse(const char* filePath, bool tractStop) {
                 continue;
             }
         } else {
+            tractIndices.push_back(firstCount);
             vertCount++;
             firstCount++;
             t.vertices.push_back(f[0]);
