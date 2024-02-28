@@ -40,8 +40,9 @@ void GLFWWrapper::init() {
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
         glViewport(0, 0, width, height);
         RenderSettings& settings = RenderSettings::getInstance();
-        settings.camera.windowWidth = width;
-        settings.camera.windowHeight = height;
+        // Make sure we don't get divide by 0.
+        settings.camera.windowWidth = width ? width : 1;
+        settings.camera.windowHeight = height ? height : 1;
     });
 
     // mouse movement callback
