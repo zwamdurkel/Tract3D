@@ -130,7 +130,7 @@ void GLFWWrapper::init() {
     glEnableVertexAttribArray(1);
 }
 
-void GLFWWrapper::use() {
+void GLFWWrapper::draw() {
     // Clear and set Clear Color
     glClearColor(settings.clear_color.x, settings.clear_color.y, settings.clear_color.z, settings.clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

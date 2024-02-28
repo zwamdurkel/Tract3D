@@ -10,7 +10,7 @@ public:
     virtual void init() = 0;
 
     // Use the tool in the render loop.
-    virtual void use() = 0;
+    virtual void draw() = 0;
 
     // Clean up resources before exiting.
     virtual void cleanup() = 0;

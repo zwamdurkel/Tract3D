@@ -96,3 +96,11 @@ bool TractData::parse(const char* filePath, bool tractStop) {
     data = std::move(tracts);
     return true;
 }
+
+void TractData::draw() {
+
+}
+
+void TractData::init() {
+
+}

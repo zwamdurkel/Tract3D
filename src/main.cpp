@@ -69,8 +69,8 @@ void run() {
 
         processInput(window);
 
-        glfw.use();
-        imgui.use();
+        glfw.draw();
+        imgui.draw();
 
         glfwSwapBuffers(window);
         glfwPollEvents();

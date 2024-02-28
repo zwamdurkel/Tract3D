@@ -19,7 +19,7 @@ void ImGuiWrapper::init() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 }
 
-void ImGuiWrapper::use() {
+void ImGuiWrapper::draw() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
