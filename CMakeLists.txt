@@ -21,7 +21,7 @@ target_sources(${NAME} PRIVATE ${ICON} src/main.cpp src/GLFWWrapper.cpp src/ImGu
 file(GLOB SHADERS
         "src/*.vsh"
         "src/*.fsh"
-        "src/*.gsh"
+        "src/*.geom"
 )
 foreach (SHADER ${SHADERS})
     if (WIN32)

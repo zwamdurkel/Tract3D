@@ -74,13 +74,15 @@ void run() {
 
     // Import vertex and fragment shaders
     auto path = getPath();
-    Shader shader = Shader(path + "basic.vsh", path + "basic.fsh");
+    Shader shader = Shader(path + "basic.vsh", path + "basic.fsh", path + "basic.geom");
 
     Info("Starting render");
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
         shader.use();
+        glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        shader.setMat4("uModelMatrix", modelMatrix);
         shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
         shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
 

@@ -24,6 +24,7 @@ public:
     // ------------------------------------------------------------------------
     Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath = "") {
         ID = glCreateProgram();
+
         build(vertexPath, GL_VERTEX_SHADER, "VERTEX");
         build(fragmentPath, GL_FRAGMENT_SHADER, "FRAGMENT");
         if (!geometryPath.empty())
@@ -51,7 +52,7 @@ public:
             shaderCode = shaderStream.str();
         }
         catch (std::ifstream::failure& e) {
-            Error("ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what());
+            Error("ERROR::" << typeString << "::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what());
         }
         const char* shaderCodeString = shaderCode.c_str();
         // 2. compile shaders
