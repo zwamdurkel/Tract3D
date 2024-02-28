@@ -24,20 +24,8 @@ file(GLOB SHADERS
         "src/*.geom"
 )
 foreach (SHADER ${SHADERS})
-    if (WIN32)
-        # Configure_file(${SHADER} "test")
-        add_custom_command(TARGET ${NAME} PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SHADER} ${CMAKE_CURRENT_BINARY_DIR})
-        add_custom_command(TARGET ${NAME} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${NAME}> $<TARGET_FILE_DIR:${NAME}>
-                COMMAND_EXPAND_LISTS
-        )
-    elseif (UNIX AND NOT APPLE)
-        file(COPY ${SHADER} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-    elseif (APPLE)
-        # Create symbolic link for *.vs *.fs *.gs
-        get_filename_component(SHADERNAME ${SHADER} NAME)
-        makeLink(${SHADER} ${CMAKE_CURRENT_BINARY_DIR}/${SHADERNAME} ${NAME})
-    endif (WIN32)
+    get_filename_component(SHADER_NAME ${SHADER} NAME)
+    configure_file(${SHADER} ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME} COPYONLY)
 endforeach (SHADER)
 
 # ------------
@@ -47,7 +35,7 @@ endforeach (SHADER)
 # GLAD
 # Add glad.c to use GLAD functions.
 target_sources(${NAME} PRIVATE external/glad/glad.c)
-# Include `./include/` subdirectory for GLAD headers.
+# Include `./external/` subdirectory for GLAD headers.
 target_include_directories(${NAME} PRIVATE external)
 
 # GLFW
@@ -57,6 +45,12 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+if (WIN32)
+    add_custom_command(TARGET ${NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${NAME}> $<TARGET_FILE_DIR:${NAME}>
+            COMMAND_EXPAND_LISTS
+    )
+endif (WIN32)
 
 # Add GLFW subdirectory. We build glfw from source and link.
 add_subdirectory(external/glfw-3.3.9)
@@ -66,11 +60,8 @@ target_link_libraries(${NAME} PRIVATE glfw)
 # ImGui
 file(GLOB IMGUI
         "external/imgui-1.90.3/*.cpp"
-        #        "external/imgui-1.90.3/*.h"
         "external/imgui-1.90.3/backends/*.cpp"
-        #        "external/imgui-1.90.3/backends/*.h"
         "external/imgui-1.90.3/misc/cpp/*.cpp"
-        #        "external/imgui-1.90.3/misc/cpp/*.h"
 )
 add_library(imgui SHARED ${IMGUI})
 if (WIN32)
