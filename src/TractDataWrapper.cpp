@@ -65,9 +65,16 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
         tracts.reserve(count);
     }
     float f[3];
+
+
     Tract t;
     int vertCount = 0;
     int firstCount = 0;
+
+    glm::vec3 prev1(0.0f, 0.0f, 0.0f);//one before
+    glm::vec3 prev2(0.0f, 0.0f, 0.0f);//two before
+    glm::vec3 gradient;
+
     while (!std::isinf(f[0])) { // read all coordinates from binary data until we encounter (inf,inf,inf)
         file.read((char*) &f, 12);//read float triplet (3*4 = 12 bytes)
         if (std::isnan(f[0])) {
@@ -76,9 +83,20 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
             // 0xFFFFFFFF is the primitive restart value, i.e, the renderer will see this as the start of a new line.
             tractIndices.push_back(0xFFFFFFFF);
             vertCount = 0;
+
+            //add final gradient
+            gradient = glm::normalize(prev1 - prev2);
+            t.gradient.push_back(abs(gradient.x));
+            t.gradient.push_back(abs(gradient.y));
+            t.gradient.push_back(abs(gradient.z));
+            //reset previous positions when starting a new tract
+            prev1 = glm::vec3(0.0f, 0.0f, 0.0f);
+            prev2 = glm::vec3(0.0f, 0.0f, 0.0f);
+
             if (tractStop) {
                 tracts.push_back(t);
                 t.vertices.clear();
+                t.gradient.clear();
             } else {
                 continue;
             }
@@ -89,6 +107,27 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
             t.vertices.push_back(f[0]);
             t.vertices.push_back(f[1]);
             t.vertices.push_back(f[2]);
+
+            //gradient vector
+            glm::vec3 current = glm::vec3(f[0], f[1], f[2]);
+            if (glm::distance(prev1, glm::vec3(0.0f, 0.0f, 0.0f)) > 0.01) {
+                if (glm::distance(prev2, glm::vec3(0.0f, 0.0f, 0.0f)) > 0.01) {
+                    glm::vec3 prevDelta = glm::normalize(prev1 - prev2);
+                    glm::vec3 currDelta = glm::normalize(current - prev1);
+                    gradient = glm::normalize(prevDelta + currDelta);
+
+                    t.gradient.push_back(abs(gradient.x));
+                    t.gradient.push_back(abs(gradient.y));
+                    t.gradient.push_back(abs(gradient.z));
+                } else {
+                    gradient = glm::normalize(current - prev1);
+                    t.gradient.push_back(abs(gradient.x));
+                    t.gradient.push_back(abs(gradient.y));
+                    t.gradient.push_back(abs(gradient.z));
+                }
+            }
+            prev2 = prev1;
+            prev1 = current;
         }
     }
     if (!tractStop) {
@@ -128,6 +167,7 @@ void TractDataWrapper::init() {
     // Generate buffers. VAO = Vertex Array Object, VBO = Vertex Buffer Object, VCO = Vertex Color Object
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &GVO);
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &VCO);
 
@@ -150,6 +190,15 @@ void TractDataWrapper::init() {
     // Color Attribute
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(1);
+
+    // Copy Vertices Array to a Buffer for OpenGL
+    glBindBuffer(GL_ARRAY_BUFFER, GVO);
+    glBufferData(GL_ARRAY_BUFFER, (long) (data[0].gradient.size() * sizeof(float)), &data[0].gradient[0],
+                 GL_STATIC_DRAW);
+    // Then set our Vertex Attributes Pointers
+    // Position Attribute
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(2);
 }
 
 void TractDataWrapper::draw() {

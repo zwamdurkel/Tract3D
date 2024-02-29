@@ -7,6 +7,7 @@
 
 struct Tract {
     std::vector<float> vertices;
+    std::vector<float> gradient;
 };
 
 class TractDataWrapper : AbstractWrapper {
@@ -26,7 +27,7 @@ public:
     int showTractCount = 1;
     // Total number of tracts represented by this class.
     int tractCount = 1;
-    unsigned int VAO, VBO, VCO, EBO;
+    unsigned int VAO, VBO, VCO, GVO, EBO;
 
     float rainbow[21] = {
             1.0f, 0.15f, 0.15f, // red
