@@ -42,16 +42,18 @@ void main() {
     vec3 diff = normalize((modelPos[0] - modelPos[1]).xyz);
     //side 1
     vec3 ucorner1 = cross(grad[0], vec3(0, 1, 0));
-    vec3 ucorner2 = cross(grad[0], ucorner1);
-    vec3 ucorner3 = -normalize(ucorner1 + ucorner2);
+    // Rodrigues' rotation formula
+    vec3 ucorner2 = 1.5*dot(ucorner1, grad[0])*grad[0] - 0.5*ucorner1 + 0.86602540378*cross(grad[0], ucorner1);
+    vec3 ucorner3 = 1.5*dot(ucorner2, grad[0])*grad[0] - 0.5*ucorner2 + 0.86602540378*cross(grad[0], ucorner2);
     vec4 uc1 = vec4(ucorner1 * tubesize, 0);
     vec4 uc2 = vec4(ucorner2 * tubesize, 0);
     vec4 uc3 = vec4(ucorner3 * tubesize, 0);
 
     //side 2
     vec3 lcorner1 = cross(grad[1], vec3(0, 1, 0));
-    vec3 lcorner2 = cross(grad[1], lcorner1);
-    vec3 lcorner3 = -normalize(lcorner1 + lcorner2);
+    // Rodrigues' rotation formula
+    vec3 lcorner2 = 1.5*dot(lcorner1, grad[1])*grad[1] - 0.5*lcorner1 + 0.86602540378*cross(grad[1], lcorner1);
+    vec3 lcorner3 = 1.5*dot(lcorner2, grad[1])*grad[1] - 0.5*lcorner2 + 0.86602540378*cross(grad[1], lcorner2);
     vec4 lc1 = vec4(lcorner1 * tubesize, 0);
     vec4 lc2 = vec4(lcorner2 * tubesize, 0);
     vec4 lc3 = vec4(lcorner3 * tubesize, 0);
