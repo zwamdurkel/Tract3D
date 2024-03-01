@@ -15,7 +15,7 @@ uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 
-void emitSide(vec4 delta, vec4 delta2){
+void emitSide(vec4 delta, vec4 delta2) {
     fColor = ourColor[0];
     normal = delta.xyz;
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[0] + delta);
@@ -25,8 +25,7 @@ void emitSide(vec4 delta, vec4 delta2){
     EmitVertex();
 }
 
-void emitPrism(vec4 delta1, vec4 delta2, vec4 delta3, int index, vec3 newNormal)
-{
+void emitPrism(vec4 delta1, vec4 delta2, vec4 delta3, int index, vec3 newNormal) {
     fColor = ourColor[index];
     normal = newNormal;
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta1);
@@ -58,20 +57,20 @@ void main() {
     vec4 lc2 = vec4(lcorner2 * tubesize, 0);
     vec4 lc3 = vec4(lcorner3 * tubesize, 0);
 
-    // Only draw end caps
-    if (cross(grad[0], diff).x <= 0.01) {
-        emitPrism(uc1, uc2, uc3, 0, -grad[0]);
-        EndPrimitive();
-    }
-
     emitSide(uc1, lc1);
     emitSide(uc3, lc3);
     emitSide(uc2, lc2);
     emitSide(uc1, lc1);
     EndPrimitive();
 
+    float c1 = cross(grad[0], diff).x;
+    float c2 = cross(grad[1], diff).x;
+
     // Only draw end caps
-    if (cross(grad[1], diff).x <= 0.01) {
+    if (c1 <= 0.000001 && c1 >= -0.000001) {
+        emitPrism(uc1, uc2, uc3, 0, -grad[0]);
+        EndPrimitive();
+    } else if (c2 <= 0.000001 && c2 >= -0.000001) {
         emitPrism(lc3, lc2, lc1, 1, grad[1]);
         EndPrimitive();
     }
