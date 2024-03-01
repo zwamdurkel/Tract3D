@@ -6,18 +6,22 @@ layout(max_vertices = 16) out;
 
 in vec3 ourColor[];
 in vec4 modelPos[];
+in vec3 grad[];
+
 out vec3 fColor;
 out vec3 normal;
+
+uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 
-void emitSide(vec4 delta){
+void emitSide(vec4 delta, vec4 delta2){
     fColor = ourColor[0];
     normal = delta.xyz;
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[0] + delta);
     EmitVertex();
     fColor = ourColor[1];
-    gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[1] + delta);
+    gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[1] + delta2);
     EmitVertex();
 }
 
@@ -27,40 +31,40 @@ void emitPrism(vec4 delta1, vec4 delta2, vec4 delta3, int index, vec3 newNormal)
     normal = newNormal;
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta1);
     EmitVertex();
-    fColor = ourColor[index];
-    gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta2);
-    EmitVertex();
-    fColor = ourColor[index];
-    normal = newNormal;
-    gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta1);
-    EmitVertex();
-    fColor = ourColor[index];
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta3);
+    EmitVertex();
+    gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta2);
     EmitVertex();
 }
 
 void main() {
     const float tubesize = 0.1f;
     vec3 diff = normalize((modelPos[0] - modelPos[1]).xyz);
-    vec3 corner1 = cross(diff, vec3(0, 1, 0));
-    vec3 corner2 = cross(diff, corner1);
-    vec3 corner3 = -normalize(corner1 + corner2);
-    vec4 c1 = vec4(corner1 * tubesize, 0);
-    vec4 c2 = vec4(corner2 * tubesize, 0);
-    vec4 c3 = vec4(corner3 * tubesize, 0);
-
-    emitPrism(c1, c2, c3, 0, diff);
-    EndPrimitive();
-
     //side 1
-    emitSide(c1);
-    emitSide(c2);
-    emitSide(c3);
-    emitSide(c1);
+    vec3 ucorner1 = cross(grad[0], vec3(0, 1, 0));
+    vec3 ucorner2 = cross(grad[0], ucorner1);
+    vec3 ucorner3 = -normalize(ucorner1 + ucorner2);
+    vec4 uc1 = vec4(ucorner1 * tubesize, 0);
+    vec4 uc2 = vec4(ucorner2 * tubesize, 0);
+    vec4 uc3 = vec4(ucorner3 * tubesize, 0);
+
+    //side 2
+    vec3 lcorner1 = cross(grad[1], vec3(0, 1, 0));
+    vec3 lcorner2 = cross(grad[1], lcorner1);
+    vec3 lcorner3 = -normalize(lcorner1 + lcorner2);
+    vec4 lc1 = vec4(lcorner1 * tubesize, 0);
+    vec4 lc2 = vec4(lcorner2 * tubesize, 0);
+    vec4 lc3 = vec4(lcorner3 * tubesize, 0);
+
+    emitPrism(uc1, uc2, uc3, 0, -grad[0]);
     EndPrimitive();
 
-    emitPrism(c3, c2, c1, 1, -diff);
+    emitSide(uc1, lc1);
+    emitSide(uc3, lc3);
+    emitSide(uc2, lc2);
+    emitSide(uc1, lc1);
     EndPrimitive();
 
-
+    emitPrism(lc3, lc2, lc1, 1, grad[1]);
+    EndPrimitive();
 }
