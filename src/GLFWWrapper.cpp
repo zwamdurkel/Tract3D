@@ -37,6 +37,7 @@ void GLFWWrapper::init() {
     // Update on resize:
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
         glViewport(0, 0, width, height);
+        glScissor(0, 0, width, height);
         RenderSettings& settings = RenderSettings::getInstance();
         // Make sure we don't get divide by 0.
         settings.camera.windowWidth = width ? width : 1;

@@ -28,6 +28,11 @@ public:
     int tractCount = 1;
     unsigned int VAO, VBO, VCO, EBO;
 
+    std::vector<std::vector<glm::vec3>> blips; //tracts
+    std::vector<glm::vec3> TubeVertices;
+    std::vector<float> TubeVerticesFRFR;
+    std::vector<unsigned int> TubeVertexIndices;
+
     float rainbow[21] = {
             1.0f, 0.15f, 0.15f, // red
             1.0f, 0.6f, 0.0f, // orange
@@ -43,6 +48,8 @@ public:
     TractDataWrapper() = default;
 
     bool parse(const char* filePath, bool tractStop);
+
+    void GenerateTubeFromTract(std::vector<glm::vec3> tract);
 
     void cleanup() override {}
 
