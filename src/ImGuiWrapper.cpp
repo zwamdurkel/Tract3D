@@ -1,6 +1,7 @@
 #include "ImGuiWrapper.h"
 #include "logger.h"
 #include "TractDataWrapper.h"
+#include "path.h"
 
 void ImGuiWrapper::init() {
     settings.imgui = this;
@@ -51,6 +52,14 @@ void ImGuiWrapper::draw() {
         }
         if (ImGui::Checkbox("V-Sync", &settings.vsync)) {
             glfwSwapInterval((int) settings.vsync);
+        }
+        if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
+            auto path = getPath();
+            if (settings.drawTubes) {
+                settings.shader = Shader(path + "tubes.vsh", path + "tubes.fsh", path + "tubes.geom");
+            } else {
+                settings.shader = Shader(path + "basic.vsh", path + "basic.fsh");
+            }
         }
 
         ImGuiIO& io = ImGui::GetIO();

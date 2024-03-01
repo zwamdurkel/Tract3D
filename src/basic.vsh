@@ -11,5 +11,5 @@ uniform mat4 uProjectionMatrix;
 void main()
 {
     gl_Position = uProjectionMatrix * uViewMatrix *  uModelMatrix * vec4(aPos, 1.0);
-    fColor = gradient;// set ourColor to the input color we got from the vertex data
+    fColor = abs(gradient);// set ourColor to the input color we got from the vertex data
 }

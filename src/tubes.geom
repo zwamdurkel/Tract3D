@@ -17,7 +17,7 @@ uniform mat4 uProjectionMatrix;
 
 void emitSide(vec4 delta, vec4 delta2) {
     fColor = ourColor[0];
-    normal = delta.xyz;
+    normal = normalize(delta.xyz);
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[0] + delta);
     EmitVertex();
     fColor = ourColor[1];
