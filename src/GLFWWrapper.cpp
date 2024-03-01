@@ -89,6 +89,7 @@ void GLFWWrapper::init() {
     });
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
     glEnable(GL_MULTISAMPLE);
     // Used for drawing lines from one buffer.
     glEnable(GL_PRIMITIVE_RESTART);
