@@ -10,6 +10,7 @@ in vec3 grad[];
 
 out vec3 fColor;
 out vec3 normal;
+out vec3 FragPos;
 
 uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
@@ -19,9 +20,11 @@ void emitSide(vec4 delta, vec4 delta2) {
     fColor = ourColor[0];
     normal = normalize(delta.xyz);
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[0] + delta);
+    FragPos = vec3(modelPos[0] + delta);
     EmitVertex();
     fColor = ourColor[1];
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[1] + delta2);
+    FragPos = vec3(modelPos[1] + delta2);
     EmitVertex();
 }
 
@@ -29,10 +32,13 @@ void emitPrism(vec4 delta1, vec4 delta2, vec4 delta3, int index, vec3 newNormal)
     fColor = ourColor[index];
     normal = newNormal;
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta1);
+    FragPos = vec3(modelPos[index] + delta1);
     EmitVertex();
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta3);
+    FragPos = vec3(modelPos[index] + delta3);
     EmitVertex();
     gl_Position = uProjectionMatrix * uViewMatrix * (modelPos[index] + delta2);
+    FragPos = vec3(modelPos[index] + delta2);
     EmitVertex();
 }
 
