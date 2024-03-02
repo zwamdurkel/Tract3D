@@ -87,6 +87,7 @@ void run() {
         shader.setMat4("uModelMatrix", modelMatrix);
         shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
         shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
+        shader.setVec3("uViewPos", settings.camera.Position);
 
         glfw.draw();
         for (auto dataset: settings.datasets) {
