@@ -4,6 +4,7 @@
 #include "path.h"
 #include "nativefiledialog/src/include/nfd.h"
 #include "nativefiledialog/src/include/nfd.hpp"
+#include "RenderSettings.h"
 
 void ImGuiWrapper::init() {
     settings.imgui = this;
@@ -14,12 +15,12 @@ void ImGuiWrapper::init() {
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     auto path = getPath();
-    io.Fonts->AddFontFromFileTTF((path + "Ruda-Regular.ttf").c_str(), 15);
+    io.Fonts->AddFontFromFileTTF((path + "Ruda-Regular.ttf").c_str(), 16);
 //    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 10);
 //    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 14);
 //    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 18);
 
-    ImGuiStyle * style = &ImGui::GetStyle();
+    ImGuiStyle* style = &ImGui::GetStyle();
 
     style->WindowPadding = ImVec2(15, 15);
     style->WindowRounding = 5.0f;
@@ -44,7 +45,7 @@ void ImGuiWrapper::init() {
     style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
     style->Colors[ImGuiCol_FrameBgActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-    style->Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(1.00f, 0.98f, 0.95f, 0.75f);
+    style->Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
     style->Colors[ImGuiCol_TitleBgActive] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
     style->Colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
     style->Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
@@ -85,7 +86,7 @@ void ImGuiWrapper::draw() {
     static bool no_move = false;
     static bool no_resize = false;
     ImGuiWindowFlags window_flags = 0;
-    window_flags |= ImGuiWindowFlags_NoCollapse;
+    //window_flags |= ImGuiWindowFlags_NoCollapse;
     if (no_move) window_flags |= ImGuiWindowFlags_NoMove;
     if (no_resize) window_flags |= ImGuiWindowFlags_NoResize;
 
@@ -95,13 +96,13 @@ void ImGuiWrapper::draw() {
     {
         //static int counter = 0;
         ImGui::Begin(
-                "Tract 3D", nullptr, window_flags);                          // Create a window called "Hello, world!" and append into it.
+                "Tract 3D", nullptr,
+                window_flags);                          // Create a window called "Hello, world!" and append into it.
 
         ImGui::Text(
-                "Alpha version 0.1");               // Display some text (you can use a format strings too)
+                "Alpha version 1.0.0");               // Display some text (you can use a format strings too)
 
-        if (ImGui::CollapsingHeader("Rendering options"))
-        {
+        if (ImGui::CollapsingHeader("Rendering options")) {
 
             ImGui::Text("Graphic options:");
 
@@ -113,13 +114,13 @@ void ImGuiWrapper::draw() {
             }
 
             if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
-                for (auto& dataset : settings.datasets) {
+                for (auto& dataset: settings.datasets) {
                     dataset->init();
                 }
             }
 
             if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
-                for (auto& dataset : settings.datasets) {
+                for (auto& dataset: settings.datasets) {
                     dataset->init();
                 }
             };
@@ -128,33 +129,27 @@ void ImGuiWrapper::draw() {
 
             ImGui::Text("Tract Counts:");
 
-            for (auto &dataset: settings.datasets) {
+            for (auto& dataset: settings.datasets) {
                 std::string name = dataset->name;
                 ImGui::SliderInt(name.c_str(), &dataset->showTractCount, 1, dataset->tractCount);
             }
 
         }
 
-        if (ImGui::CollapsingHeader("Dataset options"))
-        {
+        if (ImGui::CollapsingHeader("Dataset options")) {
             if (ImGui::Button("Select Dataset")) {
                 NFD_Init();
 
-                nfdchar_t *outPath;
-                nfdfilteritem_t filterItem[1] = { { "MRI files", "tck" }};
+                nfdchar_t* outPath;
+                nfdfilteritem_t filterItem[1] = {{"MRI files", "tck"}};
                 nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
-                if (result == NFD_OKAY)
-                {
+                if (result == NFD_OKAY) {
                     puts("Success!");
                     puts(outPath);
                     NFD_FreePath(outPath);
-                }
-                else if (result == NFD_CANCEL)
-                {
+                } else if (result == NFD_CANCEL) {
                     puts("User pressed cancel.");
-                }
-                else
-                {
+                } else {
                     printf("Error: %s\n", NFD_GetError());
                 }
 
@@ -162,46 +157,38 @@ void ImGuiWrapper::draw() {
                 std::stringstream test(outPath);
                 std::string segment;
                 std::vector<std::string> seglist;
-                while(std::getline(test, segment, '\\'))
-                {
+                while (std::getline(test, segment, '\\')) {
                     seglist.push_back(segment);
                 }
-                std::string name = seglist[seglist.size()-1];
+                std::string name = seglist[seglist.size() - 1];
                 auto td = std::make_shared<TractDataWrapper>(outPath, name);
                 settings.datasets.push_back(td);
             }
 
             ImGui::Text("Datasets:");
 
-            for (auto &dataset: settings.datasets) {
+            for (auto& dataset: settings.datasets) {
                 ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
             }
         }
 
-        if (ImGui::CollapsingHeader("Development options"))
-        {
-            if (ImGui::BeginTable("split", 3))
-            {
-                ImGui::TableNextColumn(); ImGui::Checkbox("No move", &no_move);
-                ImGui::TableNextColumn(); ImGui::Checkbox("No resize", &no_resize);
-                ImGui::EndTable();
-            }
-            ImGui::Checkbox("Demo Window",
-                            &settings.show_demo_window);      // Edit bools storing our window open/close state
+        if (ImGui::CollapsingHeader("Camera options")) {
+            ImGui::SliderFloat("FOV", &settings.camera.FOV, 30.0f, 150.0f);
+            ImGui::SliderFloat("Speed", &settings.camera.MovementSpeed, 1.0f, 100.0f);
+            ImGui::SliderFloat("Draw Distance", &settings.camera.FarPlane, 1.0f, 300.0f);
         }
 
-        if (ImGui::CollapsingHeader("Camera options"))
-        {
-            if (ImGui::BeginTable("split", 3))
-            {
-                ImGui::TableNextColumn(); ImGui::Checkbox("No move", &no_move);
-                ImGui::TableNextColumn(); ImGui::Checkbox("No resize", &no_resize);
-                ImGui::EndTable();
-            }
+        if (ImGui::CollapsingHeader("Development options")) {
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("No move", &no_move);
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("No resize", &no_resize);
+//            ImGui::Checkbox("Demo Window",
+//                            &settings.show_demo_window);      // Edit bools storing our window open/close state
         }
 
         ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::Text("Application framerate %.1f FPS", io.Framerate);
         ImGui::End();
     }
 
