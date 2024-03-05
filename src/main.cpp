@@ -68,13 +68,12 @@ void run() {
 
     GLFWwindow* window = glfw.getWindow();
 
-    auto td = std::make_shared<TractDataWrapper>("whole_brain.tck", "whole_brain.tck");
+    auto path = getPath();
+    auto td = std::make_shared<TractDataWrapper>((path + "whole_brain.tck").c_str(), "whole_brain.tck");
 
     settings.datasets.push_back(td);
 
     // Import vertex and fragment shaders
-    auto path = getPath();
-
     Shader& shader = settings.shader;
     shader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
 
@@ -91,7 +90,7 @@ void run() {
         shader.setBool("uDrawTubes", settings.drawTubes);
 
         glfw.draw();
-        for (auto &dataset: settings.datasets) {
+        for (auto& dataset: settings.datasets) {
             if (dataset->enabled) {
                 dataset->draw();
             }
