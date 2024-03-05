@@ -147,22 +147,22 @@ void ImGuiWrapper::draw() {
                     puts("Success!");
                     puts(outPath);
                     NFD_FreePath(outPath);
+                    std::stringstream test(outPath);
+                    std::string segment;
+                    std::vector<std::string> seglist;
+                    while (std::getline(test, segment, '\\')) {
+                        seglist.push_back(segment);
+                    }
+                    std::string name = seglist[seglist.size() - 1];
+                    auto td = std::make_shared<TractDataWrapper>(outPath, name);
+                    settings.datasets.push_back(td);
                 } else if (result == NFD_CANCEL) {
                     puts("User pressed cancel.");
                 } else {
                     printf("Error: %s\n", NFD_GetError());
                 }
-
                 NFD_Quit();
-                std::stringstream test(outPath);
-                std::string segment;
-                std::vector<std::string> seglist;
-                while (std::getline(test, segment, '\\')) {
-                    seglist.push_back(segment);
-                }
-                std::string name = seglist[seglist.size() - 1];
-                auto td = std::make_shared<TractDataWrapper>(outPath, name);
-                settings.datasets.push_back(td);
+
             }
 
             ImGui::Text("Datasets:");
