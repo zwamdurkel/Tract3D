@@ -41,6 +41,8 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+    float FOV = 90.0f;
+    float FarPlane = 150.0f;
     int windowWidth = 4, windowHeight = 3;
 
     // constructor with vectors
@@ -70,8 +72,8 @@ public:
     }
 
     glm::mat4 GetProjectionMatrix() {
-        glm::mat4 mat = glm::perspective(90.0f, (float) windowWidth / (float) windowHeight,
-                                         0.2f, 150.0f);
+        glm::mat4 mat = glm::perspective(glm::radians(FOV), (float) windowWidth / (float) windowHeight,
+                                         0.2f, FarPlane);
         return mat;
     }
 
@@ -114,11 +116,11 @@ public:
 
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(double yoffset) {
-        MovementSpeed += (float) yoffset;
+        MovementSpeed += (float) yoffset * 2;
         if (MovementSpeed < 1.0f)
             MovementSpeed = 1.0f;
-        if (MovementSpeed > 50.0f)
-            MovementSpeed = 50.0f;
+        if (MovementSpeed > 100.0f)
+            MovementSpeed = 100.0f;
     }
 
 private:

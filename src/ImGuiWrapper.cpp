@@ -4,6 +4,7 @@
 #include "path.h"
 #include "nativefiledialog/src/include/nfd.h"
 #include "nativefiledialog/src/include/nfd.hpp"
+#include "RenderSettings.h"
 
 void ImGuiWrapper::init() {
     settings.imgui = this;
@@ -172,22 +173,18 @@ void ImGuiWrapper::draw() {
         }
 
         if (ImGui::CollapsingHeader("Camera options")) {
+            ImGui::SliderFloat("FOV", &settings.camera.FOV, 30.0f, 150.0f);
+            ImGui::SliderFloat("Speed", &settings.camera.MovementSpeed, 1.0f, 100.0f);
+            ImGui::SliderFloat("Draw Distance", &settings.camera.FarPlane, 1.0f, 300.0f);
+        }
+
+        if (ImGui::CollapsingHeader("Development options")) {
             ImGui::TableNextColumn();
             ImGui::Checkbox("No move", &no_move);
             ImGui::TableNextColumn();
             ImGui::Checkbox("No resize", &no_resize);
-        }
-
-        if (ImGui::CollapsingHeader("Development options")) {
-            if (ImGui::BeginTable("split", 3)) {
-                ImGui::TableNextColumn();
-                ImGui::Checkbox("No move", &no_move);
-                ImGui::TableNextColumn();
-                ImGui::Checkbox("No resize", &no_resize);
-                ImGui::EndTable();
-            }
-            ImGui::Checkbox("Demo Window",
-                            &settings.show_demo_window);      // Edit bools storing our window open/close state
+//            ImGui::Checkbox("Demo Window",
+//                            &settings.show_demo_window);      // Edit bools storing our window open/close state
         }
 
         ImGuiIO& io = ImGui::GetIO();
