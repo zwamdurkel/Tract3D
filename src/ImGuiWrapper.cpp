@@ -109,13 +109,16 @@ void ImGuiWrapper::draw() {
             }
 
             if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
-                auto path = getPath();
-                if (settings.drawTubes) {
-                    settings.shader = Shader(path + "tubes.vsh", path + "tubes.fsh", path + "tubes.geom");
-                } else {
-                    settings.shader = Shader(path + "basic.vsh", path + "basic.fsh");
+                for (auto& dataset : settigs:datasets) { 
+                    dataset->init();
                 }
             }
+          
+            if (ImGui::SliderInt("Number of tube sides", &settings.nrOfSides, 3, 8)) {
+                for (auto& dataset : settigs:datasets) { 
+                    dataset->init();
+                }
+            };
 
             for (auto &dataset: settings.datasets) {
                 ImGui::SliderInt("Tract Count", &dataset->showTractCount, 0, dataset->tractCount);
@@ -164,7 +167,7 @@ void ImGuiWrapper::draw() {
             for (auto &dataset: settings.datasets) {
                 ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
             }
-        }
+        }   
 
         if (ImGui::CollapsingHeader("Development options"))
         {
@@ -176,6 +179,7 @@ void ImGuiWrapper::draw() {
             }
             ImGui::Checkbox("Demo Window",
                             &settings.show_demo_window);      // Edit bools storing our window open/close state
+
         }
 
         ImGuiIO& io = ImGui::GetIO();

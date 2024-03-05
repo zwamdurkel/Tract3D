@@ -25,6 +25,7 @@ public:
     bool MSAA = true;
     bool vsync = true;
     bool drawTubes = false;
+    int nrOfSides = 3;
     // vector that determines how many tracts to show per file
     std::vector<int> show_tract_count = {1};
     // vector that stores the total number of tracts per file
