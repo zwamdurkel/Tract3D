@@ -131,21 +131,20 @@ void ImGuiWrapper::draw() {
 
             for (auto& dataset: settings.datasets) {
                 std::string name = dataset->name;
-                ImGui::SliderInt(name.c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+                ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
             }
 
         }
 
         if (ImGui::CollapsingHeader("Dataset options")) {
-            if (ImGui::Button("Select Dataset")) {
+            if (ImGui::Button("Browse")) {
                 NFD_Init();
-
                 nfdchar_t* outPath;
                 nfdfilteritem_t filterItem[1] = {{"MRI files", "tck"}};
                 nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
                 if (result == NFD_OKAY) {
-                    puts("Success!");
-                    puts(outPath);
+                    Info("Success!");
+                    Info(outPath);
                     NFD_FreePath(outPath);
                     std::stringstream test(outPath);
                     std::string segment;
@@ -154,16 +153,30 @@ void ImGuiWrapper::draw() {
                         seglist.push_back(segment);
                     }
                     std::string name = seglist[seglist.size() - 1];
-                    auto td = std::make_shared<TractDataWrapper>(outPath, name);
-                    settings.datasets.push_back(td);
+                    bool duplicate = true;
+                    for (auto& dataset: settings.datasets) {
+                        if (dataset->name == name) {
+                            duplicate = false;
+                            message = "Duplicate Rejected";
+                        }
+                    }
+                    if (duplicate) {
+                        auto td = std::make_shared<TractDataWrapper>(outPath, name);
+                        settings.datasets.push_back(td);
+                        message = "Successfully Added";
+                    }
                 } else if (result == NFD_CANCEL) {
-                    puts("User pressed cancel.");
+                    Info("User pressed cancel.");
+                    message = "User Cancelled";
                 } else {
-                    printf("Error: %s\n", NFD_GetError());
+                    Info("Error: %s\n" << NFD_GetError());
+                    message = "Select Dataset";
                 }
                 NFD_Quit();
 
             }
+            ImGui::SameLine();
+            ImGui::Text(message.c_str());
 
             ImGui::Text("Datasets:");
 
@@ -175,7 +188,7 @@ void ImGuiWrapper::draw() {
         if (ImGui::CollapsingHeader("Camera options")) {
             ImGui::SliderFloat("FOV", &settings.camera.FOV, 30.0f, 150.0f);
             ImGui::SliderFloat("Speed", &settings.camera.MovementSpeed, 1.0f, 100.0f);
-            ImGui::SliderFloat("Draw Distance", &settings.camera.FarPlane, 1.0f, 300.0f);
+            ImGui::SliderFloat("Draw Distance", &settings.camera.FarPlane, 1.0f, 500.0f);
         }
 
         if (ImGui::CollapsingHeader("Development options")) {

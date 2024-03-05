@@ -20,4 +20,5 @@ public:
 
 private:
     GLFWwindow* window;
+    std::string message = "Select Dataset";
 };

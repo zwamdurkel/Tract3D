@@ -42,7 +42,7 @@ public:
     float MouseSensitivity;
     float Zoom;
     float FOV = 90.0f;
-    float FarPlane = 150.0f;
+    float FarPlane = 250.0f;
     int windowWidth = 4, windowHeight = 3;
 
     // constructor with vectors
