@@ -2,6 +2,7 @@
 #include "path.h"
 #include "logger.h"
 #include "ImGuiWrapper.h"
+#include "TractDataWrapper.h"
 
 const unsigned int INITIAL_WIDTH = 800;
 const unsigned int INITIAL_HEIGHT = 600;
@@ -83,6 +84,9 @@ void GLFWWrapper::init() {
     glfwSetWindowRefreshCallback(window, [](GLFWwindow* window) {
         RenderSettings& settings = RenderSettings::getInstance();
         settings.glfw->draw();
+        for (auto& dataset: settings.datasets) {
+            dataset->draw();
+        }
         settings.imgui->draw();
 
         glfwSwapBuffers(window);
