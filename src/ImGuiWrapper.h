@@ -5,8 +5,6 @@
 #include <imgui_impl_opengl3.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "nativefiledialog/src/include/nfd.h"
-#include "nativefiledialog/src/include/nfd.hpp"
 #include "AbstractWrapper.h"
 
 

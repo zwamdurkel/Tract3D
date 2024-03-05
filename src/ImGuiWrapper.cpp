@@ -2,6 +2,8 @@
 #include "logger.h"
 #include "TractDataWrapper.h"
 #include "path.h"
+#include "nativefiledialog/src/include/nfd.h"
+#include "nativefiledialog/src/include/nfd.hpp"
 
 void ImGuiWrapper::init() {
     settings.imgui = this;
@@ -97,33 +99,6 @@ void ImGuiWrapper::draw() {
         ImGui::Text(
                 "Alpha version 0.1");               // Display some text (you can use a format strings too)
 
-        if (ImGui::Button("Browse")) {
-            NFD_Init();
-
-            nfdchar_t *outPath;
-            nfdfilteritem_t filterItem[1] = { { "MRI files", "tck" }};
-            nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
-            if (result == NFD_OKAY)
-            {
-                puts("Success!");
-                puts(outPath);
-                NFD_FreePath(outPath);
-            }
-            else if (result == NFD_CANCEL)
-            {
-                puts("User pressed cancel.");
-            }
-            else
-            {
-                printf("Error: %s\n", NFD_GetError());
-            }
-
-            NFD_Quit();
-//            TractDataWrapper td;
-//            td.parse(outPath, false);
-            Info(outPath);
-        }
-
         if (ImGui::CollapsingHeader("Rendering options"))
         {
             if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
@@ -132,14 +107,62 @@ void ImGuiWrapper::draw() {
             if (ImGui::Checkbox("V-Sync", &settings.vsync)) {
                 glfwSwapInterval((int) settings.vsync);
             }
+
+            if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
+                auto path = getPath();
+                if (settings.drawTubes) {
+                    settings.shader = Shader(path + "tubes.vsh", path + "tubes.fsh", path + "tubes.geom");
+                } else {
+                    settings.shader = Shader(path + "basic.vsh", path + "basic.fsh");
+                }
+            }
+
+            for (auto &dataset: settings.datasets) {
+                ImGui::SliderInt("Tract Count", &dataset->showTractCount, 0, dataset->tractCount);
+            }
+
             ImGui::ColorEdit3("Background color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
         }
 
         if (ImGui::CollapsingHeader("Dataset options"))
         {
-            for (auto dataset: settings.datasets) {
-                ImGui::SliderInt("Tract Count", &dataset->showTractCount, 1, dataset->tractCount);
+            if (ImGui::Button("Select Dataset")) {
+                NFD_Init();
+
+                nfdchar_t *outPath;
+                nfdfilteritem_t filterItem[1] = { { "MRI files", "tck" }};
+                nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+                if (result == NFD_OKAY)
+                {
+                    puts("Success!");
+                    puts(outPath);
+                    NFD_FreePath(outPath);
+                }
+                else if (result == NFD_CANCEL)
+                {
+                    puts("User pressed cancel.");
+                }
+                else
+                {
+                    printf("Error: %s\n", NFD_GetError());
+                }
+
+                NFD_Quit();
+                std::stringstream test(outPath);
+                std::string segment;
+                std::vector<std::string> seglist;
+                while(std::getline(test, segment, '\\'))
+                {
+                    seglist.push_back(segment);
+                }
+                std::string name = seglist[seglist.size()-1];
+                auto td = std::make_shared<TractDataWrapper>(outPath, name);
+                settings.datasets.push_back(td);
+            }
+
+            for (auto &dataset: settings.datasets) {
+                ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
             }
         }
 
@@ -153,14 +176,6 @@ void ImGuiWrapper::draw() {
             }
             ImGui::Checkbox("Demo Window",
                             &settings.show_demo_window);      // Edit bools storing our window open/close state
-        }
-        if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
-            auto path = getPath();
-            if (settings.drawTubes) {
-                settings.shader = Shader(path + "tubes.vsh", path + "tubes.fsh", path + "tubes.geom");
-            } else {
-                settings.shader = Shader(path + "basic.vsh", path + "basic.fsh");
-            }
         }
 
         ImGuiIO& io = ImGui::GetIO();

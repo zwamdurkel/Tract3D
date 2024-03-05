@@ -202,11 +202,14 @@ void TractDataWrapper::init() {
 }
 
 void TractDataWrapper::draw() {
+    glBindVertexArray(VAO);
     glDrawElements(GL_LINE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
 }
 
-TractDataWrapper::TractDataWrapper(const char* filePath) {
+TractDataWrapper::TractDataWrapper(const char* filePath, std::string n) {
     parse(filePath, false);
+    name = n;
+    enabled = true;
     TractDataWrapper::init();
 }
 

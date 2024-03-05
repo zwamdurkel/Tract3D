@@ -17,6 +17,8 @@ private:
     std::vector<std::string> readline(std::ifstream& file);
 
 public:
+    std::string name;
+    bool enabled;
     std::vector<Tract> data;
     // The number of vertices in each tract.
     std::vector<int> tractSizes;
@@ -39,7 +41,7 @@ public:
             0.55f, 0.15f, 1.0f //purple
     };
 
-    explicit TractDataWrapper(const char* filePath);
+    explicit TractDataWrapper(const char* filePath, std::string n);
 
     TractDataWrapper() = default;
 

@@ -68,9 +68,9 @@ void run() {
 
     GLFWwindow* window = glfw.getWindow();
 
-    TractDataWrapper td("whole_brain.tck");
+    auto td = std::make_shared<TractDataWrapper>("whole_brain.tck", "whole_brain.tck");
 
-    settings.datasets.push_back(&td);
+    settings.datasets.push_back(td);
 
     // Import vertex and fragment shaders
     auto path = getPath();
@@ -91,7 +91,9 @@ void run() {
 
         glfw.draw();
         for (auto dataset: settings.datasets) {
-            dataset->draw();
+            if (dataset->enabled) {
+                dataset->draw();
+            }
         }
         imgui.draw();
 
