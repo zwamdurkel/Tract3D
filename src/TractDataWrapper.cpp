@@ -86,9 +86,9 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
 
             //add final gradient
             gradient = glm::normalize(prev1 - prev2);
-            t.gradient.push_back(abs(gradient.x));
-            t.gradient.push_back(abs(gradient.y));
-            t.gradient.push_back(abs(gradient.z));
+            t.gradient.push_back(gradient.x);
+            t.gradient.push_back(gradient.y);
+            t.gradient.push_back(gradient.z);
             //reset previous positions when starting a new tract
             prev1 = glm::vec3(0.0f, 0.0f, 0.0f);
             prev2 = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -116,14 +116,14 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
                     glm::vec3 currDelta = glm::normalize(current - prev1);
                     gradient = glm::normalize(prevDelta + currDelta);
 
-                    t.gradient.push_back(abs(gradient.x));
-                    t.gradient.push_back(abs(gradient.y));
-                    t.gradient.push_back(abs(gradient.z));
+                    t.gradient.push_back(gradient.x);
+                    t.gradient.push_back(gradient.y);
+                    t.gradient.push_back(gradient.z);
                 } else {
                     gradient = glm::normalize(current - prev1);
-                    t.gradient.push_back(abs(gradient.x));
-                    t.gradient.push_back(abs(gradient.y));
-                    t.gradient.push_back(abs(gradient.z));
+                    t.gradient.push_back(gradient.x);
+                    t.gradient.push_back(gradient.y);
+                    t.gradient.push_back(gradient.z);
                 }
             }
             prev2 = prev1;
