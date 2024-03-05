@@ -117,8 +117,8 @@ void ImGuiWrapper::draw() {
                     dataset->init();
                 }
             }
-            ImGui::Text("Number of tube sides");
-            if (ImGui::SliderInt(" ", &settings.nrOfSides, 3, 8)) {
+
+            if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
                 for (auto& dataset : settings.datasets) {
                     dataset->init();
                 }
@@ -188,6 +188,16 @@ void ImGuiWrapper::draw() {
             }
             ImGui::Checkbox("Demo Window",
                             &settings.show_demo_window);      // Edit bools storing our window open/close state
+        }
+
+        if (ImGui::CollapsingHeader("Camera options"))
+        {
+            if (ImGui::BeginTable("split", 3))
+            {
+                ImGui::TableNextColumn(); ImGui::Checkbox("No move", &no_move);
+                ImGui::TableNextColumn(); ImGui::Checkbox("No resize", &no_resize);
+                ImGui::EndTable();
+            }
         }
 
         ImGuiIO& io = ImGui::GetIO();
