@@ -123,6 +123,14 @@ public:
             MovementSpeed = 100.0f;
     }
 
+    void ChangeFOV(double yoffset) {
+        FOV += (float) yoffset * 2;
+        if (FOV < 30.0f)
+            FOV = 30.0f;
+        if (FOV > 150.0f)
+            FOV = 150.0f;
+    }
+
 private:
     // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors() {

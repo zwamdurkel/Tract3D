@@ -77,7 +77,10 @@ void GLFWWrapper::init() {
     // Mouse scroll callback
     glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset) {
         RenderSettings& settings = RenderSettings::getInstance();
-        settings.camera.ProcessMouseScroll(yoffset);
+        if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
+            settings.camera.ProcessMouseScroll(yoffset);
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+            settings.camera.ChangeFOV(yoffset);
     });
 
     // Keep rendering while resizing
