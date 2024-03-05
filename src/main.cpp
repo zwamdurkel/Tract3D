@@ -90,7 +90,7 @@ void run() {
         shader.setVec3("uViewPos", settings.camera.Position);
 
         glfw.draw();
-        for (auto dataset: settings.datasets) {
+        for (auto &dataset: settings.datasets) {
             if (dataset->enabled) {
                 dataset->draw();
             }
