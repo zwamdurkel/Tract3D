@@ -26,7 +26,7 @@ void ImGuiWrapper::init() {
     style->WindowRounding = 5.0f;
     style->FramePadding = ImVec2(5, 5);
     style->FrameRounding = 4.0f;
-    style->ItemSpacing = ImVec2(12, 8);
+    style->ItemSpacing = ImVec2(12, 10);
     style->ItemInnerSpacing = ImVec2(8, 6);
     style->IndentSpacing = 25.0f;
     style->ScrollbarSize = 15.0f;
@@ -59,9 +59,9 @@ void ImGuiWrapper::init() {
     style->Colors[ImGuiCol_Button] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
     style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
     style->Colors[ImGuiCol_ButtonActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-    style->Colors[ImGuiCol_Header] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
+    style->Colors[ImGuiCol_Header] = ImVec4(0.40f, 0.38f, 0.42f, 1.00f);
     style->Colors[ImGuiCol_HeaderHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-    style->Colors[ImGuiCol_HeaderActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+    style->Colors[ImGuiCol_HeaderActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
     style->Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
@@ -104,7 +104,7 @@ void ImGuiWrapper::draw() {
 
         if (ImGui::CollapsingHeader("Rendering options")) {
 
-            ImGui::Text("Graphic options:");
+            ImGui::SeparatorText("Graphic options");
 
             if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
                 settings.MSAA ? glEnable(GL_MULTISAMPLE) : glDisable(GL_MULTISAMPLE);
@@ -127,7 +127,7 @@ void ImGuiWrapper::draw() {
 
             ImGui::ColorEdit3("Background color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
-            ImGui::Text("Tract Counts:");
+            ImGui::SeparatorText("Tract Counts");
 
             for (auto& dataset: settings.datasets) {
                 std::string name = dataset->name;
@@ -178,7 +178,7 @@ void ImGuiWrapper::draw() {
             ImGui::SameLine();
             ImGui::Text(message.c_str());
 
-            ImGui::Text("Datasets:");
+            ImGui::SeparatorText("Datasets");
 
             for (auto& dataset: settings.datasets) {
                 ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
