@@ -75,6 +75,10 @@ target_include_directories(imgui PUBLIC external/imgui-1.90.3 external/imgui-1.9
 target_link_libraries(imgui PRIVATE glfw)
 target_link_libraries(${NAME} PRIVATE imgui)
 
+# Native-File-Dialog
+add_subdirectory(external/nativefiledialog)
+target_link_libraries(${NAME} PRIVATE nfd)
+
 # ----------------
 # Installer Config
 # ----------------
