@@ -57,21 +57,15 @@ void ImGuiWrapper::init() {
     style->Colors[ImGuiCol_Header] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
     style->Colors[ImGuiCol_HeaderHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_HeaderActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-//    style->Colors[ImGuiCol_Column] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-//    style->Colors[ImGuiCol_ColumnHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-//    style->Colors[ImGuiCol_ColumnActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
     style->Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-//    style->Colors[ImGuiCol_CloseButton] = ImVec4(0.40f, 0.39f, 0.38f, 0.16f);
-//    style->Colors[ImGuiCol_CloseButtonHovered] = ImVec4(0.40f, 0.39f, 0.38f, 0.39f);
-//    style->Colors[ImGuiCol_CloseButtonActive] = ImVec4(0.40f, 0.39f, 0.38f, 1.00f);
     style->Colors[ImGuiCol_PlotLines] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
     style->Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
     style->Colors[ImGuiCol_PlotHistogram] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
     style->Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
     style->Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.25f, 1.00f, 0.00f, 0.43f);
-//    style->Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
+    style->Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
 
     // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -83,32 +77,81 @@ void ImGuiWrapper::draw() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+    // windows settings
+    static bool no_move = false;
+    static bool no_resize = false;
+    ImGuiWindowFlags window_flags = 0;
+    window_flags |= ImGuiWindowFlags_NoCollapse;
+    if (no_move) window_flags |= ImGuiWindowFlags_NoMove;
+    if (no_resize) window_flags |= ImGuiWindowFlags_NoResize;
 
     if (settings.show_demo_window)
         ImGui::ShowDemoWindow(&settings.show_demo_window);
 
     {
-        static int counter = 0;
-
+        //static int counter = 0;
         ImGui::Begin(
-                "Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+                "Tract 3D", nullptr, window_flags);                          // Create a window called "Hello, world!" and append into it.
 
         ImGui::Text(
-                "This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window",
-                        &settings.show_demo_window);      // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &settings.show_another_window);
+                "Alpha version 0.1");               // Display some text (you can use a format strings too)
 
-        for (auto dataset: settings.datasets) {
-            ImGui::SliderInt("Tract Count", &dataset->showTractCount, 1, dataset->tractCount);
-        }
-        ImGui::ColorEdit3("clear color", (float*) &settings.clear_color); // Edit 3 floats representing a color
+        if (ImGui::Button("Browse")) {
+            NFD_Init();
 
-        if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
-            settings.MSAA ? glEnable(GL_MULTISAMPLE) : glDisable(GL_MULTISAMPLE);
+            nfdchar_t *outPath;
+            nfdfilteritem_t filterItem[1] = { { "MRI files", "tck" }};
+            nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+            if (result == NFD_OKAY)
+            {
+                puts("Success!");
+                puts(outPath);
+                NFD_FreePath(outPath);
+            }
+            else if (result == NFD_CANCEL)
+            {
+                puts("User pressed cancel.");
+            }
+            else
+            {
+                printf("Error: %s\n", NFD_GetError());
+            }
+
+            NFD_Quit();
+//            TractDataWrapper td;
+//            td.parse(outPath, false);
+            Info(outPath);
         }
-        if (ImGui::Checkbox("V-Sync", &settings.vsync)) {
-            glfwSwapInterval((int) settings.vsync);
+
+        if (ImGui::CollapsingHeader("Rendering options"))
+        {
+            if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
+                settings.MSAA ? glEnable(GL_MULTISAMPLE) : glDisable(GL_MULTISAMPLE);
+            }
+            if (ImGui::Checkbox("V-Sync", &settings.vsync)) {
+                glfwSwapInterval((int) settings.vsync);
+            }
+            ImGui::ColorEdit3("Background color", (float*) &settings.clear_color); // Edit 3 floats representing a color
+
+        }
+
+        if (ImGui::CollapsingHeader("Dataset options"))
+        {
+            for (auto dataset: settings.datasets) {
+                ImGui::SliderInt("Tract Count", &dataset->showTractCount, 1, dataset->tractCount);
+            }
+        }
+
+        if (ImGui::CollapsingHeader("Development options"))
+        {
+            if (ImGui::BeginTable("split", 3))
+            {
+                ImGui::TableNextColumn(); ImGui::Checkbox("No move", &no_move);
+                ImGui::TableNextColumn(); ImGui::Checkbox("No resize", &no_resize);
+                ImGui::EndTable();
+            }
+            ImGui::Checkbox("Demo Window",
+                            &settings.show_demo_window);      // Edit bools storing our window open/close state
         }
 
         ImGuiIO& io = ImGui::GetIO();
