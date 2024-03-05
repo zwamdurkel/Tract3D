@@ -186,9 +186,9 @@ void ImGuiWrapper::draw() {
         }
 
         if (ImGui::CollapsingHeader("Camera options")) {
-            ImGui::SliderFloat("FOV", &settings.camera.FOV, 30.0f, 150.0f);
-            ImGui::SliderFloat("Speed", &settings.camera.MovementSpeed, 1.0f, 100.0f);
-            ImGui::SliderFloat("Draw Distance", &settings.camera.FarPlane, 1.0f, 500.0f);
+            ImGui::SliderFloat("FOV", &settings.camera.FOV, 30.0f, 150.0f, "%.0f");
+            ImGui::SliderFloat("Speed", &settings.camera.MovementSpeed, 1.0f, 100.0f, "%.0f");
+            ImGui::SliderFloat("Draw Distance", &settings.camera.FarPlane, 1.0f, 500.0f, "%.0f");
         }
 
         if (ImGui::CollapsingHeader("Development options")) {
