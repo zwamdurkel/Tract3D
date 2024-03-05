@@ -27,6 +27,8 @@ foreach (SHADER ${SHADERS})
     get_filename_component(SHADER_NAME ${SHADER} NAME)
     configure_file(${SHADER} ${CMAKE_CURRENT_BINARY_DIR}/${SHADER_NAME} COPYONLY)
 endforeach (SHADER)
+configure_file("data/Ruda-Regular.ttf" "${CMAKE_CURRENT_BINARY_DIR}/Ruda-Regular.ttf" COPYONLY)
+configure_file("data/Ruda-Bold.ttf" "${CMAKE_CURRENT_BINARY_DIR}/Ruda-Bold.ttf" COPYONLY)
 
 # ------------
 # Set up tools
@@ -88,9 +90,11 @@ install(TARGETS ${NAME} DESTINATION bin)
 install(FILES ${SHADERS} DESTINATION bin)
 install(FILES $<TARGET_RUNTIME_DLLS:${NAME}> DESTINATION bin)
 install(FILES $<TARGET_RUNTIME_DLLS:imgui> DESTINATION bin)
+install(FILES "data/Ruda-Regular.ttf" DESTINATION bin)
+install(FILES "data/Ruda-Bold.ttf" DESTINATION bin)
 
 # Settings
-set(FULL_NAME "Tract Track 3D")
+set(FULL_NAME "Tract 3D")
 include(InstallRequiredSystemLibraries)
 set(CPACK_GENERATOR "NSIS")
 set(CPACK_PACKAGE_NAME ${FULL_NAME})
