@@ -13,7 +13,8 @@ void ImGuiWrapper::init() {
 //    (void) io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-    io.Fonts->AddFontFromFileTTF("Ruda-Regular.ttf", 15);
+    auto path = getPath();
+    io.Fonts->AddFontFromFileTTF((path + "Ruda-Regular.ttf").c_str(), 15);
 //    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 10);
 //    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 14);
 //    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 18);
@@ -116,8 +117,8 @@ void ImGuiWrapper::draw() {
                     dataset->init();
                 }
             }
-
-            if (ImGui::SliderInt("Number of tube sides", &settings.nrOfSides, 3, 8)) {
+            ImGui::Text("Number of tube sides");
+            if (ImGui::SliderInt(" ", &settings.nrOfSides, 3, 8)) {
                 for (auto& dataset : settings.datasets) {
                     dataset->init();
                 }
