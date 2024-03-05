@@ -101,6 +101,9 @@ void ImGuiWrapper::draw() {
 
         if (ImGui::CollapsingHeader("Rendering options"))
         {
+
+            ImGui::Text("Graphic options:");
+
             if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
                 settings.MSAA ? glEnable(GL_MULTISAMPLE) : glDisable(GL_MULTISAMPLE);
             }
@@ -109,22 +112,25 @@ void ImGuiWrapper::draw() {
             }
 
             if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
-                for (auto& dataset : settigs:datasets) { 
+                for (auto& dataset : settings.datasets) {
                     dataset->init();
                 }
             }
-          
+
             if (ImGui::SliderInt("Number of tube sides", &settings.nrOfSides, 3, 8)) {
-                for (auto& dataset : settigs:datasets) { 
+                for (auto& dataset : settings.datasets) {
                     dataset->init();
                 }
             };
 
-            for (auto &dataset: settings.datasets) {
-                ImGui::SliderInt("Tract Count", &dataset->showTractCount, 0, dataset->tractCount);
-            }
-
             ImGui::ColorEdit3("Background color", (float*) &settings.clear_color); // Edit 3 floats representing a color
+
+            ImGui::Text("Tract Counts:");
+
+            for (auto &dataset: settings.datasets) {
+                std::string name = dataset->name;
+                ImGui::SliderInt(name.c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+            }
 
         }
 
@@ -164,10 +170,12 @@ void ImGuiWrapper::draw() {
                 settings.datasets.push_back(td);
             }
 
+            ImGui::Text("Datasets:");
+
             for (auto &dataset: settings.datasets) {
                 ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
             }
-        }   
+        }
 
         if (ImGui::CollapsingHeader("Development options"))
         {
@@ -179,7 +187,6 @@ void ImGuiWrapper::draw() {
             }
             ImGui::Checkbox("Demo Window",
                             &settings.show_demo_window);      // Edit bools storing our window open/close state
-
         }
 
         ImGuiIO& io = ImGui::GetIO();
