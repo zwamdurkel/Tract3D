@@ -22,6 +22,8 @@ private:
     void constructTubes(int sides);
 
 public:
+    std::string name;
+    bool enabled;
     std::vector<Tract> data;
     // tractEndIndex[i] stores the index of the last vertex of the i'th tract in tractIndices
     std::vector<int> tractEndIndex;
@@ -35,7 +37,7 @@ public:
     std::vector<glm::vec3> vertices;
     std::vector<uint32_t> indices;
 
-    explicit TractDataWrapper(const char* filePath);
+    explicit TractDataWrapper(const char* filePath, std::string n);
 
     TractDataWrapper() = default;
 
