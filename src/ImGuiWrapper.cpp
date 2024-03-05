@@ -54,13 +54,12 @@ void ImGuiWrapper::draw() {
             glfwSwapInterval((int) settings.vsync);
         }
         if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
-            auto path = getPath();
-            if (settings.drawTubes) {
-                settings.shader = Shader(path + "tubes.vsh", path + "tubes.fsh", path + "tubes.geom");
-            } else {
-                settings.shader = Shader(path + "basic.vsh", path + "basic.fsh");
-            }
+            settings.datasets[0]->init();
         }
+
+        if (ImGui::SliderInt("Number of tube sides", &settings.nrOfSides, 3, 8)) {
+            settings.datasets[0]->init();
+        };
 
         ImGuiIO& io = ImGui::GetIO();
         ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
