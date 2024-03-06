@@ -90,6 +90,9 @@ void GLFWWrapper::init() {
         for (auto& dataset: settings.datasets) {
             dataset->draw();
         }
+        for (auto& dataset: settings.examples) {
+            dataset->draw();
+        }
         settings.imgui->draw();
 
         glfwSwapBuffers(window);

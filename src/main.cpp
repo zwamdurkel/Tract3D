@@ -2,6 +2,10 @@
 #define _WIN32_WINNT 0x0501 // enable AttachConsole command
 
 #include <windows.h>
+#include <string>
+#include <iostream>
+#include <filesystem>
+#include <algorithm>
 
 // Tell GPU drivers to use Dedicated GPU instead of iGPU (mostly for laptops)
 extern "C" {
@@ -68,10 +72,16 @@ void run() {
 
     GLFWwindow* window = glfw.getWindow();
 
+    namespace fs = std::filesystem;
     auto path = getPath();
-    auto td = std::make_shared<TractDataWrapper>((path + "whole_brain.tck").c_str(), "whole_brain.tck");
 
-    settings.datasets.push_back(td);
+    for (const auto& entry: fs::directory_iterator(path + "examples")) {
+        std::string filePath = entry.path().string();
+        std::replace(filePath.begin(), filePath.end(), '\\', '/');
+        auto td = std::make_shared<TractDataWrapper>(filePath.c_str(), entry.path().filename().string());
+        settings.examples.push_back(td);
+        //Info(filePath);
+    }
 
     // Import vertex and fragment shaders
     Shader& shader = settings.shader;
@@ -91,6 +101,11 @@ void run() {
 
         glfw.draw();
         for (auto& dataset: settings.datasets) {
+            if (dataset->enabled) {
+                dataset->draw();
+            }
+        }
+        for (auto& dataset: settings.examples) {
             if (dataset->enabled) {
                 dataset->draw();
             }

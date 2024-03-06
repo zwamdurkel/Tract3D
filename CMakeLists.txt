@@ -29,6 +29,13 @@ foreach (SHADER ${SHADERS})
 endforeach (SHADER)
 configure_file("data/Ruda-Regular.ttf" "${CMAKE_CURRENT_BINARY_DIR}/Ruda-Regular.ttf" COPYONLY)
 configure_file("data/Ruda-Bold.ttf" "${CMAKE_CURRENT_BINARY_DIR}/Ruda-Bold.ttf" COPYONLY)
+file(GLOB INPUTS
+        "data/tck files/*.tck"
+)
+foreach (INPUT ${INPUTS})
+    get_filename_component(INPUT_NAME ${INPUT} NAME)
+    configure_file(${INPUT} ${CMAKE_CURRENT_BINARY_DIR}/examples/${INPUT_NAME} COPYONLY)
+endforeach (INPUT)
 
 # ------------
 # Set up tools

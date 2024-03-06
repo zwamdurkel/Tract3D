@@ -117,11 +117,17 @@ void ImGuiWrapper::draw() {
                 for (auto& dataset: settings.datasets) {
                     dataset->init();
                 }
+                for (auto& dataset: settings.examples) {
+                    dataset->init();
+                }
             }
 
             if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
                 if (settings.drawTubes) {
                     for (auto& dataset: settings.datasets) {
+                        dataset->init();
+                    }
+                    for (auto& dataset: settings.examples) {
                         dataset->init();
                     }
                 }
@@ -132,10 +138,17 @@ void ImGuiWrapper::draw() {
             ImGui::SeparatorText("Tract Counts");
 
             for (auto& dataset: settings.datasets) {
-                std::string name = dataset->name;
-                ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+                if (dataset->enabled) {
+                    std::string name = dataset->name;
+                    ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+                }
             }
-
+            for (auto& dataset: settings.examples) {
+                if (dataset->enabled) {
+                    std::string name = dataset->name;
+                    ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+                }
+            }
         }
 
         if (ImGui::CollapsingHeader("Dataset options")) {
@@ -162,6 +175,12 @@ void ImGuiWrapper::draw() {
                             message = "Duplicate Rejected";
                         }
                     }
+                    for (auto& dataset: settings.examples) {
+                        if (dataset->name == name) {
+                            duplicate = false;
+                            message = "Example Duplicate";
+                        }
+                    }
                     if (duplicate) {
                         auto td = std::make_shared<TractDataWrapper>(outPath, name);
                         settings.datasets.push_back(td);
@@ -184,6 +203,25 @@ void ImGuiWrapper::draw() {
 
             for (auto& dataset: settings.datasets) {
                 ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
+            }
+
+            if (ImGui::TreeNode("Examples")) {
+                if (ImGui::Button("Enable All")) {
+                    for (auto& dataset: settings.examples) {
+                        dataset->enabled = true;
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Disable All")) {
+                    for (auto& dataset: settings.examples) {
+                        dataset->enabled = false;
+                    }
+                }
+
+                for (auto& dataset: settings.examples) {
+                    ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
+                }
+                ImGui::TreePop();
             }
         }
 
