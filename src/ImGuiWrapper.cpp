@@ -120,8 +120,10 @@ void ImGuiWrapper::draw() {
             }
 
             if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
-                for (auto& dataset: settings.datasets) {
-                    dataset->init();
+                if (settings.drawTubes) {
+                    for (auto& dataset: settings.datasets) {
+                        dataset->init();
+                    }
                 }
             };
 

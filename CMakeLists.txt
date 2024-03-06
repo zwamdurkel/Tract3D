@@ -65,17 +65,8 @@ file(GLOB IMGUI
         "external/imgui-1.90.3/backends/*.cpp"
         "external/imgui-1.90.3/misc/cpp/*.cpp"
 )
-add_library(imgui SHARED ${IMGUI})
-if (WIN32)
-    target_link_options(imgui PRIVATE -static -static-libgcc -static-libstdc++)
-    add_custom_command(TARGET imgui POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:imgui> $<TARGET_FILE_DIR:${NAME}>
-            COMMAND_EXPAND_LISTS
-    )
-endif (WIN32)
-target_include_directories(imgui PUBLIC external/imgui-1.90.3 external/imgui-1.90.3/backends)
-target_link_libraries(imgui PRIVATE glfw)
-target_link_libraries(${NAME} PRIVATE imgui)
+target_include_directories(${NAME} PUBLIC external/imgui-1.90.3 external/imgui-1.90.3/backends)
+target_sources(${NAME} PRIVATE ${IMGUI})
 
 # Native-File-Dialog
 add_subdirectory(external/nativefiledialog)
@@ -89,7 +80,6 @@ target_link_libraries(${NAME} PRIVATE nfd)
 install(TARGETS ${NAME} DESTINATION bin)
 install(FILES ${SHADERS} DESTINATION bin)
 install(FILES $<TARGET_RUNTIME_DLLS:${NAME}> DESTINATION bin)
-install(FILES $<TARGET_RUNTIME_DLLS:imgui> DESTINATION bin)
 install(FILES "data/Ruda-Regular.ttf" DESTINATION bin)
 install(FILES "data/Ruda-Bold.ttf" DESTINATION bin)
 

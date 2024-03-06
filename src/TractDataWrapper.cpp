@@ -130,16 +130,16 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
 
 // Construct "sides"-sided tubes for the current "data"
 void TractDataWrapper::constructTubes(int sides) {
-    int capIndices[sides];
-    capIndices[0] = 0;
+    std::vector<int> capIndices;
+    capIndices.push_back(0);
     int offset;
 
     // Pre-calculate cap indices.
     for (int i = 2; i <= sides; i++) {
         if (i % 2 == 0) {
-            capIndices[i - 1] = i / 2;
+            capIndices.push_back(i / 2);
         } else {
-            capIndices[i - 1] = sides - i / 2;
+            capIndices.push_back(sides - i / 2);
         }
     }
 
@@ -218,6 +218,7 @@ void TractDataWrapper::init() {
     tractEndIndex.clear();
     if (settings.drawTubes) {
         constructTubes(settings.nrOfSides);
+        Info("Constructed tubes with " << settings.nrOfSides << " sides.");
     } else {
         for (auto tract: data) {
             gradients.insert(gradients.end(), tract.gradient.begin(), tract.gradient.end());
@@ -227,6 +228,7 @@ void TractDataWrapper::init() {
             tractEndIndex.push_back(indices.size());
             indices.push_back(0xFFFFFFFF);
         }
+        Info("Constructed lines.");
     }
 
     // Bind Vertex Array Object
