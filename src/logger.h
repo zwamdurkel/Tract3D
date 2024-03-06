@@ -3,15 +3,25 @@
 #include <iostream>
 
 // Toggle logger here
-#define ENABLE_LOGGER true
+#define ENABLE_ERROR true
+#define ENABLE_INFO true
+#define ENABLE_DEBUG false
 
-#if ENABLE_LOGGER
+#if ENABLE_ERROR
 #define Error(msg) std::cerr << "[ERROR] " << msg << std::endl
+#else
+#define Error(msg)
+#endif
+
+#if ENABLE_INFO
 #define Info(msg) std::cout << "[INFO] " << msg << std::endl
-#define Debug(msg) std::cout << "[DEBUG] " << msg << std::endl
 #else
 #define Info(msg)
-#define Error(msg)
+#endif
+
+#if ENABLE_DEBUG
+#define Debug(msg) std::cout << "[DEBUG] " << msg << std::endl
+#else
 #define Debug(msg)
 #endif
 
