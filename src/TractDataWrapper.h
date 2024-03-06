@@ -24,6 +24,7 @@ private:
 public:
     std::string name;
     bool enabled;
+    float alpha;
     std::vector<Tract> data;
     // tractEndIndex[i] stores the index of the last vertex of the i'th tract in tractIndices
     std::vector<int> tractEndIndex;

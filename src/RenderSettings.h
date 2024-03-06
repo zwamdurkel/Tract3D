@@ -26,6 +26,10 @@ public:
     bool MSAA = true;
     bool vsync = true;
     bool drawTubes = false;
+    bool highlightEnabled = false;
+    std::string highlightedBundle = "none";
+    float highlightAlpha = 0.1f;
+    float generalAlpha = 1.0f;
     int nrOfSides = 3;
     // vector that determines how many tracts to show per file
     std::vector<int> show_tract_count = {1};

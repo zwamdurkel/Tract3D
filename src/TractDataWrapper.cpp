@@ -266,6 +266,7 @@ void TractDataWrapper::init() {
 
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
+    settings.shader.setFloat("alpha", alpha);
     if (settings.drawTubes) {
         glDrawElements(GL_TRIANGLE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
     } else {
@@ -282,6 +283,7 @@ TractDataWrapper::TractDataWrapper(const char* filePath, std::string n) {
     glGenBuffers(1, &VNO);
     name = n;
     enabled = true;
+    alpha = 1.0f;
     TractDataWrapper::init();
 }
 

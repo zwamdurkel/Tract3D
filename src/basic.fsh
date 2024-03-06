@@ -6,6 +6,7 @@ in vec4 modelPos;
 
 uniform vec3 uViewPos;
 uniform bool uDrawTubes;
+uniform float alpha;
 
 void main()
 {
@@ -32,9 +33,9 @@ void main()
         vec3 specular = specularStrength * spec * lightColor;
 
         vec3 result = (ambient + diffuse + specular) * fColor;
-        FragColor = vec4(result, 1.0);
+        FragColor = vec4(result, alpha);
     } else {
-        FragColor = vec4(fColor, 1.0);
+        FragColor = vec4(fColor, alpha);
     }
 
 }

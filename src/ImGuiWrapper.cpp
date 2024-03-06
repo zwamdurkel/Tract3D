@@ -121,9 +121,8 @@ void ImGuiWrapper::draw() {
                     dataset->init();
                 }
             }
-
-            if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
-                if (settings.drawTubes) {
+            if (settings.drawTubes) {
+                if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
                     for (auto& dataset: settings.datasets) {
                         dataset->init();
                     }
@@ -131,7 +130,94 @@ void ImGuiWrapper::draw() {
                         dataset->init();
                     }
                 }
-            };
+            }
+
+            if (ImGui::Checkbox("Enable Highlight", &settings.highlightEnabled)) {
+                for (auto& dataset: settings.datasets) {
+                    if (!settings.highlightEnabled) {
+                        dataset->alpha = settings.generalAlpha;
+                    }
+                }
+                for (auto& dataset: settings.examples) {
+                    if (!settings.highlightEnabled) {
+                        dataset->alpha = settings.generalAlpha;
+                    }
+                }
+            }
+            if (settings.highlightEnabled) {
+                if (ImGui::SliderFloat("Highlight Alpha", &settings.highlightAlpha, 0.0f, 1.0f, "%.2f")) {
+                    for (auto& data: settings.datasets) {
+                        if (data->name != settings.highlightedBundle) {
+                            data->alpha = settings.highlightAlpha;
+                        }
+                    }
+                    for (auto& data: settings.examples) {
+                        if (data->name != settings.highlightedBundle) {
+                            data->alpha = settings.highlightAlpha;
+                        }
+                    }
+                }
+
+
+                if (ImGui::BeginCombo("Highlighted Bundle", settings.highlightedBundle.c_str())) {
+                    for (auto& dataset: settings.datasets) {
+                        if (dataset->enabled) {
+                            ImGui::PushID(&dataset);
+                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.highlightedBundle)) {
+                                settings.highlightedBundle = dataset->name;
+                                for (auto& data: settings.datasets) {
+                                    if (data->name != settings.highlightedBundle) {
+                                        data->alpha = settings.highlightAlpha;
+                                    } else {
+                                        data->alpha = settings.generalAlpha;
+                                    }
+                                }
+                                for (auto& data: settings.examples) {
+                                    if (data->name != settings.highlightedBundle) {
+                                        data->alpha = settings.highlightAlpha;
+                                    } else {
+                                        data->alpha = settings.generalAlpha;
+                                    }
+                                }
+                            }
+                            ImGui::PopID();
+                        }
+                    }
+                    for (auto& dataset: settings.examples) {
+                        if (dataset->enabled) {
+                            ImGui::PushID(&dataset);
+                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.highlightedBundle)) {
+                                settings.highlightedBundle = dataset->name;
+                                for (auto& data: settings.datasets) {
+                                    if (data->name != settings.highlightedBundle) {
+                                        data->alpha = settings.highlightAlpha;
+                                    } else {
+                                        data->alpha = settings.generalAlpha;
+                                    }
+                                }
+                                for (auto& data: settings.examples) {
+                                    if (data->name != settings.highlightedBundle) {
+                                        data->alpha = settings.highlightAlpha;
+                                    } else {
+                                        data->alpha = settings.generalAlpha;
+                                    }
+                                }
+                            }
+                            ImGui::PopID();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+            }
+
+//            if (ImGui::SliderFloat("Alpha", &settings.generalAlpha, 0.0f, 1.0f, "%.2f")) {
+//                for (auto& dataset: settings.datasets) {
+//                    dataset->alpha = settings.generalAlpha;
+//                }
+//                for (auto& dataset: settings.examples) {
+//                    dataset->alpha = settings.generalAlpha;
+//                }
+//            }
 
             ImGui::ColorEdit3("Background color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
