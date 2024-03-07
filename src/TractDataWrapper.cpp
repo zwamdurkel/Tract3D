@@ -33,6 +33,7 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
 
     std::vector<std::string> line;
     int count = -1;
+    int byteOffset = 0;
     // read key value pairs until END keyword
     do {
         line = readline(file);
@@ -48,6 +49,9 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
                 return false;
             }
         }
+        if (line[0] == "file:") {
+            byteOffset = std::stoi(line[2]);
+        }
         //check datatype
         if (line[0] == "datatype:" && line[1] != "Float32LE") {
             Error("Unsupported datatype " << line[1]
@@ -56,6 +60,8 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
         }
 
     } while (line[0] != "END");
+    // set filestream to required offset
+    file.seekg(byteOffset);
 
     // rest of file should be binary data
     // tracts separated by (NaN,NaN,NaN)
