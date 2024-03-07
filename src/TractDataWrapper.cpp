@@ -6,7 +6,7 @@
 #include <vector>
 #include <cmath>
 #include "logger.h"
-#include "path.h"
+#include <chrono>
 
 std::vector<std::string> TractDataWrapper::readline(std::ifstream& file) {
     std::string input;
@@ -37,7 +37,7 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
     do {
         line = readline(file);
         for (const std::string& i: line)
-            Debug("reading: " << i << " ");
+                Debug("reading: " << i << " ");
 
         //find number of tracts
         if (line[0] == "count:") {
@@ -131,15 +131,15 @@ bool TractDataWrapper::parse(const char* filePath, bool tractStop) {
 // Construct "sides"-sided tubes for the current "data"
 void TractDataWrapper::constructTubes(int sides) {
     std::vector<int> capIndices;
-    capIndices.push_back(0);
+    capIndices.emplace_back(0);
     int offset;
 
     // Pre-calculate cap indices.
     for (int i = 2; i <= sides; i++) {
         if (i % 2 == 0) {
-            capIndices.push_back(i / 2);
+            capIndices.emplace_back(i / 2);
         } else {
-            capIndices.push_back(sides - i / 2);
+            capIndices.emplace_back(sides - i / 2);
         }
     }
 
@@ -148,61 +148,81 @@ void TractDataWrapper::constructTubes(int sides) {
         offset = vertices.size();
 
         // ---------
-        // begin cap
+        // Begin cap
         // ---------
         for (int ci: capIndices) {
-            indices.push_back((sides - ci) % sides + offset);
+            indices.emplace_back((sides - ci) % sides + offset);
         }
 
-        indices.push_back(0xFFFFFFFF);
+        indices.emplace_back(0xFFFFFFFF);
 
         // -------------
-        // tube segments
+        // Tube segments
         // -------------
         makeContour(sides, t, 0);
 
         for (int i = 1; i < t.vertices.size(); i++) {
             offset = vertices.size();
-            makeContour(sides, t, i);
-            indices.push_back(offset - sides);
-            indices.push_back(offset);
+            projectContour(sides, t, i);
+            indices.emplace_back(offset - sides);
+            indices.emplace_back(offset);
 
             for (int j = 1; j <= sides; j++) {
-                indices.push_back(offset - j);
-                indices.push_back(offset + sides - j);
+                indices.emplace_back(offset - j);
+                indices.emplace_back(offset + sides - j);
             }
 
-            indices.push_back(0xFFFFFFFF);
+            indices.emplace_back(0xFFFFFFFF);
         }
 
         // -------
-        // end cap
+        // End cap
         // -------
         offset = vertices.size() - sides;
 
         for (int ci: capIndices) {
-            indices.push_back(ci + offset);
+            indices.emplace_back(ci + offset);
         }
 
-        tractEndIndex.push_back(indices.size());
-        indices.push_back(0xFFFFFFFF);
+        tractEndIndex.emplace_back(indices.size());
+        indices.emplace_back(0xFFFFFFFF);
     }
 }
 
 // Make a "sides"-sided polygon around vertex "i" in Tract "t" around the gradient.
 void TractDataWrapper::makeContour(int sides, Tract& t, int i) {
-    const float diameter = 0.1f;
-    glm::mat4 rot = glm::rotate(glm::mat4(1), glm::radians(360.0f / (float) sides), t.gradient[i]);
-    auto v = glm::normalize(glm::cross(t.gradient[i], glm::vec3(0, 1, 0))) * diameter;
-    vertices.push_back(v + t.vertices[i]);
-    gradients.push_back(t.gradient[i]);
+    auto& r = t.gradient[i];
+    // Vector perpendicular to the line segment
+    auto v = glm::normalize(glm::cross(r, glm::vec3(0, 1, 0))) * diameter;
     normals.push_back(v);
+    vertices.emplace_back(v + t.vertices[i]);
+    gradients.push_back(r);
 
+    // Rodrigues' Rotation Formula: new v := rotate old v around r
     for (int j = 1; j < sides; j++) {
-        v = rot * glm::vec4(normals.back(), 0);
-        vertices.push_back(v + t.vertices[i]);
-        gradients.push_back(t.gradient[i]);
+        v = (1 - fixedCos[sides]) * glm::dot(v, r) * r
+            + fixedCos[sides] * v
+            + fixedSin[sides] * cross(r, v);
         normals.push_back(v);
+        vertices.emplace_back(v + t.vertices[i]);
+        gradients.push_back(r);
+    }
+}
+
+// Project previous "sides"-sided polygon to the plane from vertex and gradient "i" in Tract "t"
+void TractDataWrapper::projectContour(int sides, Tract& t, int i) {
+    auto& n = t.gradient[i]; // Plane normal
+    auto& p0 = t.vertices[i]; // Point on plane
+    auto l = glm::normalize(t.vertices[i] - t.vertices[i - 1]); // Line direction
+
+    // Project all vertices of the previous contour onto the plane
+    for (int s = 0; s < sides; s++) {
+        auto& l0 = vertices[vertices.size() - sides]; // Line starting point
+        auto d = glm::dot(p0 - l0, n) / glm::dot(l, n); // Distance from point to plane along line
+        auto p = l0 + l * d; // Intersection point of line and plane
+        normals.emplace_back(p - t.vertices[i]);
+        vertices.push_back(p);
+        gradients.push_back(n);
     }
 }
 
@@ -217,9 +237,13 @@ void TractDataWrapper::init() {
     indices.clear();
     tractEndIndex.clear();
     if (settings.drawTubes) {
+        auto start = std::chrono::high_resolution_clock::now();
         constructTubes(settings.nrOfSides);
-        Info("Constructed tubes with " << settings.nrOfSides << " sides.");
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+        Debug("Constructed tubes with " << settings.nrOfSides << " sides in " << duration);
     } else {
+        auto start = std::chrono::high_resolution_clock::now();
         for (auto tract: data) {
             gradients.insert(gradients.end(), tract.gradient.begin(), tract.gradient.end());
             vertices.insert(vertices.end(), tract.vertices.begin(), tract.vertices.end());
@@ -228,7 +252,9 @@ void TractDataWrapper::init() {
             tractEndIndex.push_back(indices.size());
             indices.push_back(0xFFFFFFFF);
         }
-        Info("Constructed lines.");
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+        Debug("Constructed lines in " << duration);
     }
 
     // Bind Vertex Array Object

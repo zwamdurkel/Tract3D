@@ -1,5 +1,6 @@
 #pragma once
 
+#include <utility>
 #include <vector>
 #include <string>
 #include <fstream>
@@ -19,12 +20,20 @@ private:
 
     void makeContour(int sides, Tract& t, int i);
 
+    void projectContour(int sides, Tract& t, int i);
+
     void constructTubes(int sides);
+
+    constexpr static float fixedSin[9] = {0.0f, 0.0f, 0.0f, 0.86602540378f, 1.0f, 0.95105651629f, 0.86602540378f,
+                                          0.78183148246f, 0.70710678118f};
+    constexpr static float fixedCos[9] = {0.0f, 0.0f, 0.0f, -0.5f, 0.0f, 0.30901699437f, 0.5f, 0.62348980185f,
+                                          0.70710678118f};
 
 public:
     std::string name;
-    bool enabled;
-    float alpha;
+    bool enabled = true;
+    float alpha = 1.0f;
+    float diameter = 0.1f;
     std::vector<Tract> data;
     // tractEndIndex[i] stores the index of the last vertex of the i'th tract in tractIndices
     std::vector<int> tractEndIndex;
