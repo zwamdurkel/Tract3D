@@ -2,7 +2,6 @@
 #include "logger.h"
 #include "TractDataWrapper.h"
 #include "path.h"
-#include "nativefiledialog/src/include/nfd.h"
 #include "nativefiledialog/src/include/nfd.hpp"
 #include "RenderSettings.h"
 
@@ -39,7 +38,7 @@ void ImGuiWrapper::init() {
     style->Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
     style->Colors[ImGuiCol_ChildBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
     style->Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
-    style->Colors[ImGuiCol_Border] = ImVec4(0.80f, 0.80f, 0.83f, 0.88f);
+    style->Colors[ImGuiCol_Border] = ImVec4(0.52f, 0.50f, 0.55f, 0.88f);
     style->Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
     style->Colors[ImGuiCol_FrameBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
     style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
@@ -59,7 +58,7 @@ void ImGuiWrapper::init() {
     style->Colors[ImGuiCol_Button] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
     style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
     style->Colors[ImGuiCol_ButtonActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-    style->Colors[ImGuiCol_Header] = ImVec4(0.40f, 0.38f, 0.42f, 1.00f);
+    style->Colors[ImGuiCol_Header] = ImVec4(0.32f, 0.30f, 0.34f, 1.00f);
     style->Colors[ImGuiCol_HeaderHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_HeaderActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
     style->Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
@@ -94,13 +93,9 @@ void ImGuiWrapper::draw() {
         ImGui::ShowDemoWindow(&settings.show_demo_window);
 
     {
-        //static int counter = 0;
-        ImGui::Begin(
-                "Tract 3D", nullptr,
-                window_flags);                          // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Tract 3D", nullptr, window_flags);
 
-        ImGui::Text(
-                "Alpha version 1.0.0");               // Display some text (you can use a format strings too)
+        ImGui::Text("Version 1.0.0");
 
         if (ImGui::CollapsingHeader("Rendering options")) {
 
@@ -221,7 +216,7 @@ void ImGuiWrapper::draw() {
 
             ImGui::ColorEdit3("Background color", (float*) &settings.clear_color); // Edit 3 floats representing a color
 
-            ImGui::SeparatorText("Tract Counts");
+            ImGui::SeparatorText("Tract Count");
 
             for (auto& dataset: settings.datasets) {
                 if (dataset->enabled) {
@@ -229,57 +224,57 @@ void ImGuiWrapper::draw() {
                     ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
                 }
             }
-            for (auto& dataset: settings.examples) {
-                if (dataset->enabled) {
-                    std::string name = dataset->name;
-                    ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+
+            if (ImGui::TreeNode("Examples Tract Count")) {
+                for (auto& dataset: settings.examples) {
+                    if (dataset->enabled) {
+                        std::string name = dataset->name;
+                        ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+                    }
                 }
+
+                ImGui::TreePop();
             }
         }
 
         if (ImGui::CollapsingHeader("Dataset options")) {
+            static std::string message = "Select Dataset";
             if (ImGui::Button("Browse")) {
-                NFD_Init();
-                nfdchar_t* outPath;
+                NFD::Init();
+                char* outPath;
                 nfdfilteritem_t filterItem[1] = {{"MRI files", "tck"}};
-                nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+                nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1, nullptr);
                 if (result == NFD_OKAY) {
-                    Info("Success!");
-                    Info(outPath);
-                    NFD_FreePath(outPath);
-                    std::stringstream test(outPath);
-                    std::string segment;
-                    std::vector<std::string> seglist;
-                    while (std::getline(test, segment, '\\')) {
-                        seglist.push_back(segment);
-                    }
-                    std::string name = seglist[seglist.size() - 1];
-                    bool duplicate = true;
+                    Info("Selected file: " << outPath);
+                    NFD::FreePath(outPath);
+                    auto name = std::string(outPath);
+                    name.erase(0, name.find_last_of('\\') + 1);
+                    bool duplicate = false;
                     for (auto& dataset: settings.datasets) {
                         if (dataset->name == name) {
-                            duplicate = false;
+                            duplicate = true;
                             message = "Duplicate Rejected";
                         }
                     }
                     for (auto& dataset: settings.examples) {
                         if (dataset->name == name) {
-                            duplicate = false;
+                            duplicate = true;
                             message = "Example Duplicate";
                         }
                     }
-                    if (duplicate) {
-                        auto td = std::make_shared<TractDataWrapper>(outPath, name);
-                        settings.datasets.push_back(td);
+                    if (!duplicate) {
+                        auto td = std::make_unique<TractDataWrapper>(name, outPath);
+                        settings.datasets.push_back(std::move(td));
                         message = "Successfully Added";
                     }
                 } else if (result == NFD_CANCEL) {
                     Info("User pressed cancel.");
                     message = "User Cancelled";
                 } else {
-                    Info("Error: %s\n" << NFD_GetError());
+                    Info("Error: %s\n" << NFD::GetError());
                     message = "Select Dataset";
                 }
-                NFD_Quit();
+                NFD::Quit();
 
             }
             ImGui::SameLine();
