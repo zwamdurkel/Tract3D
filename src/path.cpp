@@ -1,7 +1,10 @@
 #include "path.h"
 #include <cstdio>
 #include <algorithm>
+
+#ifdef __unix__
 #include <unistd.h>
+#endif
 
 #ifdef _WIN32
 
