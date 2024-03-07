@@ -89,6 +89,7 @@ install(FILES ${SHADERS} DESTINATION bin)
 install(FILES $<TARGET_RUNTIME_DLLS:${NAME}> DESTINATION bin)
 install(FILES "data/Ruda-Regular.ttf" DESTINATION bin)
 install(FILES "data/Ruda-Bold.ttf" DESTINATION bin)
+install(FILES ${INPUTS} DESTINATION bin/examples)
 
 # Settings
 set(FULL_NAME "Tract 3D")
