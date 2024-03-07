@@ -2,10 +2,6 @@
 #define _WIN32_WINNT 0x0501 // enable AttachConsole command
 
 #include <windows.h>
-#include <string>
-#include <iostream>
-#include <filesystem>
-#include <algorithm>
 
 // Tell GPU drivers to use Dedicated GPU instead of iGPU (mostly for laptops)
 extern "C" {
@@ -16,6 +12,10 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 
 #include <glad/glad.h> // this is important
 #include <GLFW/glfw3.h>
+#include <string>
+#include <iostream>
+#include <algorithm>
+#include <filesystem>
 #include "logger.h"
 #include "path.h"
 #include "GLFWWrapper.h"
