@@ -83,6 +83,7 @@ void run() {
 
     // Import vertex and fragment shaders
     Shader& shader = settings.shader;
+    //shader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
     shader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
 
     Info("Starting render");
