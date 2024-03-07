@@ -38,7 +38,9 @@ public:
     std::vector<glm::vec3> vertices;
     std::vector<uint32_t> indices;
 
-    explicit TractDataWrapper(const char* filePath, std::string n);
+    explicit TractDataWrapper(std::string name) : name(std::move(name)) {};
+
+    TractDataWrapper(std::string name, const char* filePath);
 
     TractDataWrapper() = default;
 

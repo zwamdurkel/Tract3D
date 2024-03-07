@@ -14,7 +14,6 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 #endif
 
-#include <iostream>
 #include <glad/glad.h> // this is important
 #include <GLFW/glfw3.h>
 #include "logger.h"
@@ -78,9 +77,8 @@ void run() {
     for (const auto& entry: fs::directory_iterator(path + "examples")) {
         std::string filePath = entry.path().string();
         std::replace(filePath.begin(), filePath.end(), '\\', '/');
-        auto td = std::make_shared<TractDataWrapper>(filePath.c_str(), entry.path().filename().string());
-        settings.examples.push_back(td);
-        //Info(filePath);
+        auto td = std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath.c_str());
+        settings.examples.push_back(std::move(td));
     }
 
     // Import vertex and fragment shaders

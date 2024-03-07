@@ -19,8 +19,8 @@ class RenderSettings {
 public:
     GLFWWrapper* glfw = nullptr;
     ImGuiWrapper* imgui = nullptr;
-    std::vector<std::shared_ptr<TractDataWrapper>> datasets;
-    std::vector<std::shared_ptr<TractDataWrapper>> examples;
+    std::vector<std::unique_ptr<TractDataWrapper>> datasets;
+    std::vector<std::unique_ptr<TractDataWrapper>> examples;
     bool show_demo_window = false;
     bool show_another_window = false;
     bool MSAA = true;

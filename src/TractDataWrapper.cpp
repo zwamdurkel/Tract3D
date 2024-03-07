@@ -274,16 +274,13 @@ void TractDataWrapper::draw() {
     }
 }
 
-TractDataWrapper::TractDataWrapper(const char* filePath, std::string n) {
+TractDataWrapper::TractDataWrapper(std::string name, const char* filePath) : TractDataWrapper(std::move(name)) {
     parse(filePath, true);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &GVO);
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &VNO);
-    name = n;
-    enabled = true;
-    alpha = 1.0f;
     TractDataWrapper::init();
 }
 
