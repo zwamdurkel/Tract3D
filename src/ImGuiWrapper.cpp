@@ -108,6 +108,10 @@ void ImGuiWrapper::draw() {
                 glfwSwapInterval((int) settings.vsync);
             }
 
+            if (ImGui::Button("clear")) {
+                settings.datasets.clear();
+            }
+
             if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
                 for (auto& dataset: settings.datasets) {
                     dataset->init();

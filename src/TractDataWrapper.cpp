@@ -247,7 +247,7 @@ void TractDataWrapper::init() {
         constructTubes(settings.nrOfSides);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-        Debug("Constructed tubes with " << settings.nrOfSides << " sides in " << duration);
+        Info("Constructed tubes with " << settings.nrOfSides << " sides in " << duration);
     } else {
         auto start = std::chrono::high_resolution_clock::now();
         for (auto tract: data) {
@@ -314,5 +314,13 @@ TractDataWrapper::TractDataWrapper(std::string name, const char* filePath) : Tra
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &VNO);
     TractDataWrapper::init();
+}
+
+TractDataWrapper::~TractDataWrapper() {
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &GVO);
+    glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &VNO);
 }
 

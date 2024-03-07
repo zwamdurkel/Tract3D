@@ -53,6 +53,8 @@ public:
 
     TractDataWrapper() = default;
 
+    ~TractDataWrapper();
+
     bool parse(const char* filePath, bool tractStop);
 
     void cleanup() override {}
