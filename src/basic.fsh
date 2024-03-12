@@ -7,12 +7,13 @@ in vec4 modelPos;
 uniform vec3 uViewPos;
 uniform bool uDrawTubes;
 uniform float alpha;
+uniform vec3 lightDir;
 
 void main()
 {
     if (uDrawTubes) {
         vec3 lightColor = vec3(1, 1, 1);
-        vec3 lightPos = vec3(0.33333333, 0.66666666, 0.66666666);
+        //        vec3 lightDir = vec3(0.33333333, 0.66666666, 0.66666666);
 
         // ambient
         float ambientStrength = 0.0;
@@ -20,7 +21,7 @@ void main()
 
         // diffuse
         vec3 norm = normalize(normal);
-        vec3 lightDir = normalize(lightPos - modelPos.xyz);
+        //vec3 lightDir = normalize(lightPos - modelPos.xyz);
         float diff = max(dot(norm, lightDir), 0.5);
         vec3 diffuse = diff * lightColor;
 

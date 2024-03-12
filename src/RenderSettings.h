@@ -25,6 +25,7 @@ public:
     bool show_another_window = false;
     bool MSAA = true;
     bool vsync = true;
+    bool shadedLines = false;
     bool drawTubes = false;
     bool highlightEnabled = false;
     std::string highlightedBundle = "none";
@@ -38,6 +39,8 @@ public:
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     Camera camera = Camera(glm::vec3(0.0f, -25.0f, 100.0f));
     Shader shader;
+    Shader defaultShader;
+    Shader lineShadingShader;
 
     // Singleton logic
     static RenderSettings& getInstance() {

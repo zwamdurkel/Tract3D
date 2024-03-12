@@ -82,15 +82,28 @@ void run() {
     }
 
     // Import vertex and fragment shaders
+
+    Shader& defaultShader = settings.defaultShader;
+    defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
+    Shader& lineShadingShader = settings.lineShadingShader;
+    lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
     Shader& shader = settings.shader;
-    //shader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
-    shader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
+    shader = defaultShader;//draw only lines
+
 
     Info("Starting render");
+
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
         shader.use();
+
+        glm::vec4 lightPos = glm::normalize(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
+        glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * glfwGetTime())),
+                                              glm::vec3(0.0f, 1.0f, 0.0f));
+        lightPos = lightRotation * lightPos;
+        shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
+
         glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         shader.setMat4("uModelMatrix", modelMatrix);
         shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());

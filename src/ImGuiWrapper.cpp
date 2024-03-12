@@ -112,6 +112,11 @@ void ImGuiWrapper::draw() {
                 settings.datasets.clear();
             }
 
+            if (ImGui::Checkbox("Line Shading", &settings.shadedLines)) {
+                if (settings.shadedLines) { settings.shader = settings.lineShadingShader; }
+                else { settings.shader = settings.defaultShader; }
+            }
+
             if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
                 for (auto& dataset: settings.datasets) {
                     dataset->init();
