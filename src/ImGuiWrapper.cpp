@@ -1,9 +1,11 @@
+#include <algorithm>
 #include "ImGuiWrapper.h"
 #include "logger.h"
 #include "TractDataWrapper.h"
 #include "path.h"
 #include "nativefiledialog/src/include/nfd.hpp"
 #include "RenderSettings.h"
+#include "GLFWWrapper.h"
 
 void ImGuiWrapper::init() {
     settings.imgui = this;
@@ -97,9 +99,12 @@ void ImGuiWrapper::draw() {
 
         ImGui::Text("Version 1.0.0");
 
-        if (ImGui::CollapsingHeader("Rendering options")) {
+        if (ImGui::CollapsingHeader("Rendering Options")) {
 
-            ImGui::SeparatorText("Graphic options");
+            ImGui::SeparatorText("General Options");
+
+            ImVec2 avail_size = ImGui::GetContentRegionAvail();
+            ImGui::ColorEdit3("Background Color", (float*) &settings.clear_color, ImGuiColorEditFlags_NoInputs);
 
             if (ImGui::Checkbox("Anti Aliasing", &settings.MSAA)) {
                 settings.MSAA ? glEnable(GL_MULTISAMPLE) : glDisable(GL_MULTISAMPLE);
@@ -111,6 +116,8 @@ void ImGuiWrapper::draw() {
             if (ImGui::Checkbox("Full Screen", &settings.fullScreen)) {
                 settings.glfw->setFullScreen(settings.fullScreen);
             }
+
+            ImGui::SeparatorText("Tract Options");
 
             if (ImGui::Checkbox("Line Shading", &settings.shadedLines)) {
                 if (settings.shadedLines) { settings.shader = settings.lineShadingShader; }
@@ -223,8 +230,6 @@ void ImGuiWrapper::draw() {
 //                }
 //            }
 
-            ImGui::ColorEdit3("Background color", (float*) &settings.clear_color); // Edit 3 floats representing a color
-
             ImGui::SeparatorText("Tract Count");
 
             for (auto& dataset: settings.datasets) {
@@ -291,8 +296,14 @@ void ImGuiWrapper::draw() {
 
             ImGui::SeparatorText("Datasets");
 
-            for (auto& dataset: settings.datasets) {
-                ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled);
+            for (auto it = settings.datasets.begin(); it != settings.datasets.end();) {
+                ImGui::Checkbox((*it)->name.c_str(), &(*it)->enabled);
+                ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - 60);
+                if (ImGui::Button("Remove")) {
+                    it = settings.datasets.erase(it);
+                } else {
+                    ++it;
+                }
             }
 
             if (ImGui::TreeNode("Examples")) {
@@ -315,23 +326,23 @@ void ImGuiWrapper::draw() {
             }
         }
 
-        if (ImGui::CollapsingHeader("Camera options")) {
+        if (ImGui::CollapsingHeader("Camera Options")) {
             ImGui::SliderFloat("FOV", &settings.camera.FOV, 30.0f, 150.0f, "%.0f");
             ImGui::SliderFloat("Speed", &settings.camera.MovementSpeed, 1.0f, 100.0f, "%.0f");
             ImGui::SliderFloat("Draw Distance", &settings.camera.FarPlane, 1.0f, 500.0f, "%.0f");
         }
 
-        if (ImGui::CollapsingHeader("Development options")) {
+        if (ImGui::CollapsingHeader("Development Options")) {
             ImGui::TableNextColumn();
-            ImGui::Checkbox("No move", &no_move);
+            ImGui::Checkbox("No Move", &no_move);
             ImGui::TableNextColumn();
-            ImGui::Checkbox("No resize", &no_resize);
+            ImGui::Checkbox("No Resize", &no_resize);
 //            ImGui::Checkbox("Demo Window",
 //                            &settings.show_demo_window);      // Edit bools storing our window open/close state
         }
 
         ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("Application framerate %.1f FPS", io.Framerate);
+        ImGui::Text("Application Framerate %.1f FPS", io.Framerate);
         ImGui::End();
     }
 
