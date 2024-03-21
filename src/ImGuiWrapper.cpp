@@ -108,8 +108,8 @@ void ImGuiWrapper::draw() {
                 glfwSwapInterval((int) settings.vsync);
             }
 
-            if (ImGui::Button("clear")) {
-                settings.datasets.clear();
+            if (ImGui::Checkbox("Full Screen", &settings.fullScreen)) {
+                settings.glfw->setFullScreen(settings.fullScreen);
             }
 
             if (ImGui::Checkbox("Line Shading", &settings.shadedLines)) {

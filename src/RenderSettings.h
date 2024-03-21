@@ -25,6 +25,7 @@ public:
     bool show_another_window = false;
     bool MSAA = true;
     bool vsync = true;
+    bool fullScreen = false;
     bool shadedLines = false;
     bool drawTubes = false;
     bool highlightEnabled = false;

@@ -11,6 +11,8 @@ public:
         return window;
     }
 
+    void setFullScreen(bool enabled);
+
     void init() override;
 
     void draw() override;
