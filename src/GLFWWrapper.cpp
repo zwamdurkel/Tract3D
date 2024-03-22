@@ -1,8 +1,6 @@
 #include "GLFWWrapper.h"
-#include "path.h"
 #include "logger.h"
-#include "ImGuiWrapper.h"
-#include "TractDataWrapper.h"
+#include "RenderSettings.h"
 
 const unsigned int INITIAL_WIDTH = 800;
 const unsigned int INITIAL_HEIGHT = 600;

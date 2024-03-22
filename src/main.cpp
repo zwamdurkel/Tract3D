@@ -23,6 +23,7 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #include "TractDataWrapper.h"
 #include "learnopengl/camera.h"
 #include "learnopengl/shader_s.h"
+#include "RenderSettings.h"
 
 void run();
 
