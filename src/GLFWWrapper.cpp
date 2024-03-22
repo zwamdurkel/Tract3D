@@ -98,6 +98,14 @@ void GLFWWrapper::init() {
         glfwSwapBuffers(window);
     });
 
+    glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+        RenderSettings& settings = RenderSettings::getInstance();
+        if (key == GLFW_KEY_F11 && action == GLFW_PRESS) {
+            settings.fullScreen = !settings.fullScreen;
+            settings.glfw->setFullScreen(settings.fullScreen);
+        }
+    });
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glEnable(GL_MULTISAMPLE);
@@ -117,4 +125,20 @@ void GLFWWrapper::draw() {
 
 void GLFWWrapper::cleanup() {
     glfwTerminate();
+}
+
+void GLFWWrapper::setFullScreen(bool enabled) {
+    static int xpos, ypos, width, height;
+
+    if (enabled) {
+        glfwGetWindowPos(window, &xpos, &ypos);
+        glfwGetWindowSize(window, &width, &height);
+
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+    } else {
+        glfwSetWindowMonitor(window, NULL, xpos, ypos, width, height, 0);
+    }
 }

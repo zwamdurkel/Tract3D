@@ -247,7 +247,7 @@ void TractDataWrapper::init() {
         constructTubes(settings.nrOfSides);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-        Info("Constructed tubes with " << settings.nrOfSides << " sides in " << duration.count() << "ms");
+        Debug("Constructed tubes with " << settings.nrOfSides << " sides in " << duration.count() << "ms");
     } else {
         auto start = std::chrono::high_resolution_clock::now();
         for (auto tract: data) {
