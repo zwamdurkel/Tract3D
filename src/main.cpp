@@ -3,7 +3,6 @@
 
 #include <windows.h>
 
-#define EXAMPLE true
 // Tell GPU drivers to use Dedicated GPU instead of iGPU (mostly for laptops)
 extern "C" {
 __declspec(dllexport) DWORD NvOptimusEnablement = 1;
@@ -24,7 +23,7 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #include "TractDataWrapper.h"
 #include "learnopengl/camera.h"
 #include "learnopengl/shader_s.h"
-#include "RayTracer.h"
+#include "RenderSettings.h"
 
 void run();
 
@@ -75,28 +74,24 @@ void run() {
 
     namespace fs = std::filesystem;
     auto path = getPath();
-#if EXAMPLE
+
     for (const auto& entry: fs::directory_iterator(path + "examples")) {
         std::string filePath = entry.path().string();
         std::replace(filePath.begin(), filePath.end(), '\\', '/');
         auto td = std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath.c_str());
         settings.examples.push_back(std::move(td));
     }
-#endif
+
     // Import vertex and fragment shaders
 
     Shader& defaultShader = settings.defaultShader;
     defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
     Shader& lineShadingShader = settings.lineShadingShader;
     lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
-    Shader& raytracingShader = settings.rayTracingShader;
-    raytracingShader = Shader(path + "RayTrace.vsh", path + "RayTrace.fsh");
-
     Shader& shader = settings.shader;
     shader = defaultShader;//draw only lines
 
-    RayTracer rt;
-    rt.init();
+
     Info("Starting render");
 
     while (!glfwWindowShouldClose(window)) {
@@ -118,21 +113,15 @@ void run() {
         shader.setBool("uDrawTubes", settings.drawTubes);
 
         glfw.draw();
-        if (!settings.superEpicRaytracingEnabled) {
-            for (auto& dataset: settings.datasets) {
-                if (dataset->enabled) {
-                    dataset->draw();
-                }
+        for (auto& dataset: settings.datasets) {
+            if (dataset->enabled) {
+                dataset->draw();
             }
-            for (auto& dataset: settings.examples) {
-                if (dataset->enabled) {
-                    dataset->draw();
-                }
+        }
+        for (auto& dataset: settings.examples) {
+            if (dataset->enabled) {
+                dataset->draw();
             }
-        } else {
-            //do raytracing i guess
-            //update buffer using cpu and render it in real time i guess
-            rt.draw();
         }
         imgui.draw();
 

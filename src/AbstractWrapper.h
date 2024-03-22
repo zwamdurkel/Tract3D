@@ -1,6 +1,6 @@
 #pragma once
 
-#include "RenderSettings.h"
+class RenderSettings;
 
 class AbstractWrapper {
 public:
@@ -16,5 +16,5 @@ public:
     virtual void cleanup() = 0;
 
 protected:
-    RenderSettings& settings = RenderSettings::getInstance();
+    static RenderSettings& settings;
 };

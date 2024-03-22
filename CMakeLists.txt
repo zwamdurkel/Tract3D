@@ -15,7 +15,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(ICON data/main.rc)
 # Add new files like this: target_sources(${NAME} PRIVATE main.cpp file1.cpp file2.cpp)
-target_sources(${NAME} PRIVATE ${ICON} src/main.cpp src/GLFWWrapper.cpp src/ImGuiWrapper.cpp src/path.cpp src/TractDataWrapper.cpp src/RayTracer.cpp)
+target_sources(${NAME} PRIVATE ${ICON} src/main.cpp src/GLFWWrapper.cpp src/ImGuiWrapper.cpp src/path.cpp src/TractDataWrapper.cpp src/AbstractWrapper.cpp)
 
 # Copy Shaders to build directory
 file(GLOB SHADERS

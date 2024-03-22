@@ -7,6 +7,7 @@
 #include <cmath>
 #include "logger.h"
 #include <chrono>
+#include "RenderSettings.h"
 
 std::vector<std::string> TractDataWrapper::readline(std::ifstream& file) {
     std::string input;

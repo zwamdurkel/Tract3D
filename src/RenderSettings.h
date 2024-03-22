@@ -5,15 +5,9 @@
 #include <vector>
 #include <learnopengl/shader_s.h>
 #include <memory>
-
-// Forward declarations to use pointer to wrapper classes.
-class AbstractWrapper;
-
-class GLFWWrapper;
-
-class ImGuiWrapper;
-
-class TractDataWrapper;
+#include "GLFWWrapper.h"
+#include "ImGuiWrapper.h"
+#include "TractDataWrapper.h"
 
 class RenderSettings {
 public:

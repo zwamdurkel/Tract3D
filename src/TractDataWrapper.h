@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include "AbstractWrapper.h"
+#include "glm/glm.hpp"
 
 struct Tract {
     std::vector<glm::vec3> vertices;
