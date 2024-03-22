@@ -4,7 +4,7 @@
 void RayTracer::init() {
     //should be called everytime camera is moved since image will not be valid anymore, and thus needs to be reset
 
-    Camera cam = RenderSettings::getInstance().camera;//used to get window sizes
+    Camera cam = settings.camera;//used to get window sizes
     float vertices[]{
             -0.5f, -0.5f, 0.0f,
             0.5f, -0.5f, 0.0f,
@@ -48,7 +48,7 @@ void RayTracer::init() {
 }
 
 void RayTracer::renderPixel() {
-    Camera cam = RenderSettings::getInstance().camera;
+    Camera cam = settings.camera;
 
     //first get pixel coords in range [0,imgWidth-1], [0, imgHeight-1]
     glm::vec2 pixelCoord = glm::vec2(float(renderIndex % imgWidth),
@@ -64,20 +64,19 @@ void RayTracer::renderPixel() {
     //finally create our ray
     Ray ray = Ray(cam.Position, dir);
 
+    //-------------------------------------------
+    //----insert lighting calculation here ------
+    //-------------------------------------------
+
     //update pixel index so next call does next pixel
     renderIndex++;
 }
 
 void RayTracer::draw() {
-    RenderSettings::getInstance().rayTracingShader.use();
+    settings.rayTracingShader.use();
     glBindVertexArray(VAO);
     glBindTexture(GL_TEXTURE_2D, texture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-}
-
-void RayTracer::cleanup() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
 }
 
 RayTracer::RayTracer() {
@@ -86,5 +85,6 @@ RayTracer::RayTracer() {
 }
 
 RayTracer::~RayTracer() {
-    cleanup();
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
 }

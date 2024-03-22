@@ -18,7 +18,7 @@ public:
 
     void draw() override;
 
-    void cleanup() override;
+    void cleanup() override {};
 
     RayTracer();
 
