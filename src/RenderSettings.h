@@ -28,10 +28,12 @@ public:
     bool shadedLines = false;
     bool drawTubes = false;
     bool highlightEnabled = false;
+    bool superEpicRaytracingEnabled = false;
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;
     int nrOfSides = 3;
+    int nrOfThreads = 1;
     // vector that determines how many tracts to show per file
     std::vector<int> show_tract_count = {1};
     // vector that stores the total number of tracts per file
@@ -41,6 +43,7 @@ public:
     Shader shader;
     Shader defaultShader;
     Shader lineShadingShader;
+    Shader rayTracingShader;
 
     // Singleton logic
     static RenderSettings& getInstance() {
