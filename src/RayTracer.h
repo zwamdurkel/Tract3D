@@ -1,9 +1,11 @@
 #pragma once
 
+#include "glm/glm.hpp"
 #include <vector>
 #include "AbstractWrapper.h"
 
 class RayTracer : AbstractWrapper {
+public:
     unsigned int VAO, VBO, texture;
 
     int renderIndex;//current index we are calculating
@@ -11,8 +13,10 @@ class RayTracer : AbstractWrapper {
     float dX, dY;
     std::vector<glm::vec3> colours;//list of colours, this will be the image send to GPU
 
-public:
+
     void init() override;
+
+    void reset();
 
     void renderPixel();
 

@@ -18,7 +18,11 @@ public:
     float intersectSphere(glm::vec3 pos, float r);
 
     //actually needed
-    float intersectCylinder(glm::vec3 pos, float r);
+    float intersectCylinder(glm::vec3 cap, glm::vec3 dir, float r, float length);
+
+    bool solveQuadratic(float a, float b, float c, float* t0, float* t1);
+
+    bool solveHalfQuadratic(float a, float half_b, float c, float* t0, float* t1);
 };
 
 

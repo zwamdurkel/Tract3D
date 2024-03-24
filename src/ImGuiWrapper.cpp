@@ -124,6 +124,8 @@ void ImGuiWrapper::draw() {
                 else { settings.shader = settings.defaultShader; }
             }
 
+            ImGui::Checkbox("RT enabled", &settings.superEpicRaytracingEnabled);
+
             if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
                 for (auto& dataset: settings.datasets) {
                     dataset->init();

@@ -24,6 +24,7 @@ __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 #include "learnopengl/camera.h"
 #include "learnopengl/shader_s.h"
 #include "RenderSettings.h"
+#include "RayTracer.h"
 
 void run();
 
@@ -88,8 +89,14 @@ void run() {
     defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
     Shader& lineShadingShader = settings.lineShadingShader;
     lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
+    Shader& rayTracingShader = settings.rayTracingShader;
+    rayTracingShader = Shader(path + "RayTrace.vsh", path + "RayTrace.fsh");//draw only lines
+
+
     Shader& shader = settings.shader;
     shader = defaultShader;//draw only lines
+
+    settings.rt.init();
 
 
     Info("Starting render");
@@ -113,15 +120,24 @@ void run() {
         shader.setBool("uDrawTubes", settings.drawTubes);
 
         glfw.draw();
-        for (auto& dataset: settings.datasets) {
-            if (dataset->enabled) {
-                dataset->draw();
+
+        if (!settings.superEpicRaytracingEnabled) {
+            for (auto& dataset: settings.datasets) {
+                if (dataset->enabled) {
+                    dataset->draw();
+                }
             }
-        }
-        for (auto& dataset: settings.examples) {
-            if (dataset->enabled) {
-                dataset->draw();
+            for (auto& dataset: settings.examples) {
+                if (dataset->enabled) {
+                    dataset->draw();
+                }
             }
+        } else {
+            int pixelsPerFrame = settings.rt.imgSize;
+            for (int i = 0; i < pixelsPerFrame; i++) {
+                settings.rt.renderPixel();
+            }
+            settings.rt.draw();
         }
         imgui.draw();
 

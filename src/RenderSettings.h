@@ -8,6 +8,7 @@
 #include "GLFWWrapper.h"
 #include "ImGuiWrapper.h"
 #include "TractDataWrapper.h"
+#include "RayTracer.h"
 
 class RenderSettings {
 public:
@@ -23,7 +24,7 @@ public:
     bool shadedLines = false;
     bool drawTubes = false;
     bool highlightEnabled = false;
-    bool superEpicRaytracingEnabled = false;
+    bool superEpicRaytracingEnabled = true;
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;
@@ -39,6 +40,7 @@ public:
     Shader defaultShader;
     Shader lineShadingShader;
     Shader rayTracingShader;
+    RayTracer rt;
 
     // Singleton logic
     static RenderSettings& getInstance() {

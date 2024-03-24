@@ -44,7 +44,7 @@ public:
     float FOV = 90.0f;
     float FarPlane = 250.0f;
     float NearPlane = 0.2f;
-    int windowWidth = 4, windowHeight = 3;
+    int windowWidth = 800, windowHeight = 600;
 
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
