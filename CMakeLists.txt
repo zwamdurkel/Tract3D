@@ -29,6 +29,8 @@ foreach (SHADER ${SHADERS})
 endforeach (SHADER)
 configure_file("data/Ruda-Regular.ttf" "${CMAKE_CURRENT_BINARY_DIR}/Ruda-Regular.ttf" COPYONLY)
 configure_file("data/Ruda-Bold.ttf" "${CMAKE_CURRENT_BINARY_DIR}/Ruda-Bold.ttf" COPYONLY)
+configure_file("data/fa-regular-400.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fa-regular-400.ttf" COPYONLY)
+configure_file("data/fa-solid-900.ttf" "${CMAKE_CURRENT_BINARY_DIR}/fa-solid-900.ttf" COPYONLY)
 file(GLOB INPUTS
         "data/tck files/*.tck"
 )
@@ -89,6 +91,8 @@ install(FILES ${SHADERS} DESTINATION bin)
 install(FILES $<TARGET_RUNTIME_DLLS:${NAME}> DESTINATION bin)
 install(FILES "data/Ruda-Regular.ttf" DESTINATION bin)
 install(FILES "data/Ruda-Bold.ttf" DESTINATION bin)
+install(FILES "data/fa-solid-900.ttf" DESTINATION bin)
+install(FILES "data/fa-regular-400.ttf" DESTINATION bin)
 install(FILES ${INPUTS} DESTINATION bin/examples)
 
 # Settings

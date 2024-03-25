@@ -27,6 +27,7 @@ public:
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;
     int nrOfSides = 3;
+    float tubeDiameter = 0.1f;
     // vector that determines how many tracts to show per file
     std::vector<int> show_tract_count = {1};
     // vector that stores the total number of tracts per file

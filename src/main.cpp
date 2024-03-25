@@ -55,6 +55,20 @@ int main() {
     return 0;
 }
 
+bool getExamples() {
+    RenderSettings& settings = RenderSettings::getInstance();
+    namespace fs = std::filesystem;
+    auto path = getPath();
+
+    for (const auto& entry: fs::directory_iterator(path + "examples")) {
+        std::string filePath = entry.path().string();
+        std::replace(filePath.begin(), filePath.end(), '\\', '/');
+        settings.examples.emplace_back(std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath));
+    }
+
+    return true;
+}
+
 void run() {
     RenderSettings& settings = RenderSettings::getInstance();
     Info("Attempting to initialize window");
@@ -75,13 +89,6 @@ void run() {
     namespace fs = std::filesystem;
     auto path = getPath();
 
-    for (const auto& entry: fs::directory_iterator(path + "examples")) {
-        std::string filePath = entry.path().string();
-        std::replace(filePath.begin(), filePath.end(), '\\', '/');
-        auto td = std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath.c_str());
-        settings.examples.push_back(std::move(td));
-    }
-
     // Import vertex and fragment shaders
 
     Shader& defaultShader = settings.defaultShader;
@@ -90,7 +97,6 @@ void run() {
     lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
     Shader& shader = settings.shader;
     shader = defaultShader;//draw only lines
-
 
     Info("Starting render");
 
@@ -127,6 +133,7 @@ void run() {
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+        static bool t = getExamples(); // Get examples once (because static) after initial paint.
     }
     Info("User requested to close");
 

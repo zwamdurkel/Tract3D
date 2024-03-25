@@ -14,14 +14,16 @@ visual enhancements that aid in analyzing and understanding the structures of th
 
 This project uses the following external resources:
 
-| Tool            | Description                                                    | Version | Source                                                    | License                                                                       |
-|-----------------|----------------------------------------------------------------|---------|-----------------------------------------------------------|-------------------------------------------------------------------------------|
-| GLFW            | An open source, multi-platform library for OpenGL.             | 3.3.9   | [link](https://www.glfw.org/)                             | [zlib](https://www.glfw.org/license.html)                                     |
-| GLM             | A header only C++ mathematics library for graphics software.   | 1.0.0   | [link](https://github.com/g-truc/glm)                     | [MIT](https://github.com/g-truc/glm?tab=License-1-ov-file)                    |
-| GLAD            | OpenGL Loader-Generator based on the official specifications.  | 0.1.36  | [link](https://glad.dav1d.de/)                            | [MIT](https://github.com/Dav1dde/glad?tab=License-1-ov-file#readme)           |
-| Dear ImGui      | A bloat-free graphical user interface library.                 | 1.90.3  | [link](https://github.com/ocornut/imgui)                  | [MIT](https://github.com/ocornut/imgui?tab=MIT-1-ov-file#readme)              |
-| NFD Extended    | A library that invokes native file open and file save dialogs. | 1.1.1   | [link](https://github.com/btzy/nativefiledialog-extended) | [zlib](https://github.com/btzy/nativefiledialog-extended/blob/master/LICENSE) |
-| LearnOpenGL[^1] | Resource for learning OpenGL with examples.                    | N/A     | [link](https://learnopengl.com/)                          | [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode)      |
+| Tool               | Description                                                    | Version | Source                                                    | License                                                                       |
+|--------------------|----------------------------------------------------------------|---------|-----------------------------------------------------------|-------------------------------------------------------------------------------|
+| GLFW               | An open source, multi-platform library for OpenGL.             | 3.3.9   | [link](https://www.glfw.org/)                             | [zlib](https://www.glfw.org/license.html)                                     |
+| GLM                | A header only C++ mathematics library for graphics software.   | 1.0.0   | [link](https://github.com/g-truc/glm)                     | [MIT](https://github.com/g-truc/glm?tab=License-1-ov-file)                    |
+| GLAD               | OpenGL Loader-Generator based on the official specifications.  | 0.1.36  | [link](https://glad.dav1d.de/)                            | [MIT](https://github.com/Dav1dde/glad?tab=License-1-ov-file#readme)           |
+| Dear ImGui         | A bloat-free graphical user interface library.                 | 1.90.3  | [link](https://github.com/ocornut/imgui)                  | [MIT](https://github.com/ocornut/imgui?tab=MIT-1-ov-file#readme)              |
+| NFD Extended       | A library that invokes native file open and file save dialogs. | 1.1.1   | [link](https://github.com/btzy/nativefiledialog-extended) | [zlib](https://github.com/btzy/nativefiledialog-extended/blob/master/LICENSE) |
+| IconFontCppHeaders | A set of header files and classes for using icon fonts in C++. | 6.5.1   | [link](https://github.com/juliettef/IconFontCppHeaders)   | [zlib](https://github.com/juliettef/IconFontCppHeaders/blob/main/licence.txt) |
+| FontAwesome        | The Internet's icon library and toolkit.                       | 6.5.1   | [link](https://github.com/FortAwesome/Font-Awesome)       | [SIL OFL](https://github.com/FortAwesome/Font-Awesome/blob/6.x/LICENSE.txt)   |
+| LearnOpenGL[^1]    | Resource for learning OpenGL with examples.                    | N/A     | [link](https://learnopengl.com/)                          | [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode)      |
 
 [^1]: Some code has been changed compared to the provided code.
 

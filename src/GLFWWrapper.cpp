@@ -2,8 +2,8 @@
 #include "logger.h"
 #include "RenderSettings.h"
 
-const unsigned int INITIAL_WIDTH = 800;
-const unsigned int INITIAL_HEIGHT = 600;
+const unsigned int INITIAL_WIDTH = 1280;
+const unsigned int INITIAL_HEIGHT = 720;
 
 //stuff for mouse location
 float lastX;

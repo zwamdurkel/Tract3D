@@ -16,6 +16,14 @@ struct Tract {
 class TractDataWrapper : AbstractWrapper {
 
 private:
+    unsigned int VAO = 0, VBO = 0, EBO = 0, GVO, VNO;
+    std::vector<glm::vec3> colors;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec3> vertices;
+    std::vector<uint32_t> indices;
+    Tract avgTract;
+    std::vector<float> avgTractWidth;
+
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);
 
@@ -24,6 +32,8 @@ private:
     void projectContour(int sides, Tract& t, int i);
 
     void constructTubes(int sides);
+
+    void generateAverageTract(int nrOfPoints = 30);
 
     constexpr static float fixedSin[9] = {0.0f, 0.0f, 0.0f, 0.86602540378f, 1.0f, 0.95105651629f, 0.86602540378f,
                                           0.78183148246f, 0.70710678118f};
@@ -34,7 +44,6 @@ public:
     std::string name;
     bool enabled = true;
     float alpha = 1.0f;
-    float diameter = 0.1f;
     std::vector<Tract> data;
     // tractEndIndex[i] stores the index of the last vertex of the i'th tract in tractIndices
     std::vector<int> tractEndIndex;
@@ -42,21 +51,18 @@ public:
     int showTractCount = 1;
     // Total number of tracts represented by this class.
     int tractCount = 1;
-    unsigned int VAO, VBO, GVO, EBO, VNO;
-    std::vector<glm::vec3> gradients;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec3> vertices;
-    std::vector<uint32_t> indices;
 
     explicit TractDataWrapper(std::string name) : name(std::move(name)) {};
 
-    TractDataWrapper(std::string name, const char* filePath);
-
-    TractDataWrapper() = default;
+    TractDataWrapper(std::string name, const std::string& filePath);
 
     ~TractDataWrapper();
 
-    bool parse(const char* filePath, bool tractStop);
+    glm::vec3 getBezierPosition(int t);
+
+    glm::vec3 getBezierDirection(int t);
+
+    bool parse(const std::string& filePath, bool tractStop);
 
     void cleanup() override {}
 
