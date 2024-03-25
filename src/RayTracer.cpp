@@ -1,5 +1,4 @@
 #include "RayTracer.h"
-#include "Ray.h"
 #include "RenderSettings.h"
 
 void RayTracer::init() {
@@ -59,7 +58,6 @@ void RayTracer::reset() {
 }
 
 void RayTracer::renderPixel() {
-    Camera cam = settings.camera;
 
     //first get pixel coords in range [0,imgWidth-1], [0, imgHeight-1]
     glm::vec2 pixelCoord = glm::vec2(float(renderIndex % imgWidth),
@@ -69,48 +67,61 @@ void RayTracer::renderPixel() {
                             imgHeight / 2.0f);
     pixelCoord = dX * pixelCoord;//dX and dY are the same so this works
 
+
+
+    //-------------------------------------------
+    //----insert lighting calculation here ------
+    glm::vec3 colour = glm::vec3(0.0f);
+
+    int nrays = 4;
+    for (int i = 0; i < nrays; i++)
+        colour += getRayColour(generateRay(pixelCoord));
+
+
+    //-------------------------------------------
+
+    colours[renderIndex] = colour * 0.25f;//TODO: Add averaging
+    //update pixel index so next call does next pixel
+    renderIndex++;
+    renderIndex = renderIndex % imgSize;//Make a loop
+}
+
+Ray RayTracer::generateRay(glm::vec2 pixelCoord) {
+    Camera cam = settings.camera;
+    glm::vec2 delta = glm::vec2(distribution(generator), distribution(generator)) * (dX * 0.5f);
+
     glm::vec3 screenCentre = cam.Position + cam.Front * cam.NearPlane;
     glm::vec3 screenCoord = screenCentre + pixelCoord.x * cam.Right + pixelCoord.y * cam.Up;
     glm::vec3 dir = glm::normalize(screenCoord - cam.Position);//no need to normalize since ray constructor will do this
     //finally create our ray
-    Ray ray = Ray(cam.Position, dir);
+    return Ray(cam.Position, dir);
+}
 
-    //Initial list of sphere data for debugging purposes
-    glm::vec3 centers[] = {glm::vec3(0.0f, -25.0f, 95.0f),
-                           glm::vec3(0.0f, 1.0f, 5.0f),
-                           glm::vec3(5.0f, 1.0f, 5.0f),
-                           glm::vec3(0.0f, -1.0f, 0.0f)};
-    float radii[] = {0.5f, 1, 1, 1};
-    //--------------------------------------------
-
-    glm::vec3 colour = glm::vec3(1, 1, 1);//colour of the ray
-
-    //-------------------------------------------
-    //----insert lighting calculation here ------
+glm::vec3 RayTracer::getRayColour(Ray ray) {
     float t = -1;
     const float minRayDist = 0.001;
-
-    for (int i = 0; i < 4; i++) {
-        float newT = ray.intersectCylinder(centers[i], glm::vec3(0.0f, 1.0f, 0.0f), radii[i], 3);
+    const float tuberadius = 0.1f;
+    glm::vec3 n;
+    glm::vec3 col = glm::vec3(0.0f, 0.0f, 0.0f);
+    //auto data = settings.datasets[0]->data[0];
+    for (auto data: settings.datasets[0]->data) {
+        for (int i = 0; i < data.vertices.size() - 1; i++) {
+            glm::vec3 newN;
+            float newT = ray.intersectCylinder(data.vertices[i], data.vertices[i + 1], tuberadius, &newN);
 //        float newT = ray.intersectSphere(centers[i], radii[i]);
-        if (newT < minRayDist) { continue; }
-        if (t < 0) { t = newT; }
-        else if (newT < t) {
-            //get information about hit point
-            t = newT;
+            if (newT < minRayDist) { continue; }
+            else if (t < 0 || newT < t) {
+                //get information about hit point
+                t = newT;
+                n = newN;
+                col = glm::abs(glm::normalize(data.vertices[i + 1] - data.vertices[i]));
+            }
         }
     }
     if (t >= minRayDist) {
-        colour = glm::vec3(t, 0.0f, 0.0f);
+        col = col * glm::vec3(glm::dot(n, glm::vec3(0.0f, 1.0f, 0.0f)));
     }
-
-
-    //-------------------------------------------
-
-    colours[renderIndex] = colour;//TODO: Add averaging
-    //update pixel index so next call does next pixel
-    renderIndex++;
-    renderIndex = renderIndex % imgSize;//Make a loop
+    return col;
 }
 
 void RayTracer::draw() {

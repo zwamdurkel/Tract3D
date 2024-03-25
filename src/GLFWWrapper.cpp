@@ -114,6 +114,7 @@ void GLFWWrapper::init() {
     glPrimitiveRestartIndex(0xFFFFFFFF);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Info("max storage size: " << GL_MAX_3D_TEXTURE_SIZE);
 }
 
 void GLFWWrapper::draw() {

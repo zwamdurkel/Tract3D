@@ -24,7 +24,7 @@ public:
     bool shadedLines = false;
     bool drawTubes = false;
     bool highlightEnabled = false;
-    bool superEpicRaytracingEnabled = true;
+    bool superEpicRaytracingEnabled = false;
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;

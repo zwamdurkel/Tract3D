@@ -26,38 +26,42 @@ float Ray::intersectSphere(glm::vec3 pos, float r) {
     }
 }
 
-float Ray::intersectCylinder(glm::vec3 cap, glm::vec3 dir, float r, float length) {
-    //currently just a circle extended infinitely along z direction
+float Ray::intersectCylinder(glm::vec3 p1, glm::vec3 p2, float r, glm::vec3* normal) {
+    glm::vec3 diff = p2 - p1;
+    return intersectCylinder(p1, glm::normalize(diff), r, glm::length(diff), normal);
+}
 
-    //rotate space such that
+float Ray::intersectCylinder(glm::vec3 cap, glm::vec3 dir, float r, float length, glm::vec3* normal) {
+    //currently just a circle extended infinitely along z direction
     glm::vec3 oc = origin - cap;
 
-    float a = direction.x * direction.x + direction.z * direction.z;
-    float half_b = direction.x * oc.x + direction.z * oc.z;
-    float c = oc.x * oc.x + oc.z * oc.z - r * r;
+    //variables to reuse for performance reasons
+    //created using https://hugi.scene.org/online/hugi24/coding%20graphics%20chris%20dragan%20raytracing%20shapes.htm
+    //as a guide for calculating the intersections
+    float ddotv = glm::dot(direction, dir);
+    float xdotv = glm::dot(oc, dir);
+
+    float a = glm::dot(direction, direction) - ddotv * ddotv;
+    float half_b = glm::dot(direction, oc) - ddotv * xdotv;
+    float c = glm::dot(oc, oc) - xdotv * xdotv - r * r;
 
     float t0, t1;
     if (!solveHalfQuadratic(a, half_b, c, &t0, &t1)) {
         return -1;
     } else {
-        glm::vec3 p0 = rayAt(t0) - cap;//vector from cap to point on infinite cylinder
-        glm::vec3 p1 = rayAt(t1) - cap;
+        float d0 = ddotv * t0 + xdotv;
+        float d1 = ddotv * t1 + xdotv;
 
-        float d0 = glm::dot(p0, dir);
-        float d1 = glm::dot(p1, dir);
-
-        if (d0 < 0) {
+        if (d0 < 0 || d0 > length) {
             //we are looking at the bottom of the cylinder or missing it completely
-            if (d1 < 0 || d1 > length) { return -1; }//we missed it
-            return t1;
-            //we need to find intersection with the circle that forms the cap i guess
-        } else if (d0 > length) {
-            //we are looking at the top of the cylinder or missing it completely
-            if (d1 < 0 || d1 > length) { return -1; }//we missed it
+            if (d1 < 0 || d1 > length) { return -1; }//we missed it, also the > length check makes it hollow
+            //TODO: add face intersection check if needed
+            *normal = -glm::normalize(oc + direction * t1 - dir * d1);
             return t1;
         }
 
-        return glm::min(t0, t1);
+        *normal = glm::normalize(oc + direction * t0 - dir * d0);
+        return t0;
     }
 }
 
@@ -89,25 +93,4 @@ bool Ray::solveHalfQuadratic(float a, float half_b, float c, float* t0, float* t
     *t0 = tmin;
     *t1 = tmax;
     return true;
-}
-
-glm::mat4 Ray::matchVectorRotationsMatrix(glm::vec3 axis, float sinT, float cosT) {
-    //asin is very computationally expensive, currently already doubles computation time with 4 cyllinders
-    //so to skip calculating the angle we can use the fact that dot(v,u) = cos(theta), cross(v,u) = sin(theta) * n
-    glm::vec4 c1 = glm::vec4(cosT + axis.x * axis.x * (1 - cosT),
-                             axis.y * axis.x * (1 - cosT) + axis.z * sinT,
-                             axis.z * axis.x * (1 - cosT) - axis.y * sinT,
-                             0.0f);
-    glm::vec4 c2 = glm::vec4(axis.x * axis.y * (1 - cosT) - axis.z * sinT,
-                             cosT + axis.y * axis.y * (1 - cosT),
-                             axis.z * axis.y * (1 - cosT) + axis.x * sinT,
-                             0.0f);
-    glm::vec4 c3 = glm::vec4(axis.x * axis.z * (1 - cosT) + axis.y * sinT,
-                             axis.y * axis.z * (1 - cosT) - axis.x * sinT,
-                             cosT + axis.z * axis.z * (1 - cosT),
-                             0.0f);
-    glm::vec4 c4 = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
-
-    return glm::mat4(c1, c2, c3, c4);
 }

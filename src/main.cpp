@@ -76,12 +76,12 @@ void run() {
     namespace fs = std::filesystem;
     auto path = getPath();
 
-    for (const auto& entry: fs::directory_iterator(path + "examples")) {
-        std::string filePath = entry.path().string();
-        std::replace(filePath.begin(), filePath.end(), '\\', '/');
-        auto td = std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath.c_str());
-        settings.examples.push_back(std::move(td));
-    }
+//    for (const auto& entry: fs::directory_iterator(path + "examples")) {
+//        std::string filePath = entry.path().string();
+//        std::replace(filePath.begin(), filePath.end(), '\\', '/');
+//        auto td = std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath.c_str());
+//        settings.examples.push_back(std::move(td));
+//    }
 
     // Import vertex and fragment shaders
 
@@ -112,7 +112,8 @@ void run() {
         lightPos = lightRotation * lightPos;
         shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
 
-        glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 modelMatrix = glm::mat4(
+                1.0f);//glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
         shader.setMat4("uModelMatrix", modelMatrix);
         shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
         shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
@@ -133,7 +134,8 @@ void run() {
                 }
             }
         } else {
-            int pixelsPerFrame = settings.rt.imgSize;
+//            int pixelsPerFrame = settings.rt.imgSize;
+            int pixelsPerFrame = 1000;
             for (int i = 0; i < pixelsPerFrame; i++) {
                 settings.rt.renderPixel();
             }
