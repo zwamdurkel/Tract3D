@@ -63,7 +63,7 @@ void RayTracer::renderPixel() {
 
     //first get pixel coords in range [0,imgWidth-1], [0, imgHeight-1]
     glm::vec2 pixelCoord = glm::vec2(float(renderIndex % imgWidth),
-                                     float(renderIndex / imgHeight));
+                                     float(renderIndex / imgWidth));//integer division so no need for floor()
     // then transform coords in range [-imgWidth/2, imgWidth/2], [-imgHeight/2, imgHeight/2]
     pixelCoord -= glm::vec2(imgWidth / 2.0f,
                             imgHeight / 2.0f);
@@ -72,7 +72,6 @@ void RayTracer::renderPixel() {
     glm::vec3 screenCentre = cam.Position + cam.Front * cam.NearPlane;
     glm::vec3 screenCoord = screenCentre + pixelCoord.x * cam.Right + pixelCoord.y * cam.Up;
     glm::vec3 dir = glm::normalize(screenCoord - cam.Position);//no need to normalize since ray constructor will do this
-    //Info(cam.Up.x << ", " << cam.Up.y << ", " << cam.Up.z);
     //finally create our ray
     Ray ray = Ray(cam.Position, dir);
 
@@ -81,7 +80,7 @@ void RayTracer::renderPixel() {
                            glm::vec3(0.0f, 1.0f, 5.0f),
                            glm::vec3(5.0f, 1.0f, 5.0f),
                            glm::vec3(0.0f, -1.0f, 0.0f)};
-    float radii[] = {1, 1, 1, 1};
+    float radii[] = {0.5f, 1, 1, 1};
     //--------------------------------------------
 
     glm::vec3 colour = glm::vec3(1, 1, 1);//colour of the ray
@@ -92,7 +91,8 @@ void RayTracer::renderPixel() {
     const float minRayDist = 0.001;
 
     for (int i = 0; i < 4; i++) {
-        float newT = ray.intersectCylinder(centers[i], glm::vec3(0.0f, 1.0f, 0.0f), radii[i], 1);
+        float newT = ray.intersectCylinder(centers[i], glm::vec3(0.0f, 1.0f, 0.0f), radii[i], 3);
+//        float newT = ray.intersectSphere(centers[i], radii[i]);
         if (newT < minRayDist) { continue; }
         if (t < 0) { t = newT; }
         else if (newT < t) {

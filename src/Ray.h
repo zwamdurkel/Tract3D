@@ -23,6 +23,8 @@ public:
     bool solveQuadratic(float a, float b, float c, float* t0, float* t1);
 
     bool solveHalfQuadratic(float a, float half_b, float c, float* t0, float* t1);
+
+    glm::mat4 matchVectorRotationsMatrix(glm::vec3 axis, float sinT, float cosT);
 };
 
 
