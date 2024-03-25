@@ -250,9 +250,9 @@ void TractDataWrapper::generateAverageTract(int nrOfPoints) {
             }
         }
 
-//        if (i > 0) {
-//            avgTract.gradient.push_back(avg - avgTract.vertices.back());
-//        }
+        if (i > 0) {
+            avgTract.gradient.push_back(avg - avgTract.vertices.back());
+        }
 
         avgTract.vertices.push_back(avg);
 
@@ -265,19 +265,17 @@ void TractDataWrapper::generateAverageTract(int nrOfPoints) {
 
         avgTractWidth.push_back(maxDistance);
         avgTract.indices.push_back(i);
-        avgTract.gradient.push_back({1, 0, 0});
     }
 
-//    avgTract.gradient.push_back(avgTract.gradient.back());
-
+    avgTract.gradient.push_back(avgTract.gradient.back());
 }
 
 glm::vec3 TractDataWrapper::getBezierPosition(int t) {
-
+    return {1, 0, 0};
 }
 
 glm::vec3 TractDataWrapper::getBezierDirection(int t) {
-
+    return {1, 0, 0};
 }
 
 void TractDataWrapper::init() {
@@ -314,7 +312,7 @@ void TractDataWrapper::init() {
     }
 
     // |vertices| == |colors| == |normals|
-    auto size = vertices.size() * sizeof(glm::vec3);
+    auto size = (long long) (vertices.size() * sizeof(glm::vec3));
 
     // Bind Vertex Array Object
     glBindVertexArray(VAO);
@@ -339,38 +337,6 @@ void TractDataWrapper::init() {
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indices.size(), &indices[0], GL_STATIC_DRAW);
-
-//    // Bind Vertex Array Object
-//    glBindVertexArray(VAO);
-//    // Copy Vertices Array to a Buffer for OpenGL
-//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-//    glBufferData(GL_ARRAY_BUFFER, (long) (vertices.size() * sizeof(glm::vec3)), &vertices[0],
-//                 GL_STATIC_DRAW);
-//    // Then set our Vertex Attributes Pointers
-//    // Position Attribute
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-//    glEnableVertexAttribArray(0);
-//
-//    // Index buffer
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indices.size(), &indices[0], GL_STATIC_DRAW);
-//
-//    // Copy Vertices Array to a Buffer for OpenGL
-//    glBindBuffer(GL_ARRAY_BUFFER, GVO);
-//    glBufferData(GL_ARRAY_BUFFER, (long) (colors.size() * sizeof(glm::vec3)), &colors[0],
-//                 GL_STATIC_DRAW);
-//    // Then set our Vertex Attributes Pointers
-//    // Position Attribute
-//    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-//    glEnableVertexAttribArray(1);
-//
-//    // Copy Vertices Array to a Buffer for OpenGL
-//    glBindBuffer(GL_ARRAY_BUFFER, VNO);
-//    glBufferData(GL_ARRAY_BUFFER, (long) (normals.size() * sizeof(glm::vec3)), &normals[0],
-//                 GL_STATIC_DRAW);
-//    // Then set our Vertex Attributes Pointers
-//    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-//    glEnableVertexAttribArray(2);
 }
 
 void TractDataWrapper::draw() {
