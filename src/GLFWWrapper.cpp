@@ -14,7 +14,7 @@ void GLFWWrapper::init() {
     settings.glfw = this;
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // for MAC OS
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -40,6 +40,7 @@ void GLFWWrapper::init() {
         // Make sure we don't get divide by 0.
         settings.camera.windowWidth = width ? width : 1;
         settings.camera.windowHeight = height ? height : 1;
+        settings.rt->reset();
     });
 
     // Mouse movement callback

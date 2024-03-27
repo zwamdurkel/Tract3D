@@ -8,11 +8,13 @@
 #include "GLFWWrapper.h"
 #include "ImGuiWrapper.h"
 #include "TractDataWrapper.h"
+#include "RayTraceWrapper.h"
 
 class RenderSettings {
 public:
     GLFWWrapper* glfw = nullptr;
     ImGuiWrapper* imgui = nullptr;
+    RayTraceWrapper* rt = nullptr;
     std::vector<std::unique_ptr<TractDataWrapper>> datasets;
     std::vector<std::unique_ptr<TractDataWrapper>> examples;
     bool show_demo_window = false;
@@ -23,6 +25,7 @@ public:
     bool shadedLines = false;
     bool drawTubes = false;
     bool highlightEnabled = false;
+    bool rtEnabled = false;
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;
@@ -37,6 +40,8 @@ public:
     Shader shader;
     Shader defaultShader;
     Shader lineShadingShader;
+    Shader rtComputeShader;
+    Shader rtRenderShader;
 
     // Singleton logic
     static RenderSettings& getInstance() {

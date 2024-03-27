@@ -172,6 +172,9 @@ void ImGuiWrapper::draw() {
             }
             HelpMarker("When enabled, lighting will be applied to the line renderer.");
 
+            ImGui::Checkbox("RT enabled", &settings.rtEnabled);
+            HelpMarker("When enabled, raytracing will be used for the rendering.");
+
             if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
                 for (auto& dataset: settings.datasets) {
                     dataset->init();

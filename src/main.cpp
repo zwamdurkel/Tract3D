@@ -55,6 +55,36 @@ int main() {
     return 0;
 }
 
+void computeInfo() {
+    // show compute shader related info
+    // work group handling
+    // work group count
+    GLint work_group_count[3];
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &work_group_count[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &work_group_count[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &work_group_count[2]);
+    std::cout << "total work group count x: " << work_group_count[0] << std::endl;
+    std::cout << "total work group count y: " << work_group_count[1] << std::endl;
+    std::cout << "total work group count z: " << work_group_count[2] << std::endl;
+
+    // work group size
+    GLint work_group_size[3];
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &work_group_size[0]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &work_group_size[1]);
+    glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &work_group_size[2]);
+    std::cout << "total work group size x: " << work_group_size[0] << std::endl;
+    std::cout << "total work group size y: " << work_group_size[1] << std::endl;
+    std::cout << "total work group size z: " << work_group_size[2] << std::endl;
+    // global work group size is 512 * 512 == texture width * texture height
+    // local work group size is 1 since 1 pixel at a time
+
+    // work group invocation
+    GLint work_group_inv;
+    glGetIntegerv(GL_MAX_COMPUTE_WORK_GROUP_INVOCATIONS, &work_group_inv);
+    std::cout << "max work group invocation: " << work_group_inv << std::endl;
+    // end of work group
+}
+
 bool getExamples() {
     RenderSettings& settings = RenderSettings::getInstance();
     namespace fs = std::filesystem;
@@ -81,7 +111,9 @@ void run() {
     ImGuiWrapper imgui(glfw.getWindow());
     Info("Initializing ImGUI");
     imgui.init();
-
+    RayTraceWrapper rt;
+    rt.init();
+    computeInfo();
     Info("Successfully initialized window");
 
     GLFWwindow* window = glfw.getWindow();
@@ -91,44 +123,50 @@ void run() {
 
     // Import vertex and fragment shaders
 
-    Shader& defaultShader = settings.defaultShader;
-    defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
-    Shader& lineShadingShader = settings.lineShadingShader;
-    lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
-    Shader& shader = settings.shader;
-    shader = defaultShader;//draw only lines
+    settings.defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
+    settings.lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
+    settings.rtComputeShader = Shader(path + "rtCompute.comp");
+    settings.rtRenderShader = Shader(path + "rtRender.vsh", path + "rtRender.fsh");
+
+    settings.shader = settings.defaultShader;//draw only lines
 
     Info("Starting render");
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
-        shader.use();
-
         glm::vec4 lightPos = glm::normalize(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
         glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * glfwGetTime())),
                                               glm::vec3(0.0f, 1.0f, 0.0f));
         lightPos = lightRotation * lightPos;
-        shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
-
-        glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        shader.setMat4("uModelMatrix", modelMatrix);
-        shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
-        shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
-        shader.setVec3("uViewPos", settings.camera.Position);
-        shader.setBool("uDrawTubes", settings.drawTubes);
 
         glfw.draw();
-        for (auto& dataset: settings.datasets) {
-            if (dataset->enabled) {
-                dataset->draw();
+
+        if (!settings.rtEnabled) {
+            settings.shader.use();
+            settings.shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
+
+            glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            settings.shader.setMat4("uModelMatrix", modelMatrix);
+            settings.shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
+            settings.shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
+            settings.shader.setVec3("uViewPos", settings.camera.Position);
+            settings.shader.setBool("uDrawTubes", settings.drawTubes);
+
+            for (auto& dataset: settings.datasets) {
+                if (dataset->enabled) {
+                    dataset->draw();
+                }
             }
-        }
-        for (auto& dataset: settings.examples) {
-            if (dataset->enabled) {
-                dataset->draw();
+            for (auto& dataset: settings.examples) {
+                if (dataset->enabled) {
+                    dataset->draw();
+                }
             }
+        } else {
+            settings.rt->draw();
         }
+
         imgui.draw();
 
         glfwSwapBuffers(window);
