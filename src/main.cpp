@@ -100,18 +100,18 @@ void run() {
 
     Info("Starting render");
 
+    glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
-
-        shader.use();
 
         glm::vec4 lightPos = glm::normalize(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
         glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * glfwGetTime())),
                                               glm::vec3(0.0f, 1.0f, 0.0f));
         lightPos = lightRotation * lightPos;
-        shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
 
-        glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+        shader.use();
+        shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
         shader.setMat4("uModelMatrix", modelMatrix);
         shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
         shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
@@ -119,16 +119,26 @@ void run() {
         shader.setBool("uDrawTubes", settings.drawTubes);
 
         glfw.draw();
-        for (auto& dataset: settings.datasets) {
-            if (dataset->enabled) {
-                dataset->draw();
+
+        auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
+        [&] {
+            for (const auto& datasets: dataList) {
+                for (auto& d: datasets.get()) {
+                    if (d->name == settings.highlightedBundle && d->enabled) {
+                        d->draw();
+                        return;
+                    }
+                }
+            }
+        }();
+        for (const auto& datasets: dataList) {
+            for (auto& d: datasets.get()) {
+                if (d->name != settings.highlightedBundle && d->enabled) {
+                    d->draw();
+                }
             }
         }
-        for (auto& dataset: settings.examples) {
-            if (dataset->enabled) {
-                dataset->draw();
-            }
-        }
+
         imgui.draw();
 
         glfwSwapBuffers(window);
