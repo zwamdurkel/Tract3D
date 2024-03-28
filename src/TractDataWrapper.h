@@ -18,7 +18,7 @@ class TractDataWrapper : AbstractWrapper {
 private:
     unsigned int VAO = 0, VBO = 0, EBO = 0;
     std::vector<uint8_t> colors;
-    std::vector<uint8_t> normals;
+    std::vector<int8_t> normals;
     std::vector<glm::vec3> vertices;
     std::vector<uint32_t> indices;
     Tract avgTract;

@@ -349,7 +349,7 @@ void TractDataWrapper::init() {
     glEnableVertexAttribArray(1);
     // Normals
     glBufferSubData(GL_ARRAY_BUFFER, vs + cs, ns, &normals[0]);
-    glVertexAttribPointer(2, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*) (vs + cs));
+    glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, 0, (void*) (vs + cs));
     glEnableVertexAttribArray(2);
 
     // Index buffer
