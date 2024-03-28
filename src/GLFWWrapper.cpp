@@ -84,16 +84,23 @@ void GLFWWrapper::init() {
     // Keep rendering while resizing
     glfwSetWindowRefreshCallback(window, [](GLFWwindow* window) {
         RenderSettings& settings = RenderSettings::getInstance();
+
+        settings.shader.use();
+        settings.shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
+
         settings.glfw->draw();
-        for (auto& dataset: settings.datasets) {
-            dataset->draw();
-        }
-        for (auto& dataset: settings.examples) {
-            dataset->draw();
+        // Simplified dataset rendering
+        for (const auto& datasets: {std::cref(settings.datasets), std::cref(settings.examples)}) {
+            for (auto& d: datasets.get()) {
+                if (d->enabled) {
+                    d->draw();
+                }
+            }
         }
         settings.imgui->draw();
 
         glfwSwapBuffers(window);
+        glFinish();
     });
 
     glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
