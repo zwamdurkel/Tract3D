@@ -279,14 +279,14 @@ glm::vec3 TractDataWrapper::getBezierDirection(int t) {
 }
 
 void TractDataWrapper::addColorAsByte(const glm::vec3& clr) {
-    auto a = abs(clr);
+    auto a = glm::abs(clr);
     colors.emplace_back(abs(a.r) * 255);
     colors.emplace_back(abs(a.g) * 255);
     colors.emplace_back(abs(a.b) * 255);
 }
 
 void TractDataWrapper::addNormalAsByte(const glm::vec3& nor) {
-    auto n = normalize(nor);
+    auto n = glm::normalize(nor);
     normals.emplace_back(n.x * 127);
     normals.emplace_back(n.y * 127);
     normals.emplace_back(n.z * 127);
@@ -304,7 +304,7 @@ void TractDataWrapper::init() {
     normals.clear();
     indices.clear();
     tractEndIndex.clear();
-    if (settings.drawTubes) {
+    if (settings.renderer == SHADED_TUBES) {
         auto start = std::chrono::high_resolution_clock::now();
         constructTubes(settings.nrOfSides);
         auto stop = std::chrono::high_resolution_clock::now();
@@ -360,7 +360,7 @@ void TractDataWrapper::init() {
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
     settings.shader.setFloat("alpha", alpha);
-    if (settings.drawTubes) {
+    if (settings.renderer == SHADED_TUBES) {
         glDrawElements(GL_TRIANGLE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
     } else {
         glDrawElements(GL_LINE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);

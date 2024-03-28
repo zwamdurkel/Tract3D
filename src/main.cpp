@@ -101,14 +101,21 @@ void run() {
     Info("Starting render");
 
     glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::vec4 lightPos = glm::normalize(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
+        static float lastFrameTime;
+        float currentFrameTime = glfwGetTime();
+        float deltaTime = currentFrameTime - lastFrameTime;
+        lastFrameTime = currentFrameTime;
 
-        glm::vec4 lightPos = glm::normalize(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
-        glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * glfwGetTime())),
-                                              glm::vec3(0.0f, 1.0f, 0.0f));
-        lightPos = lightRotation * lightPos;
+        if (settings.rotatingLight) {
+
+            glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * deltaTime)),
+                                                  glm::vec3(0.0f, 1.0f, 0.0f));
+            lightPos = lightRotation * lightPos;
+        }
 
         shader.use();
         shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
@@ -116,7 +123,7 @@ void run() {
         shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
         shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
         shader.setVec3("uViewPos", settings.camera.Position);
-        shader.setBool("uDrawTubes", settings.drawTubes);
+        shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
 
         glfw.draw();
 
@@ -157,7 +164,7 @@ void run() {
 void processInput(GLFWwindow* window) {
     static float lastFrameTime;
     float currentFrameTime = glfwGetTime();
-    float deltaTime = currentFrameTime - lastFrameTime;;
+    float deltaTime = currentFrameTime - lastFrameTime;
     lastFrameTime = currentFrameTime;
 
     static Camera& cam = RenderSettings::getInstance().camera;
