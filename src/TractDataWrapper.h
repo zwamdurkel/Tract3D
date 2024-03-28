@@ -16,9 +16,9 @@ struct Tract {
 class TractDataWrapper : AbstractWrapper {
 
 private:
-    unsigned int VAO = 0, VBO = 0, EBO = 0, GVO, VNO;
-    std::vector<glm::vec3> colors;
-    std::vector<glm::vec3> normals;
+    unsigned int VAO = 0, VBO = 0, EBO = 0;
+    std::vector<uint8_t> colors;
+    std::vector<uint8_t> normals;
     std::vector<glm::vec3> vertices;
     std::vector<uint32_t> indices;
     Tract avgTract;
@@ -34,6 +34,10 @@ private:
     void constructTubes(int sides);
 
     void generateAverageTract(int nrOfPoints = 30);
+
+    void addColorAsByte(const glm::vec3& clr);
+
+    void addNormalAsByte(const glm::vec3& n);
 
     constexpr static float fixedSin[9] = {0.0f, 0.0f, 0.0f, 0.86602540378f, 1.0f, 0.95105651629f, 0.86602540378f,
                                           0.78183148246f, 0.70710678118f};

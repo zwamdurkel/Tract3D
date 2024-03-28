@@ -206,18 +206,18 @@ void TractDataWrapper::makeContour(int sides, Tract& t, int i) {
     auto& r = t.gradient[i];
     // Vector perpendicular to the line segment
     auto v = glm::normalize(glm::cross(r, glm::vec3(0, 1, 0))) * settings.tubeDiameter;
-    normals.push_back(v);
+    addNormalAsByte(v);
     vertices.emplace_back(v + t.vertices[i]);
-    colors.push_back(r);
+    addColorAsByte(r);
 
     // Rodrigues' Rotation Formula: new v := rotate old v around r
     for (int j = 1; j < sides; j++) {
         v = (1 - fixedCos[sides]) * glm::dot(v, r) * r
             + fixedCos[sides] * v
             + fixedSin[sides] * cross(r, v);
-        normals.push_back(v);
+        addNormalAsByte(v);
         vertices.emplace_back(v + t.vertices[i]);
-        colors.push_back(r);
+        addColorAsByte(r);
     }
 }
 
@@ -232,9 +232,9 @@ void TractDataWrapper::projectContour(int sides, Tract& t, int i) {
         auto& l0 = vertices[vertices.size() - sides]; // Line starting point
         auto d = glm::dot(p0 - l0, n) / glm::dot(l, n); // Distance from point to plane along line
         auto p = l0 + l * d; // Intersection point of line and plane
-        normals.emplace_back(p - t.vertices[i]);
+        addNormalAsByte(p - t.vertices[i]);
         vertices.push_back(p);
-        colors.push_back(n);
+        addColorAsByte(n);
     }
 }
 
@@ -278,6 +278,20 @@ glm::vec3 TractDataWrapper::getBezierDirection(int t) {
     return {1, 0, 0};
 }
 
+void TractDataWrapper::addColorAsByte(const glm::vec3& clr) {
+    auto a = abs(clr);
+    colors.emplace_back(abs(a.r) * 255);
+    colors.emplace_back(abs(a.g) * 255);
+    colors.emplace_back(abs(a.b) * 255);
+}
+
+void TractDataWrapper::addNormalAsByte(const glm::vec3& nor) {
+    auto n = normalize(nor);
+    normals.emplace_back(n.x * 127);
+    normals.emplace_back(n.y * 127);
+    normals.emplace_back(n.z * 127);
+}
+
 void TractDataWrapper::init() {
     if (!enabled) return;
 
@@ -299,9 +313,11 @@ void TractDataWrapper::init() {
     } else {
         auto start = std::chrono::high_resolution_clock::now();
         for (auto tract: data) {
-            colors.insert(colors.end(), tract.gradient.begin(), tract.gradient.end());
+            for (const auto& g: tract.gradient) {
+                addColorAsByte(g);
+                addNormalAsByte(g);
+            }
             vertices.insert(vertices.end(), tract.vertices.begin(), tract.vertices.end());
-            normals.insert(normals.end(), tract.gradient.begin(), tract.gradient.end());
             indices.insert(indices.end(), tract.indices.begin(), tract.indices.end());
             tractEndIndex.push_back(indices.size());
             indices.push_back(0xFFFFFFFF);
@@ -312,7 +328,9 @@ void TractDataWrapper::init() {
     }
 
     // |vertices| == |colors| == |normals|
-    auto size = (long long) (vertices.size() * sizeof(glm::vec3));
+    auto vs = (long long) (vertices.size() * sizeof(glm::vec3));
+    auto cs = (long long) (colors.size() * sizeof(uint8_t));
+    auto ns = (long long) (normals.size() * sizeof(uint8_t));
 
     // Bind Vertex Array Object
     glBindVertexArray(VAO);
@@ -320,18 +338,18 @@ void TractDataWrapper::init() {
     // Copy Vertex data
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Allocate memory
-    glBufferData(GL_ARRAY_BUFFER, size * 3, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vs + cs + ns, nullptr, GL_STATIC_DRAW);
     // Positions
-    glBufferSubData(GL_ARRAY_BUFFER, 0, size, &vertices[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vs, &vertices[0]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glEnableVertexAttribArray(0);
     // Colors
-    glBufferSubData(GL_ARRAY_BUFFER, size, size, &colors[0]);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*) size);
+    glBufferSubData(GL_ARRAY_BUFFER, vs, cs, &colors[0]);
+    glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*) vs);
     glEnableVertexAttribArray(1);
     // Normals
-    glBufferSubData(GL_ARRAY_BUFFER, size * 2, size, &normals[0]);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (void*) (2 * size));
+    glBufferSubData(GL_ARRAY_BUFFER, vs + cs, ns, &normals[0]);
+    glVertexAttribPointer(2, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*) (vs + cs));
     glEnableVertexAttribArray(2);
 
     // Index buffer
@@ -353,8 +371,6 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
     parse(filePath, true);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
-    glGenBuffers(1, &GVO);
-    glGenBuffers(1, &VNO);
     glGenBuffers(1, &EBO);
     TractDataWrapper::init();
 }
