@@ -10,6 +10,12 @@
 #include "TractDataWrapper.h"
 #include "RayTraceWrapper.h"
 
+enum rendererType {
+    UNSHADED_LINES,
+    SHADED_LINES,
+    SHADED_TUBES
+};
+
 class RenderSettings {
 public:
     GLFWWrapper* glfw = nullptr;
@@ -17,15 +23,14 @@ public:
     RayTraceWrapper* rt = nullptr;
     std::vector<std::unique_ptr<TractDataWrapper>> datasets;
     std::vector<std::unique_ptr<TractDataWrapper>> examples;
+    rendererType renderer = UNSHADED_LINES;
     bool show_demo_window = false;
-    bool show_another_window = false;
     bool MSAA = true;
     bool vsync = true;
     bool fullScreen = false;
-    bool shadedLines = false;
-    bool drawTubes = false;
     bool highlightEnabled = false;
     bool rtEnabled = false;
+    bool rotatingLight = false;
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;

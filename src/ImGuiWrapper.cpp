@@ -144,7 +144,6 @@ void ImGuiWrapper::draw() {
         if (IconCollapsingHeader("Rendering Settings", ICON_FA_VECTOR_SQUARE, ImGuiTreeNodeFlags_DefaultOpen)) {
             IconSeparatorText("General Options", ICON_FA_SLIDERS);
 
-            ImVec2 avail_size = ImGui::GetContentRegionAvail();
             ImGui::ColorEdit3("Background Color", (float*) &settings.clear_color, ImGuiColorEditFlags_NoInputs);
             HelpMarker("The user can pick the desired background color to suite their preferences.");
 
@@ -166,11 +165,20 @@ void ImGuiWrapper::draw() {
 
             IconSeparatorText("Tract Options", ICON_FA_DIAGRAM_PROJECT);
 
-            if (ImGui::Checkbox("Line Shading", &settings.shadedLines)) {
-                if (settings.shadedLines) { settings.shader = settings.lineShadingShader; }
-                else { settings.shader = settings.defaultShader; }
-            }
-            HelpMarker("When enabled, lighting will be applied to the line renderer.");
+            const char* renderers[] = {"Unshaded Lines", "Shaded Lines", "Shaded Tubes"};
+            ImGui::PushItemWidth(170);
+            if (ImGui::Combo("Renderer", (int*) &settings.renderer, renderers, IM_ARRAYSIZE(renderers))) {
+                switch (settings.renderer) {
+                    case UNSHADED_LINES:
+                        settings.shader = settings.defaultShader;
+                        break;
+                    case SHADED_LINES:
+                        settings.shader = settings.lineShadingShader;
+                        break;
+                    case SHADED_TUBES:
+                        settings.shader = settings.defaultShader;
+                        break;
+                }
 
             ImGui::Checkbox("RT enabled", &settings.rtEnabled);
             HelpMarker("When enabled, raytracing will be used for the rendering.");
@@ -183,9 +191,18 @@ void ImGuiWrapper::draw() {
                     dataset->init();
                 }
             }
-            HelpMarker("When enabled, draw tubes instead of lines. Tubes have thickness whereas lines do not.");
+            ImGui::PopItemWidth();
+            HelpMarker("Select The desired renderer.\n\n"
+                       "- Unshaded Lines: (default)\nThe tracts are rendered as lines. All colors will have the same brightness.\n\n"
+                       "- Shaded Lines:\nThe tracts are rendered as lines. Lighting will be applied to the colors.\n\n"
+                       "- Shaded Tubes:\nThe tracts are rendered as tubes. Tubes are heavier to render. The user can select how many sides the tubes have and how thick the tubes are. Lighting will be applied to the colors.");
 
-            if (settings.drawTubes) {
+            if (settings.renderer == SHADED_TUBES || settings.renderer == SHADED_LINES) {
+                ImGui::Checkbox("Rotating Light", &settings.rotatingLight);
+                HelpMarker("When enabled, the light direction will continuously rotate.");
+            }
+
+            if (settings.renderer == SHADED_TUBES) {
                 ImGui::PushItemWidth(170);
                 if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
                     for (auto& dataset: settings.datasets) {
