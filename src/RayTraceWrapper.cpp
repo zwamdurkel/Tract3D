@@ -10,19 +10,7 @@ void RayTraceWrapper::init() {
     glGenBuffers(1, &VBO);
     glGenTextures(1, &texture);
 
-    glfwGetWindowSize(settings.glfw->getWindow(), &imgWidth, &imgHeight);
-    imgSize = imgWidth * imgHeight;
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, imgWidth, imgHeight, 0,
-                 GL_RGBA, GL_FLOAT, NULL);
-    glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-    glBindTexture(GL_TEXTURE_2D, 0); // unbind
+    resetImg();
 
     //quad vertices
     float vertices[]{//vertices of the quad on which we render the result
@@ -42,7 +30,7 @@ void RayTraceWrapper::init() {
     glEnableVertexAttribArray(0);
 }
 
-void RayTraceWrapper::reset() {
+void RayTraceWrapper::resetImg() {
     glDeleteTextures(1, &texture);
     glGenTextures(1, &texture);
     glfwGetWindowSize(settings.glfw->getWindow(), &imgWidth, &imgHeight);
@@ -60,8 +48,25 @@ void RayTraceWrapper::reset() {
     glBindTexture(GL_TEXTURE_2D, 0); // unbind
 }
 
+void RayTraceWrapper::resetCamera() {
+    float w = glm::tan(glm::radians(settings.camera.FOV / 2)) * settings.camera.NearPlane;
+    float h = w * ((float) imgHeight / (float) imgWidth);
+    pixelDelta = w / imgWidth;
+    glm::vec3 screenCentre = settings.camera.Position + settings.camera.Front * settings.camera.NearPlane;
+    lowerLeft = screenCentre - w * settings.camera.Right - h * settings.camera.Up;
+//    Info(lowerLeft.x << ", " << lowerLeft.y << ", " << lowerLeft.z);
+//    Info(settings.camera.Position.x << ", " << settings.camera.Position.y << ", " << settings.camera.Position.z);
+}
+
 void RayTraceWrapper::draw() {
+    resetCamera();
+
     settings.rtComputeShader.use();
+    settings.rtComputeShader.setVec3("eye", settings.camera.Position);
+    settings.rtComputeShader.setVec3("up", settings.camera.Up);
+    settings.rtComputeShader.setVec3("right", settings.camera.Right);
+    settings.rtComputeShader.setVec3("lowerLeft", lowerLeft);
+    settings.rtComputeShader.setFloat("pixelDelta", pixelDelta);
     glDispatchCompute(imgWidth, imgHeight, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

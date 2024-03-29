@@ -152,6 +152,9 @@ void ImGuiWrapper::draw() {
             }
             HelpMarker("When enabled, sharpen the image at the cost of some performance.");
 
+            ImGui::Checkbox("RT enabled", &settings.rtEnabled);
+            HelpMarker("When enabled, use ray tracing for the rendering.");
+
             if (ImGui::Checkbox("V-Sync", &settings.vsync)) {
                 glfwSwapInterval((int) settings.vsync);
             }
@@ -180,10 +183,6 @@ void ImGuiWrapper::draw() {
                         break;
                 }
 
-            ImGui::Checkbox("RT enabled", &settings.rtEnabled);
-            HelpMarker("When enabled, raytracing will be used for the rendering.");
-
-            if (ImGui::Checkbox("Draw Tubes", &settings.drawTubes)) {
                 for (auto& dataset: settings.datasets) {
                     dataset->init();
                 }

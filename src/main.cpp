@@ -149,31 +149,32 @@ void run() {
             lightPos = lightRotation * lightPos;
         }
 
-        shader.use();
-        shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
-        shader.setMat4("uModelMatrix", modelMatrix);
-        shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
-        shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
-        shader.setVec3("uViewPos", settings.camera.Position);
-        shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
+        settings.shader.use();
+        settings.shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
+        settings.shader.setMat4("uModelMatrix", modelMatrix);
+        settings.shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
+        settings.shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
+        settings.shader.setVec3("uViewPos", settings.camera.Position);
+        settings.shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
 
         glfw.draw();
-
-        auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
-        [&] {
-            for (const auto& datasets: dataList) {
-                for (auto& d: datasets.get()) {
-                    if (d->name == settings.highlightedBundle && d->enabled) {
-                        d->draw();
-                        return;
+        if (!settings.rtEnabled) {
+            auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
+            [&] {
+                for (const auto& datasets: dataList) {
+                    for (auto& d: datasets.get()) {
+                        if (d->name == settings.highlightedBundle && d->enabled) {
+                            d->draw();
+                            return;
+                        }
                     }
                 }
-            }
-        }();
-        for (const auto& datasets: dataList) {
-            for (auto& d: datasets.get()) {
-                if (d->name != settings.highlightedBundle && d->enabled) {
-                    d->draw();
+            }();
+            for (const auto& datasets: dataList) {
+                for (auto& d: datasets.get()) {
+                    if (d->name != settings.highlightedBundle && d->enabled) {
+                        d->draw();
+                    }
                 }
             }
         } else {
@@ -218,4 +219,6 @@ void processInput(GLFWwindow* window) {
         cam.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         cam.ProcessKeyboard(DOWN, deltaTime);
+
+
 }

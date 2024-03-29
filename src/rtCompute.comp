@@ -2,7 +2,132 @@
 layout(local_size_x = 1, local_size_y = 1) in;
 layout(rgba32f, location = 0, binding = 0) writeonly uniform image2D img_output;
 
+uniform vec3 eye;
+uniform vec3 up;
+uniform vec3 right;
+uniform vec3 lowerLeft;
+uniform float pixelDelta;
+
+const float INFINITY = 1.0 / 0.0;
+
+struct Ray {
+    vec3 origin;
+    vec3 dir;
+    vec3 dir_inv;
+};
+
+struct Cylinder{
+    vec3 cap;
+    vec3 dir;
+    float r;
+    float length;
+};
+
+struct Box{
+    vec3 min;
+    vec3 max;
+};
+
+struct HitRecord{
+    vec3 point;
+    float t;
+    vec3 normal;
+};
+
+vec3 rayAt(Ray ray, float t){
+    return ray.origin + t * ray.dir;
+}
+
+bool solveHalfQuadratic(float a, float half_b, float c, out float t0, out float t1){
+    float D = half_b * half_b - a * c;
+    if (D < 0){ return false; }
+    float r1 = (-half_b - sqrt(D)) / a;
+    float r2 = (-half_b + sqrt(D)) / a;
+
+    t0 = min(r1, r2);
+    t1 = max(r1, r2);
+
+    return true;
+}
+
+//check for bounds to skip checking some tubes
+bool checkBounds(Box b, Ray r) {
+    double tmin = -INFINITY, tmax = INFINITY;
+
+    for (int i = 0; i < 3; ++i) {
+        double t1 = (b.min[i] - r.origin[i])*r.dir_inv[i];
+        double t2 = (b.max[i] - r.origin[i])*r.dir_inv[i];
+
+        tmin = max(tmin, min(t1, t2));
+        tmax = min(tmax, max(t1, t2));
+    }
+
+    return tmax > max(tmin, 0.0);
+}
+
+
+//created using https://hugi.scene.org/online/hugi24/coding%20graphics%20chris%20dragan%20raytracing%20shapes.htm
+//as a guide for calculating the intersections
+bool intersectCylinder(Ray ray, Cylinder cylinder, out HitRecord hit){
+    vec3 oc = ray.origin - cylinder.cap;
+
+    //variables to reuse for performance reasons
+    float ddotv = dot(ray.dir, cylinder.dir);
+    float xdotv = dot(oc, cylinder.dir);
+
+    float a = dot(ray.dir, ray.dir) - ddotv * ddotv;
+    float half_b = dot(ray.dir, oc) - ddotv * xdotv;
+    float c = dot(oc, oc) - xdotv * xdotv - cylinder.r * cylinder.r;
+
+    float t0, t1;
+    if (!solveHalfQuadratic(a, half_b, c, t0, t1)){
+        return false;
+    }
+
+    //distance along length of cyllinder
+    float d0 = ddotv * t0 + xdotv;
+    float d1 = ddotv * t1 + xdotv;
+
+    if (d0 < 0 || d0 > cylinder.length){
+        if (d1 < 0 || d1 > cylinder.length){ return false; }
+        hit.normal = -normalize(oc + ray.dir * t1 - cylinder.dir * d1);
+        hit.t = t1;
+        return true;
+    }
+    hit.normal = normalize(oc + ray.dir * t0 - cylinder.dir * d0);
+    hit.t = t0;
+    return true;
+}
+
 void main() {
     ivec2 pixel_index = ivec2(gl_GlobalInvocationID.xy);
-    imageStore(img_output, pixel_index, vec4(0.0, 1.0, 0.0, 1.0));
+    vec2 scaled_index = pixel_index * pixelDelta * 2;
+    ivec2 img_dims = imageSize(img_output);
+
+    int imgWidth = img_dims.x;
+    int imgHeight = img_dims.y;
+
+    Cylinder c = Cylinder(vec3(0.0f, -26.0f, 95.0f), vec3(0, 1, 0), 0.5, 2);
+    Box b;
+    b.min = c.cap + vec3(-0.5, 0.0, -0.5);
+    b.max = c.cap + vec3(0.5, 2, 0.5);
+    //float colour = pixel_index.y / float(imgHeight);
+    float colour = 1;
+    vec3 screenPos = lowerLeft + scaled_index.x * right + scaled_index.y * up;
+    vec3 direction = normalize(screenPos - eye);
+    vec3 inv_dir = 1 / direction;
+    Ray ray = Ray(eye, direction, inv_dir);
+
+
+    HitRecord hit;
+    const int stressTest = 1;
+    for (int i = 0; i < stressTest;i++){
+        if (!checkBounds(b, ray)){ continue; }
+        if (intersectCylinder(ray, c, hit)){
+            if (hit.t < 0){ continue; }
+            colour = dot(hit.normal, vec3(1, 0, 0));
+        }
+    }
+
+    imageStore(img_output, pixel_index, vec4(colour));
 }
