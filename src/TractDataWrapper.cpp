@@ -8,6 +8,7 @@
 #include "logger.h"
 #include <chrono>
 #include "RenderSettings.h"
+#include <glm/gtc/type_ptr.hpp>
 
 std::vector<std::string> TractDataWrapper::readline(std::ifstream& file) {
     std::string input;
@@ -301,6 +302,7 @@ void TractDataWrapper::init() {
 
     vertices.clear();
     colors.clear();
+    colors2.clear();
     normals.clear();
     indices.clear();
     tractEndIndex.clear();
@@ -317,6 +319,11 @@ void TractDataWrapper::init() {
                 addColorAsByte(g);
                 addNormalAsByte(g);
             }
+            for (int i = 0; i < tract.vertices.size(); ++i) {
+                ssboData.push_back({tract.vertices[i].x, tract.vertices[i].y, tract.vertices[i].z, tract.gradient[i].x,
+                                    tract.gradient[i].y, tract.gradient[i].z});
+            }
+            colors2.insert(colors2.end(), tract.gradient.begin(), tract.gradient.end());
             vertices.insert(vertices.end(), tract.vertices.begin(), tract.vertices.end());
             indices.insert(indices.end(), tract.indices.begin(), tract.indices.end());
             tractEndIndex.push_back(indices.size());
@@ -336,21 +343,24 @@ void TractDataWrapper::init() {
     glBindVertexArray(VAO);
 
     // Copy Vertex data
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Allocate memory
-    glBufferData(GL_ARRAY_BUFFER, vs + cs + ns, nullptr, GL_STATIC_DRAW);
+//    glBufferData(GL_ARRAY_BUFFER, ns, nullptr, GL_STATIC_DRAW);
     // Positions
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vs, &vertices[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(0);
-    // Colors
-    glBufferSubData(GL_ARRAY_BUFFER, vs, cs, &colors[0]);
-    glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*) vs);
-    glEnableVertexAttribArray(1);
-    // Normals
-    glBufferSubData(GL_ARRAY_BUFFER, vs + cs, ns, &normals[0]);
-    glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, 0, (void*) (vs + cs));
-    glEnableVertexAttribArray(2);
+//    glBufferSubData(GL_ARRAY_BUFFER, 0, vs, &vertices[0]);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+//    glEnableVertexAttribArray(0);
+//    // Colors
+//    glBufferSubData(GL_ARRAY_BUFFER, vs, cs, &colors[0]);
+//    glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*) vs);
+//    glEnableVertexAttribArray(1);
+//    // Normals
+//    glBufferSubData(GL_ARRAY_BUFFER, 0, ns, &normals[0]);
+//    glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, 0, (void*) 0);
+//    glEnableVertexAttribArray(2);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
 
     // Index buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -360,6 +370,7 @@ void TractDataWrapper::init() {
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
     settings.shader.setFloat("alpha", alpha);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
     if (settings.renderer == SHADED_TUBES) {
         glDrawElements(GL_TRIANGLE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
     } else {
@@ -372,6 +383,7 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
+    glGenBuffers(1, &SSBO);
     TractDataWrapper::init();
 }
 
@@ -379,5 +391,6 @@ TractDataWrapper::~TractDataWrapper() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+    glDeleteBuffers(1, &SSBO);
 }
 
