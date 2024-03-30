@@ -8,10 +8,9 @@
 class RayTraceWrapper : AbstractWrapper {
 private:
     unsigned int VAO, VBO, texture;
-    int imgSize, imgWidth, imgHeight;
+    int imgSize, imgWidth, imgHeight, pixelOffset, rowsPerFrame, imgNum;
     float pixelDelta;
     glm::vec3 lowerLeft;
-
 public:
     RayTraceWrapper();
 

@@ -11,7 +11,8 @@ void RayTraceWrapper::init() {
     glGenTextures(1, &texture);
 
     resetImg();
-
+    rowsPerFrame = 1;
+    pixelOffset = imgHeight - 1;
     //quad vertices
     float vertices[]{//vertices of the quad on which we render the result
             -1.0f, -1.0f, 0.0f,
@@ -31,6 +32,8 @@ void RayTraceWrapper::init() {
 }
 
 void RayTraceWrapper::resetImg() {
+    pixelOffset = 0;
+    imgNum = 0;
     glDeleteTextures(1, &texture);
     glGenTextures(1, &texture);
     glfwGetWindowSize(settings.glfw->getWindow(), &imgWidth, &imgHeight);
@@ -49,7 +52,7 @@ void RayTraceWrapper::resetImg() {
 }
 
 void RayTraceWrapper::resetCamera() {
-    float w = glm::tan(glm::radians(settings.camera.FOV / 2)) * settings.camera.NearPlane;
+    float w = glm::tan(glm::radians(settings.camera.FOV / 2.0f)) * settings.camera.NearPlane;
     float h = w * ((float) imgHeight / (float) imgWidth);
     pixelDelta = w / imgWidth;
     glm::vec3 screenCentre = settings.camera.Position + settings.camera.Front * settings.camera.NearPlane;
@@ -67,7 +70,17 @@ void RayTraceWrapper::draw() {
     settings.rtComputeShader.setVec3("right", settings.camera.Right);
     settings.rtComputeShader.setVec3("lowerLeft", lowerLeft);
     settings.rtComputeShader.setFloat("pixelDelta", pixelDelta);
-    glDispatchCompute(imgWidth, imgHeight, 1);
+    settings.rtComputeShader.setInt("pixelYoffset", pixelOffset);
+    settings.rtComputeShader.setInt("frameCount", imgNum);
+    int size = 0;
+    for (auto& ds: settings.datasets) {
+        ds->bindSSBO();
+        size += ds->getVertexNum();
+    }
+    Info(pixelOffset);
+    settings.rtComputeShader.setInt("bufferSize", size);
+
+    glDispatchCompute(imgWidth, rowsPerFrame, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
@@ -78,6 +91,11 @@ void RayTraceWrapper::draw() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    int newOffset = pixelOffset + rowsPerFrame;
+    if (newOffset >= imgHeight - 1) {
+        imgNum++;
+    }
+    pixelOffset = (newOffset) % imgHeight;
 }
 
 void RayTraceWrapper::cleanup() {

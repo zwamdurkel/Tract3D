@@ -367,10 +367,14 @@ void TractDataWrapper::init() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indices.size(), &indices[0], GL_STATIC_DRAW);
 }
 
+void TractDataWrapper::bindSSBO() {
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
+}
+
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
     settings.shader.setFloat("alpha", alpha);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
+    bindSSBO();
     if (settings.renderer == SHADED_TUBES) {
         glDrawElements(GL_TRIANGLE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
     } else {

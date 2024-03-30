@@ -28,7 +28,7 @@ uniform mat4 uProjectionMatrix;
 void main()
 {
     normal = vec3(uModelMatrix * vec4(ssboData[gl_VertexID].gx, ssboData[gl_VertexID].gy, ssboData[gl_VertexID].gz, 1.0));
-    modelPos = uModelMatrix * vec4(ssboData[gl_VertexID].x, ssboData[gl_VertexID].y, ssboData[gl_VertexID].z, 1.0);
+    modelPos = vec4(ssboData[gl_VertexID].x, ssboData[gl_VertexID].y, ssboData[gl_VertexID].z, 1.0);
     gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
     //    fColor = abs(vec3(uModelMatrix * vec4(color, 1.0)));// set ourColor to the input color we got from the vertex data
     fColor = abs(vec3(uModelMatrix * vec4(ssboData[gl_VertexID].gx, ssboData[gl_VertexID].gy, ssboData[gl_VertexID].gz, 1.0)));

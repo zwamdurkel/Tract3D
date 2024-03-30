@@ -90,11 +90,11 @@ bool getExamples() {
     namespace fs = std::filesystem;
     auto path = getPath();
 
-    for (const auto& entry: fs::directory_iterator(path + "examples")) {
-        std::string filePath = entry.path().string();
-        std::replace(filePath.begin(), filePath.end(), '\\', '/');
-        settings.examples.emplace_back(std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath));
-    }
+//    for (const auto& entry: fs::directory_iterator(path + "examples")) {
+//        std::string filePath = entry.path().string();
+//        std::replace(filePath.begin(), filePath.end(), '\\', '/');
+//        settings.examples.emplace_back(std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath));
+//    }
 
     return true;
 }

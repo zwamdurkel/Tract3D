@@ -80,4 +80,8 @@ public:
     void draw() override;
 
     void init() override;
+
+    void bindSSBO();
+
+    int getVertexNum() { return vertices.size(); }
 };
