@@ -13,11 +13,18 @@ struct Tract {
     std::vector<int> indices;
 };
 
+struct ssboUnit {
+    float position[3];
+    float gradient[3];
+};
+
 class TractDataWrapper : AbstractWrapper {
 
 private:
-    unsigned int VAO = 0, VBO = 0, EBO = 0;
+    unsigned int VAO = 0, VBO = 0, EBO = 0, SSBO = 0;
     std::vector<uint8_t> colors;
+    std::vector<glm::vec3> colors2;
+    std::vector<ssboUnit> ssboData;
     std::vector<int8_t> normals;
     std::vector<glm::vec3> vertices;
     std::vector<uint32_t> indices;
