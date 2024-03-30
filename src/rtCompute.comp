@@ -50,6 +50,14 @@ bool solveHalfQuadratic(float a, float half_b, float c, out float t0, out float 
     return true;
 }
 
+Box boxFromCylinder(Cylinder c){
+    vec3 a = c.cap;
+    vec3 b = a + c.dir * c.length;
+    vec3 tmp = vec3(c.r);
+
+    return Box(min(a, b) - tmp, max(a, b) + tmp);
+}
+
 //check for bounds to skip checking some tubes
 bool checkBounds(Box b, Ray r) {
     double tmin = -INFINITY, tmax = INFINITY;
@@ -69,6 +77,8 @@ bool checkBounds(Box b, Ray r) {
 //created using https://hugi.scene.org/online/hugi24/coding%20graphics%20chris%20dragan%20raytracing%20shapes.htm
 //as a guide for calculating the intersections
 bool intersectCylinder(Ray ray, Cylinder cylinder, out HitRecord hit){
+    if (!checkBounds(boxFromCylinder(cylinder), ray)){ return false; }
+
     vec3 oc = ray.origin - cylinder.cap;
 
     //variables to reuse for performance reasons
@@ -122,7 +132,6 @@ void main() {
     HitRecord hit;
     const int stressTest = 1;
     for (int i = 0; i < stressTest;i++){
-        if (!checkBounds(b, ray)){ continue; }
         if (intersectCylinder(ray, c, hit)){
             if (hit.t < 0){ continue; }
             colour = dot(hit.normal, vec3(1, 0, 0));
