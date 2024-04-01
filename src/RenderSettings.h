@@ -13,7 +13,8 @@
 enum rendererType {
     UNSHADED_LINES,
     SHADED_LINES,
-    SHADED_TUBES
+    SHADED_TUBES,
+    RAY_TRACING
 };
 
 class RenderSettings {
@@ -29,7 +30,7 @@ public:
     bool vsync = true;
     bool fullScreen = false;
     bool highlightEnabled = false;
-    bool rtEnabled = false;
+    bool blurEnabled = false;
     bool rotatingLight = false;
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;

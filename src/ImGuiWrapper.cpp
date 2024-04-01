@@ -152,9 +152,6 @@ void ImGuiWrapper::draw() {
             }
             HelpMarker("When enabled, sharpen the image at the cost of some performance.");
 
-            ImGui::Checkbox("RT enabled", &settings.rtEnabled);
-            HelpMarker("When enabled, use ray tracing for the rendering.");
-
             if (ImGui::Checkbox("V-Sync", &settings.vsync)) {
                 glfwSwapInterval((int) settings.vsync);
             }
@@ -168,7 +165,7 @@ void ImGuiWrapper::draw() {
 
             IconSeparatorText("Tract Options", ICON_FA_DIAGRAM_PROJECT);
 
-            const char* renderers[] = {"Unshaded Lines", "Shaded Lines", "Shaded Tubes"};
+            const char* renderers[] = {"Unshaded Lines", "Shaded Lines", "Shaded Tubes", "Ray tracing"};
             ImGui::PushItemWidth(170);
             if (ImGui::Combo("Renderer", (int*) &settings.renderer, renderers, IM_ARRAYSIZE(renderers))) {
                 switch (settings.renderer) {
@@ -224,29 +221,37 @@ void ImGuiWrapper::draw() {
                         "Specify the diameter of the tubes. Tubes that are too thick may not work well with some effects.");
                 ImGui::PopItemWidth();
             }
-
-            if (ImGui::Checkbox("Highlight", &settings.highlightEnabled)) {
-                for (auto& dataset: settings.datasets) {
-                    if (!settings.highlightEnabled) {
-                        dataset->alpha = settings.generalAlpha;
-                    } else {
-                        if (dataset->name != settings.highlightedBundle) {
-                            dataset->alpha = settings.highlightAlpha;
+            if (settings.renderer != RAY_TRACING) {
+                if (ImGui::Checkbox("Highlight", &settings.highlightEnabled)) {
+                    for (auto& dataset: settings.datasets) {
+                        if (!settings.highlightEnabled) {
+                            dataset->alpha = settings.generalAlpha;
+                        } else {
+                            if (dataset->name != settings.highlightedBundle) {
+                                dataset->alpha = settings.highlightAlpha;
+                            }
+                        }
+                    }
+                    for (auto& dataset: settings.examples) {
+                        if (!settings.highlightEnabled) {
+                            dataset->alpha = settings.generalAlpha;
+                        } else {
+                            if (dataset->name != settings.highlightedBundle) {
+                                dataset->alpha = settings.highlightAlpha;
+                            }
                         }
                     }
                 }
-                for (auto& dataset: settings.examples) {
-                    if (!settings.highlightEnabled) {
-                        dataset->alpha = settings.generalAlpha;
-                    } else {
-                        if (dataset->name != settings.highlightedBundle) {
-                            dataset->alpha = settings.highlightAlpha;
-                        }
-                    }
+                HelpMarker("When enabled, allows the user to select a tract bundle to highlight.");
+            } else {
+                ImGui::Checkbox("Enable Blur", &settings.blurEnabled);
+                HelpMarker("When enabled, blurs the image to attempt to remove noise");
+
+                if (ImGui::Button("Reset Image")) {
+                    settings.rt->cleanup();
+                    settings.rt->init();
                 }
             }
-            HelpMarker("When enabled, allows the user to select a tract bundle to highlight.");
-
             if (settings.highlightEnabled) {
                 ImGui::PushItemWidth(170);
                 if (ImGui::SliderFloat("Highlight Alpha", &settings.highlightAlpha, 0.0f, 1.0f, "%.2f")) {

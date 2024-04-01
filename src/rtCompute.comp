@@ -1,6 +1,6 @@
 #version 460 core
 layout(local_size_x = 32, local_size_y = 1) in;
-layout(rgba32f, location = 0, binding = 0) writeonly uniform image2D img_output;
+layout(rgba32f, location = 0, binding = 0) uniform image2D img_output;
 
 #define minRayDist 0.01
 #define maxLength 20
@@ -29,6 +29,38 @@ uniform int bufferSize;
 uniform int frameCount;
 
 const float INFINITY = 1.0 / 0.0;
+
+// PCG (permuted congruential generator). Thanks to:
+// www.pcg-random.org and www.shadertoy.com/view/XlGcRh
+uint NextRandom(inout uint state)
+{
+    state = state * 747796405 + 2891336453;
+    uint result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737;
+    result = (result >> 22) ^ result;
+    return result;
+}
+
+float RandomValue(inout uint state)
+{
+    return NextRandom(state) / 4294967295.0;// 2^32 - 1
+}
+
+float RandomValueNormalDistribution(inout uint rngState)
+{
+    // Thanks to https://stackoverflow.com/a/6178290
+    float theta = 2 * 3.1415926 * RandomValue(rngState);
+    float rho = sqrt(-2 * log(RandomValue(rngState)));
+    return rho * cos(theta);
+}
+
+vec3 RandomDirection(inout uint rngState)
+{
+    // Thanks to https://math.stackexchange.com/a/1585996
+    float x = RandomValueNormalDistribution(rngState);
+    float y = RandomValueNormalDistribution(rngState);
+    float z = RandomValueNormalDistribution(rngState);
+    return normalize(vec3(x, y, z));
+}
 
 struct Ray {
     vec3 origin;
@@ -80,7 +112,7 @@ Box boxFromCylinder(Cylinder c){
 
 //check for bounds to skip checking some tubes
 //from https://tavianator.com/2011/ray_box.html
-bool checkBounds(Box b, Ray r) {
+bool checkBounds(Box b, Ray r, out double t) {
     double tmin = -INFINITY, tmax = INFINITY;
 
     for (int i = 0; i < 3; ++i) {
@@ -90,15 +122,19 @@ bool checkBounds(Box b, Ray r) {
         tmin = max(tmin, min(t1, t2));
         tmax = min(tmax, max(t1, t2));
     }
-
+    t = tmin < 0? tmax : tmin;
     return tmax > max(tmin, 0.0);
 }
 
 
 //created using https://hugi.scene.org/online/hugi24/coding%20graphics%20chris%20dragan%20raytracing%20shapes.htm
 //as a guide for calculating the intersections
-bool intersectCylinder(Ray ray, Cylinder cylinder, out HitRecord hit, out float d){
-    if (!checkBounds(boxFromCylinder(cylinder), ray)){ return false; }
+bool intersectCylinder(Ray ray, Cylinder cylinder, out HitRecord hit, out float d, float bestT){
+    double intersect;
+
+    if (!checkBounds(boxFromCylinder(cylinder), ray, intersect)){ return false; }
+    if (intersect > bestT){ return false; }
+
 
     vec3 oc = ray.origin - cylinder.cap;
 
@@ -135,7 +171,8 @@ bool intersectCylinder(Ray ray, Cylinder cylinder, out HitRecord hit, out float 
 bool checkIntersections(Ray ray, out HitRecord hit){
     HitRecord tmpHit;
     hit.t = -1;
-    int stressTest = bufferSize/10;
+    float bestT = INFINITY;
+    int stressTest = bufferSize;
     ssboUnit ss0 = ssboData[0];
     ssboUnit ss1;
     vec3 pos0 = vec3(ss0.x, ss0.y, ss0.z);
@@ -146,17 +183,24 @@ bool checkIntersections(Ray ray, out HitRecord hit){
         ss1 = ssboData[i];
         pos1 = vec3(ss1.x, ss1.y, ss1.z);
         vec3 diff = pos1 - pos0;
+        vec3 grad = vec3(ss0.gx, ss0.gy, ss0.gz);
         float length = length(diff);
         //if (length > maxLength){ continue; }
         diff /= length;
+        if (dot(diff, grad) < 0.5){
+            pos0 = pos1;
+            ss0 = ss1;
+            continue;
+        }
 
         c.cap = pos0;
         c.dir = diff;
         c.length = length;
 
-        if (intersectCylinder(ray, c, tmpHit, d)){
+        if (intersectCylinder(ray, c, tmpHit, d, bestT)){
             if (tmpHit.t < minRayDist || (hit.t > 0 && hit.t < tmpHit.t)){ continue; }
             hit.t = tmpHit.t;
+            bestT = hit.t;
             hit.normal = tmpHit.normal;
             hit.colour = mix(vec3(ss0.gx, ss0.gy, ss0.gz), vec3(ss1.gx, ss1.gy, ss1.gz), d / c.length);
         }
@@ -174,8 +218,13 @@ bool checkShadow(vec3 hitPoint, vec3 lightDir){
     return checkIntersections(ray, hit);
 }
 
+vec3 GetEnvLight(Ray ray){
+    return vec3(max(0, dot(ray.dir, vec3(0, 1, 0))));
+}
+
 void main() {
     const vec3 lightDir = vec3(0, 1, 0);
+    const int depth = 30;
     ivec2 pixel_index = ivec2(gl_GlobalInvocationID.xy);
     pixel_index.y += pixelYoffset;
     vec2 scaled_index = pixel_index * pixelDelta * 2;
@@ -184,24 +233,32 @@ void main() {
     int imgWidth = img_dims.x;
     int imgHeight = img_dims.y;
 
+    uint rngState = (imgWidth * pixel_index.y) + pixel_index.x + frameCount * 719393;//bro gotta think of something
 
     //float colour = pixel_index.y / float(imgHeight);
-    vec3 colour = vec3(0);
+    vec3 pixelColour = vec3(0);
+    vec3 rayColour = vec3(1);
     vec3 screenPos = lowerLeft + scaled_index.x * right + scaled_index.y * up;
-    vec3 direction = normalize(screenPos - eye);
+    vec3 direction = normalize(screenPos  - eye);
     vec3 inv_dir = 1 / direction;
     Ray ray = Ray(eye, direction, inv_dir);
 
     HitRecord hit;
-
-    if (checkIntersections(ray, hit)){
-        vec3 hitPoint = rayAt(ray, hit.t);
-        if (!checkShadow(hitPoint, lightDir)){
-            colour = max(0.0, dot(hit.normal, lightDir)) * hit.colour;
+    for (int i = 0; i < depth; i++){
+        if (checkIntersections(ray, hit)){
+            vec3 hitPoint = rayAt(ray, hit.t);
+            ray.origin = hitPoint;
+            ray.dir = normalize(hit.normal + RandomDirection(rngState));
+            ray.dir_inv = 1 / ray.dir;
+            rayColour *= abs(hit.colour);
+        } else {
+            pixelColour = GetEnvLight(ray) * rayColour;
+            break;
         }
     }
-    vec3 c_old = texture(img_output, pixel_index) / frameCount;
-    vec3 c_edit = abs(colour) / frameCount;
-    vec3 c_new = c_old * (frameCount - 1) + c_edit;
-    imageStore(img_output, pixel_index, vec4(c_new, 1));
+
+    //pixelColour = RandomDirection(rngState);
+    vec4 c_old = imageLoad(img_output, pixel_index) * (frameCount - 1);
+    vec4 c_new = (vec4(pixelColour, 1) + c_old) / frameCount;
+    imageStore(img_output, pixel_index, c_new);
 }

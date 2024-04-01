@@ -158,7 +158,7 @@ void run() {
         settings.shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
 
         glfw.draw();
-        if (!settings.rtEnabled) {
+        if (settings.renderer != rendererType::RAY_TRACING) {
             auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
             [&] {
                 for (const auto& datasets: dataList) {

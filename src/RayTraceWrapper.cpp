@@ -73,11 +73,10 @@ void RayTraceWrapper::draw() {
     settings.rtComputeShader.setInt("pixelYoffset", pixelOffset);
     settings.rtComputeShader.setInt("frameCount", imgNum);
     int size = 0;
-    for (auto& ds: settings.datasets) {
-        ds->bindSSBO();
-        size += ds->getVertexNum();
-    }
-    Info(pixelOffset);
+    auto& ds = settings.datasets[0];
+    ds->bindSSBO();
+    size = ds->getVertexNum();
+
     settings.rtComputeShader.setInt("bufferSize", size);
 
     glDispatchCompute(imgWidth, rowsPerFrame, 1);
@@ -87,13 +86,16 @@ void RayTraceWrapper::draw() {
     settings.rtRenderShader.use();
     settings.rtRenderShader.setInt("windowW", imgWidth);
     settings.rtRenderShader.setInt("windowH", imgHeight);
+    settings.rtRenderShader.setInt("frameCount", imgNum);
+    settings.rtRenderShader.setInt("blurEnabled", settings.blurEnabled);
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     int newOffset = pixelOffset + rowsPerFrame;
-    if (newOffset >= imgHeight - 1) {
+    if (newOffset >= imgHeight) {
         imgNum++;
+        Info(imgNum);
     }
     pixelOffset = (newOffset) % imgHeight;
 }
