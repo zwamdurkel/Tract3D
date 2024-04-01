@@ -296,75 +296,27 @@ void TractDataWrapper::addNormalAsByte(const glm::vec3& nor) {
 void TractDataWrapper::init() {
     if (!enabled) return;
 
-    // Use primitive restart to detect beginning of new tract in buffer.
-    glEnable(GL_PRIMITIVE_RESTART);
-    glPrimitiveRestartIndex(0xFFFFFFFF);
-
-    vertices.clear();
-    colors.clear();
-    colors2.clear();
-    normals.clear();
-    indices.clear();
-    tractEndIndex.clear();
-    if (settings.renderer == SHADED_TUBES) {
-        auto start = std::chrono::high_resolution_clock::now();
-        constructTubes(settings.nrOfSides);
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-        Info("Constructed tubes with " << settings.nrOfSides << " sides in " << duration.count() << "ms");
-    } else {
-        auto start = std::chrono::high_resolution_clock::now();
-        for (auto tract: data) {
-            for (const auto& g: tract.gradient) {
-                addColorAsByte(g);
-                addNormalAsByte(g);
+    counts.clear();
+    firsts.clear();
+    auto start = std::chrono::high_resolution_clock::now();
+    int firstOffset = 0;
+    for (auto tract: data) {
+        if (settings.renderer == SHADED_TUBES) {
+            counts.insert(counts.end(), tract.vertices.size() - 1, settings.nrOfSides * 2 + 2);
+            for (int i = 1; i < tract.vertices.size(); i++) {
+                firsts.push_back(firstOffset);
+                firstOffset += settings.nrOfSides * 2 + 2;
             }
-            for (int i = 0; i < tract.vertices.size(); ++i) {
-                ssboData.push_back({tract.vertices[i].x, tract.vertices[i].y, tract.vertices[i].z, tract.gradient[i].x,
-                                    tract.gradient[i].y, tract.gradient[i].z});
-            }
-            colors2.insert(colors2.end(), tract.gradient.begin(), tract.gradient.end());
-            vertices.insert(vertices.end(), tract.vertices.begin(), tract.vertices.end());
-            indices.insert(indices.end(), tract.indices.begin(), tract.indices.end());
-            tractEndIndex.push_back(indices.size());
-            indices.push_back(0xFFFFFFFF);
+            firstOffset += settings.nrOfSides * 2 + 2;
+        } else {
+            counts.emplace_back(tract.vertices.size());
+            firsts.emplace_back(firstOffset);
+            firstOffset += tract.vertices.size();
         }
-        auto stop = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-        Info("Constructed lines in " << duration.count() << "ms");
     }
-
-    // |vertices| == |colors| == |normals|
-    auto vs = (long long) (vertices.size() * sizeof(glm::vec3));
-    auto cs = (long long) (colors.size() * sizeof(uint8_t));
-    auto ns = (long long) (normals.size() * sizeof(uint8_t));
-
-    // Bind Vertex Array Object
-    glBindVertexArray(VAO);
-
-    // Copy Vertex data
-//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // Allocate memory
-//    glBufferData(GL_ARRAY_BUFFER, ns, nullptr, GL_STATIC_DRAW);
-    // Positions
-//    glBufferSubData(GL_ARRAY_BUFFER, 0, vs, &vertices[0]);
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-//    glEnableVertexAttribArray(0);
-//    // Colors
-//    glBufferSubData(GL_ARRAY_BUFFER, vs, cs, &colors[0]);
-//    glVertexAttribPointer(1, 3, GL_UNSIGNED_BYTE, GL_TRUE, 0, (void*) vs);
-//    glEnableVertexAttribArray(1);
-//    // Normals
-//    glBufferSubData(GL_ARRAY_BUFFER, 0, ns, &normals[0]);
-//    glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, 0, (void*) 0);
-//    glEnableVertexAttribArray(2);
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
-
-    // Index buffer
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32_t) * indices.size(), &indices[0], GL_STATIC_DRAW);
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    Info("Constructed tubes with " << settings.nrOfSides << " sides in " << duration.count() << "ms");
 }
 
 void TractDataWrapper::draw() {
@@ -372,9 +324,11 @@ void TractDataWrapper::draw() {
     settings.shader.setFloat("alpha", alpha);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
     if (settings.renderer == SHADED_TUBES) {
-        glDrawElements(GL_TRIANGLE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
+//        glDrawElements(GL_TRIANGLE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
+        glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
     } else {
-        glDrawElements(GL_LINE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
+//        glDrawElements(GL_LINE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
+        glMultiDrawArrays(GL_LINE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
     }
 }
 
@@ -384,6 +338,16 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
     glGenBuffers(1, &SSBO);
+    for (auto tract: data) {
+        for (int i = 0; i < tract.vertices.size(); ++i) {
+            ssboData.push_back({tract.vertices[i].x, tract.vertices[i].y, tract.vertices[i].z, tract.gradient[i].x,
+                                tract.gradient[i].y, tract.gradient[i].z});
+        }
+    }
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
+
     TractDataWrapper::init();
 }
 

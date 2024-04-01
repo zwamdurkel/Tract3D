@@ -30,6 +30,8 @@ private:
     std::vector<uint32_t> indices;
     Tract avgTract;
     std::vector<float> avgTractWidth;
+    std::vector<int32_t> counts;
+    std::vector<int32_t> firsts;
 
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);

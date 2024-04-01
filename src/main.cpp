@@ -124,6 +124,8 @@ void run() {
         shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
         shader.setVec3("uViewPos", settings.camera.Position);
         shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
+        shader.setInt("uNrOfSides", settings.nrOfSides);
+        shader.setFloat("uTubeDiameter", settings.tubeDiameter);
 
         glfw.draw();
 
