@@ -40,6 +40,7 @@ void GLFWWrapper::init() {
         // Make sure we don't get divide by 0.
         settings.camera.windowWidth = width ? width : 1;
         settings.camera.windowHeight = height ? height : 1;
+        settings.rt->resetImg();
     });
 
     // Mouse movement callback

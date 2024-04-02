@@ -230,10 +230,14 @@ void TractDataWrapper::init() {
     Info("Initialized draw parameters in " << duration.count() << "ms");
 }
 
+void TractDataWrapper::bindSSBO() {
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
+}
+
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
     settings.shader.setFloat("alpha", alpha);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
+    bindSSBO();
     if (settings.renderer == SHADED_TUBES) {
         glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
     } else {

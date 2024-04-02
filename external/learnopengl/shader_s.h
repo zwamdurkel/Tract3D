@@ -22,6 +22,15 @@ public:
 
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
+    Shader(const std::string& computePath) {
+        ID = glCreateProgram();
+        build(computePath, GL_COMPUTE_SHADER, "COMPUTE");
+
+        glLinkProgram(ID);
+        checkCompileErrors(ID, "PROGRAM");
+    }
+
+
     Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath = "") {
         ID = glCreateProgram();
 

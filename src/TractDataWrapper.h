@@ -32,6 +32,7 @@ private:
     std::vector<std::string> readline(std::ifstream& file);
 
     void generateAverageTract(int nrOfPoints = 20);
+
     void generateTractClassification();
 
 public:
@@ -61,4 +62,8 @@ public:
     void draw() override;
 
     void init() override;
+
+    void bindSSBO();
+
+    int getVertexNum() { return ssboData.size(); }
 };

@@ -43,6 +43,7 @@ public:
     float Zoom;
     float FOV = 90.0f;
     float FarPlane = 250.0f;
+    float NearPlane = 0.2f;
     int windowWidth = 16, windowHeight = 9;
 
     // constructor with vectors
@@ -73,7 +74,7 @@ public:
 
     glm::mat4 GetProjectionMatrix() {
         glm::mat4 mat = glm::perspective(glm::radians(FOV), (float) windowWidth / (float) windowHeight,
-                                         0.2f, FarPlane);
+                                         NearPlane, FarPlane);
         return mat;
     }
 

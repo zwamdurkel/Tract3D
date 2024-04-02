@@ -1,0 +1,264 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 1) in;
+layout(rgba32f, location = 0, binding = 0) uniform image2D img_output;
+
+#define minRayDist 0.01
+#define maxLength 20
+
+struct ssboUnit {
+    float x;
+    float y;
+    float z;
+    float gx;
+    float gy;
+    float gz;
+};
+
+layout(std430, binding = 3) buffer colorBuffer
+{
+    ssboUnit ssboData[];
+};
+
+uniform vec3 eye;
+uniform vec3 up;
+uniform vec3 right;
+uniform vec3 lowerLeft;
+uniform float pixelDelta;
+uniform int pixelYoffset;
+uniform int bufferSize;
+uniform int frameCount;
+
+const float INFINITY = 1.0 / 0.0;
+
+// PCG (permuted congruential generator). Thanks to:
+// www.pcg-random.org and www.shadertoy.com/view/XlGcRh
+uint NextRandom(inout uint state)
+{
+    state = state * 747796405 + 2891336453;
+    uint result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737;
+    result = (result >> 22) ^ result;
+    return result;
+}
+
+float RandomValue(inout uint state)
+{
+    return NextRandom(state) / 4294967295.0;// 2^32 - 1
+}
+
+float RandomValueNormalDistribution(inout uint rngState)
+{
+    // Thanks to https://stackoverflow.com/a/6178290
+    float theta = 2 * 3.1415926 * RandomValue(rngState);
+    float rho = sqrt(-2 * log(RandomValue(rngState)));
+    return rho * cos(theta);
+}
+
+vec3 RandomDirection(inout uint rngState)
+{
+    // Thanks to https://math.stackexchange.com/a/1585996
+    float x = RandomValueNormalDistribution(rngState);
+    float y = RandomValueNormalDistribution(rngState);
+    float z = RandomValueNormalDistribution(rngState);
+    return normalize(vec3(x, y, z));
+}
+
+struct Ray {
+    vec3 origin;
+    vec3 dir;
+    vec3 dir_inv;
+};
+
+struct Cylinder{
+    vec3 cap;
+    vec3 dir;
+    float r;
+    float length;
+};
+
+struct Box{
+    vec3 min;
+    vec3 max;
+};
+
+struct HitRecord{
+    float t;
+    vec3 normal;
+    vec3 colour;
+};
+
+vec3 rayAt(Ray ray, float t){
+    return ray.origin + t * ray.dir;
+}
+
+bool solveHalfQuadratic(float a, float half_b, float c, out float t0, out float t1){
+    float D = half_b * half_b - a * c;
+    if (D < 0){ return false; }
+    float r1 = (-half_b - sqrt(D)) / a;
+    float r2 = (-half_b + sqrt(D)) / a;
+
+    t0 = min(r1, r2);
+    t1 = max(r1, r2);
+
+    return true;
+}
+//box creation from https://gdalgorithms-list.narkive.com/s2wbl3Cd/algorithms-axis-aligned-bounding-box-of-cylinder
+Box boxFromCylinder(Cylinder c){
+    vec3 a = c.cap;
+    vec3 b = a + c.dir * c.length;
+    vec3 tmp = vec3(c.r);
+
+    return Box(min(a, b) - tmp, max(a, b) + tmp);
+}
+
+//check for bounds to skip checking some tubes
+//from https://tavianator.com/2011/ray_box.html
+bool checkBounds(Box b, Ray r, out double t) {
+    double tmin = -INFINITY, tmax = INFINITY;
+
+    for (int i = 0; i < 3; ++i) {
+        double t1 = (b.min[i] - r.origin[i])*r.dir_inv[i];
+        double t2 = (b.max[i] - r.origin[i])*r.dir_inv[i];
+
+        tmin = max(tmin, min(t1, t2));
+        tmax = min(tmax, max(t1, t2));
+    }
+    t = tmin < 0? tmax : tmin;
+    return tmax > max(tmin, 0.0);
+}
+
+
+//created using https://hugi.scene.org/online/hugi24/coding%20graphics%20chris%20dragan%20raytracing%20shapes.htm
+//as a guide for calculating the intersections
+bool intersectCylinder(Ray ray, Cylinder cylinder, out HitRecord hit, out float d, float bestT){
+    double intersect;
+
+    if (!checkBounds(boxFromCylinder(cylinder), ray, intersect)){ return false; }
+    if (intersect > bestT){ return false; }
+
+
+    vec3 oc = ray.origin - cylinder.cap;
+
+    //variables to reuse for performance reasons
+    float ddotv = dot(ray.dir, cylinder.dir);
+    float xdotv = dot(oc, cylinder.dir);
+
+    float a = dot(ray.dir, ray.dir) - ddotv * ddotv;
+    float half_b = dot(ray.dir, oc) - ddotv * xdotv;
+    float c = dot(oc, oc) - xdotv * xdotv - cylinder.r * cylinder.r;
+
+    float t0, t1;
+    if (!solveHalfQuadratic(a, half_b, c, t0, t1)){
+        return false;
+    }
+
+    //distance along length of cyllinder
+    float d0 = ddotv * t0 + xdotv;
+    float d1 = ddotv * t1 + xdotv;
+
+    if (d0 < 0 || d0 > cylinder.length){
+        if (d1 < 0 || d1 > cylinder.length){ return false; }
+        hit.normal = -normalize(oc + ray.dir * t1 - cylinder.dir * d1);
+        hit.t = t1;
+        d = d1;
+        return true;
+    }
+    hit.normal = normalize(oc + ray.dir * t0 - cylinder.dir * d0);
+    hit.t = t0;
+    d = d0;
+    return true;
+}
+
+bool checkIntersections(Ray ray, out HitRecord hit){
+    HitRecord tmpHit;
+    hit.t = -1;
+    float bestT = INFINITY;
+    int stressTest = bufferSize;
+    ssboUnit ss0 = ssboData[0];
+    ssboUnit ss1;
+    vec3 pos0 = vec3(ss0.x, ss0.y, ss0.z);
+    vec3 pos1;
+    Cylinder c = Cylinder(vec3(0), vec3(0, 1, 0), 0.1, 2);
+    float d = 0;
+    for (int i = 0; i < stressTest;i++){
+        ss1 = ssboData[i];
+        pos1 = vec3(ss1.x, ss1.y, ss1.z);
+        vec3 diff = pos1 - pos0;
+        vec3 grad = vec3(ss0.gx, ss0.gy, ss0.gz);
+        float length = length(diff);
+        //if (length > maxLength){ continue; }
+        diff /= length;
+        if (dot(diff, grad) < 0.5){
+            pos0 = pos1;
+            ss0 = ss1;
+            continue;
+        }
+
+        c.cap = pos0;
+        c.dir = diff;
+        c.length = length;
+
+        if (intersectCylinder(ray, c, tmpHit, d, bestT)){
+            if (tmpHit.t < minRayDist || (hit.t > 0 && hit.t < tmpHit.t)){ continue; }
+            hit.t = tmpHit.t;
+            bestT = hit.t;
+            hit.normal = tmpHit.normal;
+            hit.colour = mix(vec3(ss0.gx, ss0.gy, ss0.gz), vec3(ss1.gx, ss1.gy, ss1.gz), d / c.length);
+        }
+
+        pos0 = pos1;
+        ss0 = ss1;
+    }
+
+    return hit.t > 0;
+}
+
+bool checkShadow(vec3 hitPoint, vec3 lightDir){
+    Ray ray = Ray(hitPoint, lightDir, 1/lightDir);
+    HitRecord hit;
+    return checkIntersections(ray, hit);
+}
+
+vec3 GetEnvLight(Ray ray){
+    return vec3(max(0, dot(ray.dir, vec3(0, 1, 0))));
+}
+
+void main() {
+    const vec3 lightDir = vec3(0, 1, 0);
+    const int depth = 30;
+    ivec2 pixel_index = ivec2(gl_GlobalInvocationID.xy);
+    pixel_index.y += pixelYoffset;
+    vec2 scaled_index = pixel_index * pixelDelta * 2;
+    ivec2 img_dims = imageSize(img_output);
+
+    int imgWidth = img_dims.x;
+    int imgHeight = img_dims.y;
+
+    uint rngState = (imgWidth * pixel_index.y) + pixel_index.x + frameCount * 719393;//bro gotta think of something
+
+    //float colour = pixel_index.y / float(imgHeight);
+    vec3 pixelColour = vec3(0);
+    vec3 rayColour = vec3(1);
+    vec3 screenPos = lowerLeft + scaled_index.x * right + scaled_index.y * up;
+    vec3 direction = normalize(screenPos  - eye);
+    vec3 inv_dir = 1 / direction;
+    Ray ray = Ray(eye, direction, inv_dir);
+
+    HitRecord hit;
+    for (int i = 0; i < depth; i++){
+        if (checkIntersections(ray, hit)){
+            vec3 hitPoint = rayAt(ray, hit.t);
+            ray.origin = hitPoint;
+            ray.dir = normalize(hit.normal + RandomDirection(rngState));
+            ray.dir_inv = 1 / ray.dir;
+            rayColour *= abs(hit.colour);
+        } else {
+            pixelColour = GetEnvLight(ray) * rayColour;
+            break;
+        }
+    }
+
+    //pixelColour = RandomDirection(rngState);
+    vec4 c_old = imageLoad(img_output, pixel_index) * (frameCount - 1);
+    vec4 c_new = (vec4(pixelColour, 1) + c_old) / frameCount;
+    imageStore(img_output, pixel_index, c_new);
+}
