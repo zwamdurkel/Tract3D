@@ -73,6 +73,7 @@ void RayTraceWrapper::draw() {
     settings.rtComputeShader.setInt("pixelYoffset", pixelOffset);
     settings.rtComputeShader.setInt("frameCount", imgNum);
     int size = 0;
+    if (settings.datasets.empty()) { return; }
     auto& ds = settings.datasets[0];
     ds->bindSSBO();
     size = ds->getVertexNum();
