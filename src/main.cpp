@@ -111,7 +111,6 @@ void run() {
         lastFrameTime = currentFrameTime;
 
         if (settings.rotatingLight) {
-
             glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * deltaTime)),
                                                   glm::vec3(0.0f, 1.0f, 0.0f));
             lightPos = lightRotation * lightPos;

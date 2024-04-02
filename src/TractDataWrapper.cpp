@@ -204,7 +204,7 @@ void TractDataWrapper::init() {
     }
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
-    Info("Constructed tubes with " << settings.nrOfSides << " sides in " << duration.count() << "ms");
+    Info("Initialized draw parameters in " << duration.count() << "ms");
 }
 
 void TractDataWrapper::draw() {
@@ -212,11 +212,12 @@ void TractDataWrapper::draw() {
     settings.shader.setFloat("alpha", alpha);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
     if (settings.renderer == SHADED_TUBES) {
-//        glDrawElements(GL_TRIANGLE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
         glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
     } else {
-//        glDrawElements(GL_LINE_STRIP, (int) tractEndIndex[showTractCount - 1], GL_UNSIGNED_INT, nullptr);
         glMultiDrawArrays(GL_LINE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
+        if (settings.drawPoints) {
+            glMultiDrawArrays(GL_POINTS, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
+        }
     }
 }
 
@@ -233,6 +234,7 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
+    glPointSize(5);
 
     TractDataWrapper::init();
 }

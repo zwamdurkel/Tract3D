@@ -12,7 +12,7 @@ struct ssboUnit {
     float gz;
 };
 
-layout(std430, binding = 3) buffer colorBuffer
+layout(std430, binding = 3) readonly buffer colorBuffer
 {
     ssboUnit ssboData[];
 };
@@ -29,7 +29,7 @@ uniform int uNrOfSides;
 uniform float uTubeDiameter;
 
 // fixed cos lookup table
-float fc[9][8] = float[][](
+const float fc[9][8] = float[][](
 float[](1.0, 0, 0, 0, 0, 0, 0, 0), // 0
 float[](1.0, 0, 0, 0, 0, 0, 0, 0), // 1
 float[](1.0, 0, 0, 0, 0, 0, 0, 0), // 2
@@ -42,7 +42,7 @@ float[](1.0, 0.7071067811865476, 0.0, -0.7071067811865475, -1.0, -0.707106781186
 );
 
 // fixed sin lookup table
-float fs[9][8] = float[][](
+const float fs[9][8] = float[][](
 float[](0.0, 0, 0, 0, 0, 0, 0, 0), // 0
 float[](0.0, 0, 0, 0, 0, 0, 0, 0), // 1
 float[](0.0, 0, 0, 0, 0, 0, 0, 0), // 2
@@ -64,7 +64,7 @@ void main()
         vec3 r = vec3(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz);// gradient (rotation axis)
 
         // perpendicular to gradient
-        vec3 perp = normalize(cross(r, vec3(1.0, 0.0, 0.0))) * uTubeDiameter;
+        vec3 perp = normalize(cross(r, vec3(0.0, 1.0, 0.0))) * uTubeDiameter;
 
         // rotated perpendicular
         vec3 q = (1.0-fc[uNrOfSides][rotationMult]) * dot(perp, r) * r + fc[uNrOfSides][rotationMult] * perp + fs[uNrOfSides][rotationMult] * cross(r, perp);

@@ -193,6 +193,11 @@ void ImGuiWrapper::draw() {
                        "- Shaded Lines:\nThe tracts are rendered as lines. Lighting will be applied to the colors.\n\n"
                        "- Shaded Tubes:\nThe tracts are rendered as tubes. Tubes are heavier to render. The user can select how many sides the tubes have and how thick the tubes are. Lighting will be applied to the colors.");
 
+            if (settings.renderer == UNSHADED_LINES || settings.renderer == SHADED_LINES) {
+                ImGui::Checkbox("Draw Points", &settings.drawPoints);
+                HelpMarker("When enabled, draw a point on every vertex of a tract.");
+            }
+
             if (settings.renderer == SHADED_TUBES || settings.renderer == SHADED_LINES) {
                 ImGui::Checkbox("Rotating Light", &settings.rotatingLight);
                 HelpMarker("When enabled, the light direction will continuously rotate.");
