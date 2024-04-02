@@ -225,6 +225,8 @@ void ImGuiWrapper::draw() {
                 HelpMarker(
                         "Specify the diameter of the tubes. Tubes that are too thick may not work well with some effects.");
                 ImGui::PopItemWidth();
+                ImGui::Checkbox("Smooth End Caps", &settings.smoothCap);
+                HelpMarker("When enabled, the end caps of tubes are rendered to look smoother");
             }
             if (settings.renderer != RAY_TRACING) {
                 if (ImGui::Checkbox("Highlight", &settings.highlightEnabled)) {

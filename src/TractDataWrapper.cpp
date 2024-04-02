@@ -180,13 +180,13 @@ void TractDataWrapper::generateTractClassification() {
     for (Tract t: data) {
         avg = (count * avg + t.vertices[0]) / (count + 1);
         count++;
-        avg = (count * avg + t.vertices[t.vertices.size()-1]) / (count + 1);
+        avg = (count * avg + t.vertices[t.vertices.size() - 1]) / (count + 1);
         count++;
     }
 
     glm::vec3 normalVec = data[0].vertices[0] - avg;
 
-    for (Tract &t : data) {
+    for (Tract& t: data) {
         if (glm::dot(normalVec, t.vertices[0] - avg) >= 0) {
             std::reverse(t.vertices.begin(), t.vertices.end());
             std::reverse(t.gradient.begin(), t.gradient.end());
@@ -206,11 +206,19 @@ void TractDataWrapper::init() {
     if (!enabled) return;
     counts.clear();
     firsts.clear();
+    endCapCounts.clear();
+    endCapfirsts.clear();
     auto start = std::chrono::high_resolution_clock::now();
     int firstOffset = 0;
+    int endCapOffset = 0;
     for (auto tract: data) {
         if (settings.renderer == SHADED_TUBES) {
             counts.insert(counts.end(), tract.vertices.size() - 1, settings.nrOfSides * 2 + 2);
+            endCapfirsts.push_back(endCapOffset * settings.nrOfSides);
+            endCapOffset += tract.vertices.size();
+            endCapfirsts.push_back((endCapOffset - 1) * settings.nrOfSides);
+            endCapCounts.push_back(settings.nrOfSides);
+            endCapCounts.push_back(settings.nrOfSides);
             for (int i = 1; i < tract.vertices.size(); i++) {
                 firsts.push_back(firstOffset);
                 firstOffset += settings.nrOfSides * 2 + 2;
@@ -237,6 +245,10 @@ void TractDataWrapper::draw() {
     bindSSBO();
     if (settings.renderer == SHADED_TUBES) {
         glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
+        settings.shader.setBool("uDrawCaps", true);
+        glMultiDrawArrays(GL_TRIANGLE_STRIP, &endCapfirsts[0], &endCapCounts[0],
+                          endCapCounts.size() * showTractCount / tractCount);
+        settings.shader.setBool("uDrawCaps", false);
     } else {
         glMultiDrawArrays(GL_LINE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
         if (settings.drawPoints) {

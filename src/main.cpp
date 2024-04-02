@@ -155,6 +155,7 @@ void run() {
         settings.shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
         settings.shader.setVec3("uViewPos", settings.camera.Position);
         settings.shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
+        settings.shader.setBool("uSmoothCap", settings.smoothCap);
         settings.shader.setInt("uNrOfSides", settings.nrOfSides);
         settings.shader.setFloat("uTubeDiameter", settings.tubeDiameter);
 

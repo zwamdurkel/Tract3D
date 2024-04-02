@@ -25,6 +25,8 @@ uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
 uniform bool uDrawTubes;
+uniform bool uDrawCaps;
+uniform bool uSmoothCap;
 uniform int uNrOfSides;
 uniform float uTubeDiameter;
 
@@ -57,22 +59,54 @@ float[](0.0, -0.7071067811865476, -1.0, -0.7071067811865476, 0.0, 0.707106781186
 void main()
 {
     if (uDrawTubes) {
-        int nrOfVertices = uNrOfSides * 2 + 2;// total number of vertices per line segment
-        int rotationMult = (gl_VertexID % nrOfVertices / 2) % uNrOfSides;// which corner are we
-        int vi = gl_VertexID / nrOfVertices + gl_VertexID % 2;// index of vertex in SSBO
-        vec3 v = vec3(ssboData[vi].x, ssboData[vi].y, ssboData[vi].z);// vertex
-        vec3 r = vec3(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz);// gradient (rotation axis)
+        if (uDrawCaps) {
+            int vi = gl_VertexID / uNrOfSides;
+            vec3 v = vec3(ssboData[vi].x, ssboData[vi].y, ssboData[vi].z);
+            vec3 v2 = vec3(ssboData[vi + 1].x, ssboData[vi + 1].y, ssboData[vi + 1].z);
+            vec3 r = vec3(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz);
+            vec3 tmp = cross(v2 - v, r);
+            int corner = gl_VertexID - vi * uNrOfSides;
+            int rot = 0;
 
-        // perpendicular to gradient
-        vec3 perp = normalize(cross(r, vec3(0.0, 1.0, 0.0))) * uTubeDiameter;
+            if (corner % 2 == 0) {
+                rot = corner / 2;
+            } else {
+                rot = uNrOfSides - (corner + 1) / 2;
+            }
 
-        // rotated perpendicular
-        vec3 q = (1.0-fc[uNrOfSides][rotationMult]) * dot(perp, r) * r + fc[uNrOfSides][rotationMult] * perp + fs[uNrOfSides][rotationMult] * cross(r, perp);
+            if (tmp.x > -0.1 && tmp.x < 0.1) {
+                rot = uNrOfSides - rot - 1;
+            }
 
-        normal = vec3(uModelMatrix * vec4(q, 1.0));
-        modelPos = uModelMatrix * vec4(q + v, 1.0);
-        gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
-        fColor = abs(vec3(uModelMatrix * vec4(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz, 1.0)));
+            vec3 perp = normalize(cross(r, vec3(0.0, 1.0, 0.0))) * uTubeDiameter;
+            vec3 q = (1.0-fc[uNrOfSides][rot]) * dot(perp, r) * r + fc[uNrOfSides][rot] * perp + fs[uNrOfSides][rot] * cross(r, perp);
+
+            if (uSmoothCap) {
+                normal = vec3(uModelMatrix * vec4(q, 1.0));
+            } else {
+                normal = vec3(uModelMatrix * vec4(r, 1.0));
+            }
+            modelPos = uModelMatrix * vec4(q + v, 1.0);
+            gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
+            fColor = abs(vec3(uModelMatrix * vec4(r, 1.0)));
+        } else {
+            int nrOfVertices = uNrOfSides * 2 + 2;// total number of vertices per line segment
+            int rotationMult = (gl_VertexID % nrOfVertices / 2) % uNrOfSides;// which corner are we
+            int vi = gl_VertexID / nrOfVertices + gl_VertexID % 2;// index of vertex in SSBO
+            vec3 v = vec3(ssboData[vi].x, ssboData[vi].y, ssboData[vi].z);// vertex
+            vec3 r = vec3(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz);// gradient (rotation axis)
+
+            // perpendicular to gradient
+            vec3 perp = normalize(cross(r, vec3(0.0, 1.0, 0.0))) * uTubeDiameter;
+
+            // rotated perpendicular
+            vec3 q = (1.0-fc[uNrOfSides][rotationMult]) * dot(perp, r) * r + fc[uNrOfSides][rotationMult] * perp + fs[uNrOfSides][rotationMult] * cross(r, perp);
+
+            normal = vec3(uModelMatrix * vec4(q, 1.0));
+            modelPos = uModelMatrix * vec4(q + v, 1.0);
+            gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
+            fColor = abs(vec3(uModelMatrix * vec4(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz, 1.0)));
+        }
     } else {
         normal = vec3(uModelMatrix * vec4(ssboData[gl_VertexID].gx, ssboData[gl_VertexID].gy, ssboData[gl_VertexID].gz, 1.0));
         modelPos = uModelMatrix * vec4(ssboData[gl_VertexID].x, ssboData[gl_VertexID].y, ssboData[gl_VertexID].z, 1.0);

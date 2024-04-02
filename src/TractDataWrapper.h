@@ -27,6 +27,8 @@ private:
     std::vector<float> avgTractWidth;
     std::vector<int32_t> counts;
     std::vector<int32_t> firsts;
+    std::vector<int32_t> endCapCounts;
+    std::vector<int32_t> endCapfirsts;
 
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);
