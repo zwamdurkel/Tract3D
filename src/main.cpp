@@ -90,11 +90,11 @@ bool getExamples() {
     namespace fs = std::filesystem;
     auto path = getPath();
 
-//    for (const auto& entry: fs::directory_iterator(path + "examples")) {
-//        std::string filePath = entry.path().string();
-//        std::replace(filePath.begin(), filePath.end(), '\\', '/');
-//        settings.examples.emplace_back(std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath));
-//    }
+    for (const auto& entry: fs::directory_iterator(path + "examples")) {
+        std::string filePath = entry.path().string();
+        std::replace(filePath.begin(), filePath.end(), '\\', '/');
+        settings.examples.emplace_back(std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath));
+    }
 
     return true;
 }
@@ -113,7 +113,7 @@ void run() {
     imgui.init();
     RayTraceWrapper rt;
     rt.init();
-    computeInfo();
+    //computeInfo();
     Info("Successfully initialized window");
 
     GLFWwindow* window = glfw.getWindow();
@@ -148,15 +148,15 @@ void run() {
             lightPos = lightRotation * lightPos;
         }
 
-        shader.use();
-        shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
-        shader.setMat4("uModelMatrix", modelMatrix);
-        shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
-        shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
-        shader.setVec3("uViewPos", settings.camera.Position);
-        shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
-        shader.setInt("uNrOfSides", settings.nrOfSides);
-        shader.setFloat("uTubeDiameter", settings.tubeDiameter);
+        settings.shader.use();
+        settings.shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
+        settings.shader.setMat4("uModelMatrix", modelMatrix);
+        settings.shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
+        settings.shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
+        settings.shader.setVec3("uViewPos", settings.camera.Position);
+        settings.shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
+        settings.shader.setInt("uNrOfSides", settings.nrOfSides);
+        settings.shader.setFloat("uTubeDiameter", settings.tubeDiameter);
 
         glfw.draw();
         if (settings.renderer != rendererType::RAY_TRACING) {
