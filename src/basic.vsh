@@ -57,18 +57,20 @@ float[](0.0, -0.7071067811865476, -1.0, -0.7071067811865476, 0.0, 0.707106781186
 void main()
 {
     if (uDrawTubes) {
-        int nrOfVertices = uNrOfSides * 2 + 2;
-        int rotationMult = (gl_VertexID % nrOfVertices / 2) % uNrOfSides;
-        int vi = gl_VertexID / nrOfVertices + gl_VertexID % 2;
+        int nrOfVertices = uNrOfSides * 2 + 2;// total number of vertices per line segment
+        int rotationMult = (gl_VertexID % nrOfVertices / 2) % uNrOfSides;// which corner are we
+        int vi = gl_VertexID / nrOfVertices + gl_VertexID % 2;// index of vertex in SSBO
         vec3 v = vec3(ssboData[vi].x, ssboData[vi].y, ssboData[vi].z);// vertex
-        vec3 r = vec3(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz);// gradient
+        vec3 r = vec3(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz);// gradient (rotation axis)
 
-        vec3 perp = normalize(cross(r, vec3(1.0, 0.0, 0.0))) * uTubeDiameter;// perpendicular to gradient
+        // perpendicular to gradient
+        vec3 perp = normalize(cross(r, vec3(1.0, 0.0, 0.0))) * uTubeDiameter;
 
+        // rotated perpendicular
         vec3 q = (1.0-fc[uNrOfSides][rotationMult]) * dot(perp, r) * r + fc[uNrOfSides][rotationMult] * perp + fs[uNrOfSides][rotationMult] * cross(r, perp);
 
-        normal = vec3(uModelMatrix * vec4(v, 1.0));
-        modelPos = uModelMatrix * vec4(q+v, 1.0);
+        normal = vec3(uModelMatrix * vec4(q, 1.0));
+        modelPos = uModelMatrix * vec4(q + v, 1.0);
         gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
         fColor = abs(vec3(uModelMatrix * vec4(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz, 1.0)));
     } else {
