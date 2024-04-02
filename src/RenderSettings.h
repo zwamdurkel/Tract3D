@@ -32,6 +32,7 @@ public:
     bool highlightEnabled = false;
     bool blurEnabled = false;
     bool rotatingLight = false;
+    bool drawPoints = false;
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;

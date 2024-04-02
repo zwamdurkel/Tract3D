@@ -143,19 +143,20 @@ void run() {
         lastFrameTime = currentFrameTime;
 
         if (settings.rotatingLight) {
-
             glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * deltaTime)),
                                                   glm::vec3(0.0f, 1.0f, 0.0f));
             lightPos = lightRotation * lightPos;
         }
 
-        settings.shader.use();
-        settings.shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
-        settings.shader.setMat4("uModelMatrix", modelMatrix);
-        settings.shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
-        settings.shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
-        settings.shader.setVec3("uViewPos", settings.camera.Position);
-        settings.shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
+        shader.use();
+        shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
+        shader.setMat4("uModelMatrix", modelMatrix);
+        shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
+        shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
+        shader.setVec3("uViewPos", settings.camera.Position);
+        shader.setBool("uDrawTubes", settings.renderer == SHADED_TUBES);
+        shader.setInt("uNrOfSides", settings.nrOfSides);
+        shader.setFloat("uTubeDiameter", settings.tubeDiameter);
 
         glfw.draw();
         if (settings.renderer != rendererType::RAY_TRACING) {
