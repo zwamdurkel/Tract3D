@@ -173,6 +173,27 @@ void TractDataWrapper::generateAverageTract(int nrOfPoints) {
     avgTract.gradient.push_back(avgTract.gradient.back());
 }
 
+void TractDataWrapper::generateTractClassification() {
+    glm::vec3 avg = {0, 0, 0};
+    float count = 0;
+
+    for (Tract t: data) {
+        avg = (count * avg + t.vertices[0]) / (count + 1);
+        count++;
+        avg = (count * avg + t.vertices[t.vertices.size()-1]) / (count + 1);
+        count++;
+    }
+
+    glm::vec3 normalVec = data[0].vertices[0] - avg;
+
+    for (Tract &t : data) {
+        if (glm::dot(normalVec, t.vertices[0] - avg) >= 0) {
+            std::reverse(t.vertices.begin(), t.vertices.end());
+            std::reverse(t.gradient.begin(), t.gradient.end());
+        }
+    }
+}
+
 glm::vec3 TractDataWrapper::getBezierPosition(int t) {
     return {1, 0, 0};
 }
@@ -184,6 +205,8 @@ glm::vec3 TractDataWrapper::getBezierDirection(int t) {
 void TractDataWrapper::init() {
     if (!enabled) return;
 
+    generateTractClassification();
+    generateAverageTract();
     counts.clear();
     firsts.clear();
     auto start = std::chrono::high_resolution_clock::now();
@@ -231,7 +254,6 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
                                 tract.gradient[i].y, tract.gradient[i].z});
         }
     }
-
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
     glPointSize(5);

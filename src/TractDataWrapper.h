@@ -31,7 +31,8 @@ private:
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);
 
-    void generateAverageTract(int nrOfPoints = 30);
+    void generateAverageTract(int nrOfPoints = 20);
+    void generateTractClassification();
 
 public:
     std::string name;
