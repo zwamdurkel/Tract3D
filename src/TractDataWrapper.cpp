@@ -204,9 +204,6 @@ glm::vec3 TractDataWrapper::getBezierDirection(int t) {
 
 void TractDataWrapper::init() {
     if (!enabled) return;
-
-    generateTractClassification();
-    generateAverageTract();
     counts.clear();
     firsts.clear();
     auto start = std::chrono::high_resolution_clock::now();
@@ -250,6 +247,8 @@ void TractDataWrapper::draw() {
 
 TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath) : TractDataWrapper(std::move(name)) {
     parse(filePath, true);
+    generateTractClassification();
+    generateAverageTract();
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &SSBO);
     for (auto tract: data) {
