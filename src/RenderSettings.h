@@ -22,8 +22,8 @@ public:
     GLFWWrapper* glfw = nullptr;
     ImGuiWrapper* imgui = nullptr;
     RayTraceWrapper* rt = nullptr;
-    std::vector<std::unique_ptr<TractDataWrapper>> datasets;
-    std::vector<std::unique_ptr<TractDataWrapper>> examples;
+    std::vector<std::shared_ptr<TractDataWrapper>> datasets;
+    std::vector<std::shared_ptr<TractDataWrapper>> examples;
     rendererType renderer = UNSHADED_LINES;
     bool show_demo_window = false;
     bool MSAA = true;
@@ -34,6 +34,8 @@ public:
     bool rotatingLight = false;
     bool drawPoints = false;
     bool smoothCap = false;
+    bool effectCASplaying = false;
+    std::shared_ptr<TractDataWrapper> CASBundle = std::make_shared<TractDataWrapper>("none");
     std::string highlightedBundle = "none";
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;

@@ -127,6 +127,8 @@ void ImGuiWrapper::draw() {
     // windows settings
     static bool no_move = false;
     static bool no_resize = false;
+    static double timeCAS = 0;
+    static int tractNr = 1;
     ImGuiWindowFlags window_flags = 0;
     //window_flags |= ImGuiWindowFlags_NoCollapse;
     if (no_move) window_flags |= ImGuiWindowFlags_NoMove;
@@ -328,15 +330,6 @@ void ImGuiWrapper::draw() {
                 ImGui::PopItemWidth();
             }
 
-//            if (ImGui::SliderFloat("Alpha", &settings.generalAlpha, 0.0f, 1.0f, "%.2f")) {
-//                for (auto& dataset: settings.datasets) {
-//                    dataset->alpha = settings.generalAlpha;
-//                }
-//                for (auto& dataset: settings.examples) {
-//                    dataset->alpha = settings.generalAlpha;
-//                }
-//            }
-
             IconSeparatorText("Tract Count", ICON_FA_ARROW_UP_RIGHT_DOTS);
             ImGui::NewLine();
             HelpMarker("Specify the number of tracts to render for each tract bundle.", 0);
@@ -373,8 +366,9 @@ void ImGuiWrapper::draw() {
                 nfdresult_t result = NFD::OpenDialog(outPath, filterItem, 1, nullptr);
                 if (result == NFD_OKAY) {
                     Info("Selected file: " << outPath);
-                    NFD::FreePath(outPath);
                     auto name = std::string(outPath);
+                    auto filePath = std::string(outPath);
+                    NFD::FreePath(outPath);
                     name.erase(0, name.find_last_of('\\') + 1);
                     bool duplicate = false;
                     for (auto& dataset: settings.datasets) {
@@ -390,7 +384,7 @@ void ImGuiWrapper::draw() {
                         }
                     }
                     if (!duplicate) {
-                        auto td = std::make_unique<TractDataWrapper>(name, std::string(outPath));
+                        auto td = std::make_shared<TractDataWrapper>(name, filePath);
                         settings.datasets.push_back(std::move(td));
                         message = "Successfully Added";
                     }
@@ -442,6 +436,48 @@ void ImGuiWrapper::draw() {
                     if (ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled))
                         dataset->init();
                 }
+                ImGui::TreePop();
+            }
+        }
+
+        if (IconCollapsingHeader("Effects", ICON_FA_WAND_MAGIC_SPARKLES)) {
+            if (ImGui::TreeNode("Camera Along Streamlines")) {
+                ImGui::Unindent();
+                ImGui::PushItemWidth(170);
+                if (ImGui::BeginCombo("Select Bundle", settings.CASBundle->name.c_str())) {
+                    for (auto& dataset: settings.datasets) {
+                        if (dataset->enabled) {
+                            ImGui::PushID(&dataset);
+                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
+                                settings.CASBundle = dataset;
+                            }
+                            ImGui::PopID();
+                        }
+                    }
+                    for (auto& dataset: settings.examples) {
+                        if (dataset->enabled) {
+                            ImGui::PushID(&dataset);
+                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
+                                settings.CASBundle = dataset;
+                            }
+                            ImGui::PopID();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                HelpMarker("Choose which bundle the camera should follow.");
+
+                if (settings.CASBundle->name != "none") {
+                    ImGui::SliderInt("Select Tract", &tractNr, 1, settings.CASBundle->tractCount);
+                    HelpMarker("Choose which tract from the bundle the camera should follow.");
+
+                    if (ImGui::Checkbox("Play", &settings.effectCASplaying)) {
+                        timeCAS = glfwGetTime();
+                    }
+                    HelpMarker("When enabled, the camera will follow the selected tract.");
+                }
+                ImGui::PopItemWidth();
+                ImGui::Indent();
                 ImGui::TreePop();
             }
         }
@@ -566,6 +602,20 @@ void ImGuiWrapper::draw() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+    if (settings.effectCASplaying) {
+        double elapsed = glfwGetTime() - timeCAS;
+        bezierPoint b = settings.CASBundle->getBezierPosition(elapsed, tractNr - 1);
+        if (std::isnan(b.pos.x)) {
+            settings.effectCASplaying = false;
+        } else {
+            auto rot = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            settings.camera.Position = glm::vec3(rot * glm::vec4(b.pos, 0));
+            settings.camera.Front = glm::normalize(glm::vec3(rot * glm::vec4(b.dir, 0)));
+            settings.camera.Right = glm::normalize(
+                    glm::cross(settings.camera.Front, settings.camera.WorldUp));
+            settings.camera.Up = glm::normalize(glm::cross(settings.camera.Right, settings.camera.Front));
+        }
+    }
 }
 
 void ImGuiWrapper::cleanup() {

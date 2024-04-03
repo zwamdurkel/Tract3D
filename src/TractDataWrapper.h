@@ -18,6 +18,11 @@ struct ssboUnit {
     float gradient[3];
 };
 
+struct bezierPoint {
+    glm::vec3 pos;
+    glm::vec3 dir;
+};
+
 class TractDataWrapper : AbstractWrapper {
 
 private:
@@ -53,9 +58,7 @@ public:
 
     ~TractDataWrapper();
 
-    glm::vec3 getBezierPosition(int t);
-
-    glm::vec3 getBezierDirection(int t);
+    bezierPoint getBezierPosition(float time, int tractNr);
 
     bool parse(const std::string& filePath, bool tractStop);
 
