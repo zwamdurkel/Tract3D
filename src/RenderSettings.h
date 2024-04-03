@@ -30,6 +30,8 @@ public:
     bool vsync = true;
     bool fullScreen = false;
     bool highlightEnabled = false;
+    bool expandingViewsEnabled = false;
+    float expansionFactor = 0.5f;
     bool blurEnabled = false;
     bool rotatingLight = false;
     bool drawPoints = false;

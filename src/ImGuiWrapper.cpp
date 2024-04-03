@@ -337,6 +337,42 @@ void ImGuiWrapper::draw() {
 //                }
 //            }
 
+//            IconSeparatorText("Expanding Views", ICON_FA_ARROW_UP_RIGHT_DOTS);
+//            ImGui::NewLine();
+            if (ImGui::Checkbox("Expanding Views", &settings.expandingViewsEnabled)) {
+                for (auto& dataset: settings.datasets) {
+                    if (settings.expandingViewsEnabled && dataset->enabled) {
+                        dataset->bindDB();
+                    } else if (!settings.expandingViewsEnabled) {
+                        dataset->clearDB();
+                    }
+                }
+                for (auto& dataset: settings.examples) {
+                    if (settings.expandingViewsEnabled && dataset->enabled) {
+                        dataset->bindDB();
+                    } else if (!settings.expandingViewsEnabled) {
+                        dataset->clearDB();
+                    }
+                }
+            }
+
+            if (settings.expandingViewsEnabled) {
+                ImGui::PushItemWidth(170);
+                if(ImGui::SliderFloat("Expansion Factor", &settings.expansionFactor, -1.0f, 2.0f, "%.2f")){
+                    for (auto& dataset: settings.datasets) {
+                        if (settings.expandingViewsEnabled && dataset->enabled) {
+                            dataset->bindDB();
+                        }
+                    }
+                    for (auto& dataset: settings.examples) {
+                        if (settings.expandingViewsEnabled && dataset->enabled) {
+                            dataset->bindDB();
+                        }
+                    }
+                }
+            }
+
+
             IconSeparatorText("Tract Count", ICON_FA_ARROW_UP_RIGHT_DOTS);
             ImGui::NewLine();
             HelpMarker("Specify the number of tracts to render for each tract bundle.", 0);
