@@ -142,7 +142,6 @@ void run() {
         float currentFrameTime = glfwGetTime();
         float deltaTime = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
-
         glm::mat4 modelMatrix = !settings.rotateData ? glm::mat4(1.0f)
                                                      : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f),
                                                                    glm::vec3(1.0f, 0.0f, 0.0f));
@@ -164,6 +163,10 @@ void run() {
         settings.shader.setBool("uSmoothCap", settings.smoothCap);
         settings.shader.setInt("uNrOfSides", settings.nrOfSides);
         settings.shader.setFloat("uTubeDiameter", settings.tubeDiameter);
+        settings.shader.setBool("neuronSim", settings.neuronSim);
+        settings.shader.setFloat("time", currentFrameTime);
+        settings.shader.setBool("blackSim", settings.blackSim);
+        settings.shader.setInt("particleDens", settings.particleDens);
 
         glfw.draw();
         if (settings.renderer != rendererType::RAY_TRACING) {

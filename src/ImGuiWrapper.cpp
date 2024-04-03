@@ -503,7 +503,20 @@ void ImGuiWrapper::draw() {
                 HelpMarker("When enabled, the camera will follow the selected tract.");
             }
 
-            IconSeparatorText("Effect2", ICON_FA_CAMERA);
+            IconSeparatorText("Neuron Simulation", ICON_FA_BOLT);
+
+            ImGui::Checkbox("Simulate neurons", &settings.neuronSim);
+            HelpMarker("When enabled, simulates the flow of electrons along the tracts.");
+
+            ImGui::Checkbox("Hide tract colour", &settings.blackSim);
+            HelpMarker("When enabled, does not render tract colour only electrons.");
+
+            ImGui::PushItemWidth(170);
+            ImGui::SliderInt("Partice Density", &settings.particleDens, 2, 100);
+            ImGui::PopItemWidth();
+            HelpMarker(
+                    "Determines the frequency of particles on the tracts, higher number equals more space between particles");
+
             // effect 2 here
             IconSeparatorText("Expanding Views", ICON_FA_MAXIMIZE);
             ImGui::PushItemWidth(170);

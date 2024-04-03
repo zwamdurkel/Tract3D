@@ -25,6 +25,7 @@ layout(std430, binding = 4) readonly buffer disBuffer
 out vec3 fColor;// output a color to the fragment shader
 out vec3 normal;
 out vec4 modelPos;//real world coordinate for geometry shader
+out float simInt;
 
 uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
@@ -34,7 +35,8 @@ uniform bool uDrawCaps;
 uniform bool uSmoothCap;
 uniform int uNrOfSides;
 uniform float uTubeDiameter;
-
+uniform bool neuronSim;
+uniform int particleDens;
 // fixed cos lookup table
 const float fc[9][8] = float[][](
 float[](1.0, 0, 0, 0, 0, 0, 0, 0), // 0
@@ -63,6 +65,7 @@ float[](0.0, -0.7071067811865476, -1.0, -0.7071067811865476, 0.0, 0.707106781186
 
 void main()
 {
+    int ID = 0;
     if (uDrawTubes) {
         if (uDrawCaps) {
             int vi = gl_VertexID / uNrOfSides;
@@ -94,6 +97,7 @@ void main()
             modelPos = uModelMatrix * vec4(q + v + vec3(disData[vi * 3], disData[vi * 3 + 1], disData[vi * 3 + 2]), 1.0);
             gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
             fColor = abs(vec3(uModelMatrix * vec4(r, 1.0)));
+            ID = vi;
         } else {
             int nrOfVertices = uNrOfSides * 2 + 2;// total number of vertices per line segment
             int rotationMult = (gl_VertexID % nrOfVertices / 2) % uNrOfSides;// which corner are we
@@ -111,11 +115,18 @@ void main()
             modelPos = uModelMatrix * vec4(q + v + vec3(disData[vi * 3], disData[vi * 3 + 1], disData[vi * 3 + 2]), 1.0);
             gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
             fColor = abs(vec3(uModelMatrix * vec4(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz, 1.0)));
+            ID = vi;
         }
+
     } else {
         normal = vec3(uModelMatrix * vec4(ssboData[gl_VertexID].gx, ssboData[gl_VertexID].gy, ssboData[gl_VertexID].gz, 1.0));
         modelPos = uModelMatrix * vec4(ssboData[gl_VertexID].x + disData[gl_VertexID * 3], ssboData[gl_VertexID].y + disData[gl_VertexID * 3 + 1], ssboData[gl_VertexID].z + disData[gl_VertexID * 3 + 2], 1.0);
         gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
         fColor = abs(vec3(uModelMatrix * vec4(ssboData[gl_VertexID].gx, ssboData[gl_VertexID].gy, ssboData[gl_VertexID].gz, 1.0)));
+        ID = gl_VertexID;
+
+    }
+    if (neuronSim){
+        simInt = ID % particleDens;
     }
 }

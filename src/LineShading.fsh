@@ -3,11 +3,17 @@ out vec4 FragColor;
 in vec3 fColor;
 in vec3 normal;
 in vec4 modelPos;
+in float simInt;
 
 uniform vec3 uViewPos;
 uniform bool uDrawTubes;
 uniform float alpha;
 uniform vec3 lightDir;
+
+uniform bool neuronSim;
+uniform float time;
+uniform bool blackSim;
+uniform int particleDens;
 
 void main()
 {
@@ -49,4 +55,14 @@ void main()
 
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, alpha);
+
+    if (neuronSim){
+        int t = int(floor(time)) / (particleDens - 1);
+        float tmod10 = time - t*(particleDens - 1);
+        bool simCol = abs((tmod10) - simInt) < 0.05f;
+        if (!simCol && blackSim){ discard; }
+        if (simCol){
+            FragColor = vec4(vec3(simCol), 1);
+        }
+    }
 }
