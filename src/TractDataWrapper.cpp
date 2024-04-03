@@ -180,16 +180,32 @@ void TractDataWrapper::generateTractClassification() {
     for (Tract t: data) {
         avg = (count * avg + t.vertices[0]) / (count + 1);
         count++;
-        avg = (count * avg + t.vertices[t.vertices.size()-1]) / (count + 1);
+        avg = (count * avg + t.vertices[t.vertices.size() - 1]) / (count + 1);
         count++;
     }
 
     glm::vec3 normalVec = data[0].vertices[0] - avg;
 
-    for (Tract &t : data) {
+    for (Tract& t: data) {
         if (glm::dot(normalVec, t.vertices[0] - avg) >= 0) {
             std::reverse(t.vertices.begin(), t.vertices.end());
             std::reverse(t.gradient.begin(), t.gradient.end());
+        }
+    }
+}
+
+void TractDataWrapper::computeExpandingView() {
+    displacements.clear();
+    for (Tract t: data) {
+        float index = avgFidelity / t.vertices.size();
+        int count = 0;
+        for (auto v : t.vertices) {
+            auto value = settings.expansionFactor * (v - avgTract.vertices[std::floor(count * index)]);
+            //Info("Vertex " << count/3 << " with x = " << value.x << " and y = " << value.y << " and z = " << value.z);
+            displacements.push_back(value.x);
+            displacements.push_back(value.y);
+            displacements.push_back(value.z);
+            count++;
         }
     }
 }
@@ -204,16 +220,21 @@ glm::vec3 TractDataWrapper::getBezierDirection(int t) {
 
 void TractDataWrapper::init() {
     if (!enabled) return;
-
-    generateTractClassification();
-    generateAverageTract();
     counts.clear();
     firsts.clear();
+    endCapCounts.clear();
+    endCapfirsts.clear();
     auto start = std::chrono::high_resolution_clock::now();
     int firstOffset = 0;
+    int endCapOffset = 0;
     for (auto tract: data) {
         if (settings.renderer == SHADED_TUBES) {
             counts.insert(counts.end(), tract.vertices.size() - 1, settings.nrOfSides * 2 + 2);
+            endCapfirsts.push_back(endCapOffset * settings.nrOfSides);
+            endCapOffset += tract.vertices.size();
+            endCapfirsts.push_back((endCapOffset - 1) * settings.nrOfSides);
+            endCapCounts.push_back(settings.nrOfSides);
+            endCapCounts.push_back(settings.nrOfSides);
             for (int i = 1; i < tract.vertices.size(); i++) {
                 firsts.push_back(firstOffset);
                 firstOffset += settings.nrOfSides * 2 + 2;
@@ -234,12 +255,31 @@ void TractDataWrapper::bindSSBO() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
 }
 
+void TractDataWrapper::bindDB() {
+    computeExpandingView();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, DB);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, displacements.size() * sizeof(float), &displacements[0], GL_STATIC_DRAW);
+}
+
+void TractDataWrapper::clearDB() {
+    for (auto &v : displacements) {
+        v = 0.0f;
+    }
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, DB);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, displacements.size() * sizeof(float), &displacements[0], GL_STATIC_DRAW);
+}
+
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
     settings.shader.setFloat("alpha", alpha);
     bindSSBO();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, DB);
     if (settings.renderer == SHADED_TUBES) {
         glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
+        settings.shader.setBool("uDrawCaps", true);
+        glMultiDrawArrays(GL_TRIANGLE_STRIP, &endCapfirsts[0], &endCapCounts[0],
+                          endCapCounts.size() * showTractCount / tractCount);
+        settings.shader.setBool("uDrawCaps", false);
     } else {
         glMultiDrawArrays(GL_LINE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
         if (settings.drawPoints) {
@@ -250,6 +290,9 @@ void TractDataWrapper::draw() {
 
 TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath) : TractDataWrapper(std::move(name)) {
     parse(filePath, true);
+    generateTractClassification();
+    generateAverageTract(avgFidelity);
+    glGenBuffers(1, &DB);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &SSBO);
     for (auto tract: data) {
