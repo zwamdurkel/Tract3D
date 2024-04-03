@@ -65,114 +65,23 @@ namespace BVH {
         }
     };
 
-    AABB aabbFromObject(CylinderGPU c) {
-        glm::vec3 a(c.cap[0], c.cap[1], c.cap[2]);
-        glm::vec3 dir(c.dir[0], c.dir[1], c.dir[2]);
-        glm::vec3 b = a + dir * c.length;
-        glm::vec3 tmp = glm::vec3(c.r);
+    AABB aabbFromObject(CylinderGPU c);
 
-        return AABB(glm::min(a, b) - tmp, glm::max(a, b) + tmp);
-    }
+    AABB aabbFromBoxes(AABB b0, AABB b1);
 
-    AABB aabbFromBoxes(AABB b0, AABB b1) {
-        return AABB(glm::min(b0.min, b1.min), glm::max(b0.max, b1.max));
-    }
+    AABB aabbFromList(std::vector<Cylinder> objects);
 
-    AABB aabbFromList(std::vector<Cylinder> objects) {
-        AABB temp;
-        AABB output;
-        bool first = true;
+    bool boxCompare(Cylinder a, Cylinder b, int axis);
 
-        for (auto obj: objects) {
-            temp = aabbFromObject(obj.c);
-            output = first ? temp : aabbFromBoxes(temp, output);
-            first = false;
-        }
+    bool boxXCompare(Cylinder a, Cylinder b);
 
-        return output;
-    }
+    bool boxYCompare(Cylinder a, Cylinder b);
 
-    bool boxCompare(Cylinder a, Cylinder b, int axis) {
-        AABB box0 = aabbFromObject(a.c);
-        AABB box1 = aabbFromObject(b.c);
+    bool boxZCompare(Cylinder a, Cylinder b);
 
-        return box0.min[axis] < box1.min[axis];
-    }
-
-    bool boxXCompare(Cylinder a, Cylinder b) {
-        return boxCompare(a, b, 0);
-    }
-
-    bool boxYCompare(Cylinder a, Cylinder b) {
-        return boxCompare(a, b, 1);
-    }
-
-    bool boxZCompare(Cylinder a, Cylinder b) {
-        return boxCompare(a, b, 2);
-    }
-
-    bool nodeCompare(BVHNode a, BVHNode b) {
-        return a.index < b.index;
-    }
+    bool nodeCompare(BVHNode a, BVHNode b);
 
 //heavily inspired by https://github.com/grigoryoskin/vulkan-compute-ray-tracing/tree/master
-    std::vector<BVHNodeGPU> createBHV(std::vector<Cylinder> objects) {
-        std::vector<BVHNode> intermediate;
-        int nodeCounter = 0;
-        std::stack<BVHNode> nodeStack;
-
-        BVHNode root;
-        root.index = nodeCounter;
-        root.objects = objects;
-        nodeCounter++;
-        nodeStack.push(root);
-
-        while (!nodeStack.empty()) {
-            BVHNode curr = nodeStack.top();
-            nodeStack.pop();
-
-            curr.box = aabbFromList(curr.objects);
-
-            int axis = curr.sortingAxis();
-            auto comparator = (axis == 0) ? boxXCompare
-                                          : (axis == 1) ? boxYCompare
-                                                        : boxZCompare;
-
-            int objectNum = curr.objects.size();
-            std::sort(curr.objects.begin(), curr.objects.end(), comparator);
-
-            if (objectNum > 1) {
-                int mid = objectNum / 2;
-                BVHNode left;
-                left.index = nodeCounter++;
-                left.axis = curr.axis;
-                for (int i = 0; i < mid; i++) {
-                    left.objects.push_back(curr.objects[i]);
-                }
-                nodeStack.push(left);
-
-                BVHNode right;
-                right.index = nodeCounter++;
-                right.axis = curr.axis;
-                for (int i = mid; i < objectNum; i++) {
-                    right.objects.push_back(curr.objects[i]);
-                }
-                nodeStack.push(right);
-
-                curr.leftNodeIndex = left.index;
-                curr.rightNodeIndex = right.index;
-            }
-            intermediate.push_back(curr);
-        }
-        std::sort(intermediate.begin(), intermediate.end(), nodeCompare);
-        auto node = intermediate[0];
-        std::vector<BVHNodeGPU> output;
-        output.reserve(intermediate.size());
-
-        for (auto node: intermediate) {
-            output.push_back(node.gpuNode());
-        }
-        return output;
-    }
+    std::vector<BVHNodeGPU> createBHV(std::vector<Cylinder> objects);
 }
 
