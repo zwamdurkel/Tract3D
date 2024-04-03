@@ -26,7 +26,7 @@ struct bezierPoint {
 class TractDataWrapper : AbstractWrapper {
 
 private:
-    unsigned int VAO = 0, SSBO = 0;
+    unsigned int VAO = 0, SSBO = 0, DB = 0;
     std::vector<ssboUnit> ssboData;
     Tract avgTract;
     std::vector<float> avgTractWidth;
@@ -34,13 +34,17 @@ private:
     std::vector<int32_t> firsts;
     std::vector<int32_t> endCapCounts;
     std::vector<int32_t> endCapfirsts;
+    std::vector<float> displacements;
+    int avgFidelity = 30;
 
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);
 
-    void generateAverageTract(int nrOfPoints = 20);
+    void generateAverageTract(int nrOfPoints = 30);
 
     void generateTractClassification();
+
+    void computeExpandingView();
 
 public:
     std::string name;
@@ -59,6 +63,10 @@ public:
     ~TractDataWrapper();
 
     bezierPoint getBezierPosition(float time, int tractNr);
+
+    void bindDB();
+
+    void clearDB();
 
     bool parse(const std::string& filePath, bool tractStop);
 

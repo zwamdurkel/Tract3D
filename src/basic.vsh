@@ -17,6 +17,11 @@ layout(std430, binding = 3) readonly buffer colorBuffer
     ssboUnit ssboData[];
 };
 
+layout(std430, binding = 4) readonly buffer disBuffer
+{
+    float disData[];
+};
+
 out vec3 fColor;// output a color to the fragment shader
 out vec3 normal;
 out vec4 modelPos;//real world coordinate for geometry shader
@@ -109,7 +114,7 @@ void main()
         }
     } else {
         normal = vec3(uModelMatrix * vec4(ssboData[gl_VertexID].gx, ssboData[gl_VertexID].gy, ssboData[gl_VertexID].gz, 1.0));
-        modelPos = uModelMatrix * vec4(ssboData[gl_VertexID].x, ssboData[gl_VertexID].y, ssboData[gl_VertexID].z, 1.0);
+        modelPos = uModelMatrix * vec4(ssboData[gl_VertexID].x + disData[gl_VertexID * 3], ssboData[gl_VertexID].y + disData[gl_VertexID * 3 + 1], ssboData[gl_VertexID].z + disData[gl_VertexID * 3 + 2], 1.0);
         gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
         fColor = abs(vec3(uModelMatrix * vec4(ssboData[gl_VertexID].gx, ssboData[gl_VertexID].gy, ssboData[gl_VertexID].gz, 1.0)));
     }

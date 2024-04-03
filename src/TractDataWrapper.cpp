@@ -204,6 +204,25 @@ bezierPoint TractDataWrapper::getBezierPosition(float time, int tractNr) {
     if (time > data[tractNr].vertices.size() - 2) {
         return error;
     }
+void TractDataWrapper::computeExpandingView() {
+    displacements.clear();
+    for (Tract t: data) {
+        float index = avgFidelity / t.vertices.size();
+        int count = 0;
+        for (auto v : t.vertices) {
+            auto value = settings.expansionFactor * (v - avgTract.vertices[std::floor(count * index)]);
+            //Info("Vertex " << count/3 << " with x = " << value.x << " and y = " << value.y << " and z = " << value.z);
+            displacements.push_back(value.x);
+            displacements.push_back(value.y);
+            displacements.push_back(value.z);
+            count++;
+        }
+    }
+}
+
+glm::vec3 TractDataWrapper::getBezierPosition(int t) {
+    return {1, 0, 0};
+}
 
     if (tractNr > data.size() - 1) {
         return error;
@@ -231,7 +250,6 @@ bezierPoint TractDataWrapper::getBezierPosition(float time, int tractNr) {
 
     return {p, d};
 }
-
 
 void TractDataWrapper::init() {
     if (!enabled) return;
@@ -270,10 +288,25 @@ void TractDataWrapper::bindSSBO() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
 }
 
+void TractDataWrapper::bindDB() {
+    computeExpandingView();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, DB);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, displacements.size() * sizeof(float), &displacements[0], GL_STATIC_DRAW);
+}
+
+void TractDataWrapper::clearDB() {
+    for (auto &v : displacements) {
+        v = 0.0f;
+    }
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, DB);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, displacements.size() * sizeof(float), &displacements[0], GL_STATIC_DRAW);
+}
+
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
     settings.shader.setFloat("alpha", alpha);
     bindSSBO();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, DB);
     if (settings.renderer == SHADED_TUBES) {
         glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
         settings.shader.setBool("uDrawCaps", true);
@@ -291,7 +324,8 @@ void TractDataWrapper::draw() {
 TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath) : TractDataWrapper(std::move(name)) {
     parse(filePath, true);
     generateTractClassification();
-    generateAverageTract();
+    generateAverageTract(avgFidelity);
+    glGenBuffers(1, &DB);
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &SSBO);
     for (auto tract: data) {
