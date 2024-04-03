@@ -31,7 +31,6 @@ private:
     Tract avgTract;
     std::vector<float> avgTractWidth;
     std::vector<int32_t> counts;
-    std::vector<int32_t> counts2;
     std::vector<int32_t> firsts;
     std::vector<int32_t> endCapCounts;
     std::vector<int32_t> endCapfirsts;
