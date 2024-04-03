@@ -143,9 +143,9 @@ void run() {
         float deltaTime = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
 
-        glm::mat4 modelMatrix = settings.rotateData ? glm::mat4(1.0f)
-                                                    : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f),
-                                                                  glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 modelMatrix = !settings.rotateData ? glm::mat4(1.0f)
+                                                     : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f),
+                                                                   glm::vec3(1.0f, 0.0f, 0.0f));
 
 
         if (settings.rotatingLight) {

@@ -70,12 +70,27 @@ void RayTraceWrapper::resetCamera() {
     lowerLeft = screenCentre - w * settings.camera.Right - h * settings.camera.Up;
 }
 
+
 void RayTraceWrapper::createCylinders() {
     obj.clear();
-    if (settings.datasets.empty()) { return; }//if no dataset exists we cannot make any cylinders
+    if (settings.datasets.empty() &&
+        settings.examples.empty()) { return; }//if no dataset exists we cannot make any cylinders
 
     //we always take the first in the list, we maybe increase later to all of them
-    auto ds = settings.datasets[0]->getSSBOData();
+    std::vector<ssboUnit> ds;
+    //find first enabled dataset
+    auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
+    for (const auto& datasets: dataList) {
+        for (auto& d: datasets.get()) {
+            if (d->enabled) {
+                ds = d->getSSBOData();
+                break;
+            }
+        }
+        if (!ds.empty()) { break; }
+    }
+
+    Info("ds size: " << ds.size());
     glm::vec3 min = glm::vec3(0);
     glm::vec3 max = glm::vec3(0);
 
@@ -121,12 +136,7 @@ void RayTraceWrapper::draw() {
     settings.rtComputeShader.setInt("pixelYoffset", pixelOffset);
     settings.rtComputeShader.setInt("frameCount", imgNum);
     settings.rtComputeShader.setInt("depth", settings.rtBounceNr);
-    int size = 0;
-    if (settings.datasets.empty()) { return; }
-    auto& ds = settings.datasets[0];
-    size = ds->getVertexNum();
-
-    settings.rtComputeShader.setInt("bufferSize", size);
+    if (settings.datasets.empty() && settings.examples.empty()) { return; }
 
     //bind buffers
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ObjSSBO);

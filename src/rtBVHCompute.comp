@@ -8,7 +8,6 @@ uniform vec3 right;
 uniform vec3 lowerLeft;
 uniform float pixelDelta;
 uniform int pixelYoffset;
-uniform int bufferSize;
 uniform int frameCount;
 uniform int depth;
 
