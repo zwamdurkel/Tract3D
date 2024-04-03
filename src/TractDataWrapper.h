@@ -31,11 +31,14 @@ private:
     Tract avgTract;
     std::vector<float> avgTractWidth;
     std::vector<int32_t> counts;
+    std::vector<int32_t> counts2;
     std::vector<int32_t> firsts;
     std::vector<int32_t> endCapCounts;
     std::vector<int32_t> endCapfirsts;
     std::vector<float> displacements;
-    int avgFidelity = 30;
+    std::vector<int> nearestavgVertex;
+    int avgFidelity = 10;
+    int classificationFidelity = 1;
 
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);

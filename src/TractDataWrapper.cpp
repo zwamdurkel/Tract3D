@@ -152,25 +152,24 @@ void TractDataWrapper::generateAverageTract(int nrOfPoints) {
                 count++;
             }
         }
-
-        if (i > 0) {
-            avgTract.gradient.push_back(avg - avgTract.vertices.back());
-        }
-
         avgTract.vertices.push_back(avg);
-
-        float maxDistance;
-        for (Tract t: data) {
-            for (int j = i * t.vertices.size() / nrOfPoints; j < (i + 1) * t.vertices.size() / nrOfPoints; j++) {
-                maxDistance = glm::max(glm::distance(avg, t.vertices[j]), maxDistance);
-            }
-        }
-
-        avgTractWidth.push_back(maxDistance);
-        avgTract.indices.push_back(i);
     }
-
-    avgTract.gradient.push_back(avgTract.gradient.back());
+    for (auto t : data) {
+        for (auto v : t.vertices) {
+            int index = 0;
+            int counter = 0;
+            double min = sqrt(pow(avgTract.vertices[0].x - v.x, 2) + pow(avgTract.vertices[0].y - v.y, 2) + pow(avgTract.vertices[0].z - v.z, 2));
+            for (auto w : avgTract.vertices) {
+                double d = sqrt(pow(w.x - v.x, 2) + pow(w.y - v.y, 2) + pow(w.z - v.z, 2));
+                if (d < min) {
+                    min = d;
+                    index = counter;
+                }
+                counter++;
+            }
+            nearestavgVertex.push_back(index);
+        }
+    }
 }
 
 void TractDataWrapper::generateTractClassification() {
@@ -184,10 +183,32 @@ void TractDataWrapper::generateTractClassification() {
         count++;
     }
 
-    glm::vec3 normalVec = data[0].vertices[0] - avg;
+    std::vector<glm::vec3> normalVecs;
+    for (int i = 0; i < classificationFidelity; i++) {
+        int random = std::rand() % data.size();
+        Info(random);
+        normalVecs.push_back(data[random].vertices[0] - avg);
+    }
+
+    for (int i = 1; i < classificationFidelity; i++) {
+        if (glm::dot(normalVecs[i], normalVecs[0]) >= 0) {
+            std::reverse(data[i].vertices.begin(), data[i].vertices.end());
+            std::reverse(data[i].gradient.begin(), data[i].gradient.end());
+            for (auto& g: data[i].gradient) {
+                g = -g;
+            }
+            normalVecs[i] = data[i].vertices[0] - avg;
+        }
+    }
 
     for (Tract& t: data) {
-        if (glm::dot(normalVec, t.vertices[0] - avg) >= 0) {
+        float classification = 0.0f;
+        for (auto v : normalVecs) {
+            if (glm::dot(v, t.vertices[0] - avg) >= 0) {
+                classification += 1.0f / classificationFidelity;
+            }
+        }
+        if (classification >= 0.5) {
             std::reverse(t.vertices.begin(), t.vertices.end());
             std::reverse(t.gradient.begin(), t.gradient.end());
             for (auto& g: t.gradient) {
@@ -199,16 +220,22 @@ void TractDataWrapper::generateTractClassification() {
 
 void TractDataWrapper::computeExpandingView() {
     displacements.clear();
+    int counter = 0;
     for (Tract t: data) {
-        float index = avgFidelity / t.vertices.size();
+        float approx = float(avgFidelity) / t.vertices.size();
         int count = 0;
-        for (auto v: t.vertices) {
-            auto value = settings.expansionFactor * (v - avgTract.vertices[std::floor(count * index)]);
-            //Info("Vertex " << count/3 << " with x = " << value.x << " and y = " << value.y << " and z = " << value.z);
+        for (auto v : t.vertices) {
+            glm::vec3 value;
+            if (settings.expansionFactor < -0.98) {
+                value = settings.expansionFactor * (v - avgTract.vertices[count * approx]);
+            } else {
+                value = settings.expansionFactor * (v - avgTract.vertices[nearestavgVertex[counter]]);
+            }
             displacements.push_back(value.x);
             displacements.push_back(value.y);
             displacements.push_back(value.z);
             count++;
+            counter++;
         }
     }
 }
@@ -331,7 +358,6 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
                                 tract.gradient[i].y, tract.gradient[i].z});
         }
     }
-
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
     glPointSize(5);

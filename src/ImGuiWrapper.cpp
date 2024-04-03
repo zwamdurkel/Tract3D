@@ -352,42 +352,6 @@ void ImGuiWrapper::draw() {
 //                }
 //            }
 
-//            IconSeparatorText("Expanding Views", ICON_FA_ARROW_UP_RIGHT_DOTS);
-//            ImGui::NewLine();
-            if (ImGui::Checkbox("Expanding Views", &settings.expandingViewsEnabled)) {
-                for (auto& dataset: settings.datasets) {
-                    if (settings.expandingViewsEnabled && dataset->enabled) {
-                        dataset->bindDB();
-                    } else if (!settings.expandingViewsEnabled) {
-                        dataset->clearDB();
-                    }
-                }
-                for (auto& dataset: settings.examples) {
-                    if (settings.expandingViewsEnabled && dataset->enabled) {
-                        dataset->bindDB();
-                    } else if (!settings.expandingViewsEnabled) {
-                        dataset->clearDB();
-                    }
-                }
-            }
-
-            if (settings.expandingViewsEnabled) {
-                ImGui::PushItemWidth(170);
-                if (ImGui::SliderFloat("Expansion Factor", &settings.expansionFactor, -1.0f, 2.0f, "%.2f")) {
-                    for (auto& dataset: settings.datasets) {
-                        if (settings.expandingViewsEnabled && dataset->enabled) {
-                            dataset->bindDB();
-                        }
-                    }
-                    for (auto& dataset: settings.examples) {
-                        if (settings.expandingViewsEnabled && dataset->enabled) {
-                            dataset->bindDB();
-                        }
-                    }
-                }
-            }
-
-
             IconSeparatorText("Tract Count", ICON_FA_ARROW_UP_RIGHT_DOTS);
             ImGui::NewLine();
             HelpMarker("Specify the number of tracts to render for each tract bundle.", 0);
@@ -462,8 +426,10 @@ void ImGuiWrapper::draw() {
             IconSeparatorText("Datasets", ICON_FA_FOLDER_TREE);
 
             for (auto it = settings.datasets.begin(); it != settings.datasets.end();) {
-                if (ImGui::Checkbox((*it)->name.c_str(), &(*it)->enabled))
+                if (ImGui::Checkbox((*it)->name.c_str(), &(*it)->enabled)) {
                     (*it)->init();
+                    (*it)->bindDB();
+                }
                 ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - 30);
                 ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4) ImColor(191, 78, 78));
                 ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4) ImColor(211, 100, 100));
@@ -481,6 +447,7 @@ void ImGuiWrapper::draw() {
                     for (auto& dataset: settings.examples) {
                         dataset->enabled = true;
                         dataset->init();
+                        dataset->bindDB();
                     }
                 }
                 ImGui::SameLine();
@@ -491,8 +458,10 @@ void ImGuiWrapper::draw() {
                 }
 
                 for (auto& dataset: settings.examples) {
-                    if (ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled))
+                    if (ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled)) {
                         dataset->init();
+                        dataset->bindDB();
+                    }
                 }
                 ImGui::TreePop();
             }
@@ -536,8 +505,21 @@ void ImGuiWrapper::draw() {
 
             IconSeparatorText("Effect2", ICON_FA_CAMERA);
             // effect 2 here
-            IconSeparatorText("Effect3", ICON_FA_CAMERA);
-            // effect 3 here
+            IconSeparatorText("Expanding Views", ICON_FA_MAXIMIZE);
+            ImGui::PushItemWidth(170);
+            if (ImGui::SliderFloat("Expansion Factor", &settings.expansionFactor, -1.0f, 1.0f, "%.2f")) {
+                for (auto& dataset: settings.datasets) {
+                    if (dataset->enabled) {
+                        dataset->bindDB();
+                    }
+                }
+                for (auto& dataset: settings.examples) {
+                    if (dataset->enabled) {
+                        dataset->bindDB();
+                    }
+                }
+            }
+            HelpMarker("Choose the factor by which the tracts explode if positive or collide if negative");
             ImGui::PopItemWidth();
         }
 
