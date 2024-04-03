@@ -519,6 +519,19 @@ void ImGuiWrapper::draw() {
 
             // effect 2 here
             IconSeparatorText("Expanding Views", ICON_FA_MAXIMIZE);
+            if (ImGui::Button("Reset")) {
+                settings.expansionFactor = 0.0f;
+                for (auto& dataset: settings.datasets) {
+                    if (dataset->enabled) {
+                        dataset->bindDB();
+                    }
+                }
+                for (auto& dataset: settings.examples) {
+                    if (dataset->enabled) {
+                        dataset->bindDB();
+                    }
+                }
+            }
             ImGui::PushItemWidth(170);
             if (ImGui::SliderFloat("Expansion Factor", &settings.expansionFactor, -1.0f, 1.0f, "%.2f")) {
                 for (auto& dataset: settings.datasets) {
