@@ -154,12 +154,13 @@ void TractDataWrapper::generateAverageTract(int nrOfPoints) {
         }
         avgTract.vertices.push_back(avg);
     }
-    for (auto t : data) {
-        for (auto v : t.vertices) {
+    for (auto t: data) {
+        for (auto v: t.vertices) {
             int index = 0;
             int counter = 0;
-            double min = sqrt(pow(avgTract.vertices[0].x - v.x, 2) + pow(avgTract.vertices[0].y - v.y, 2) + pow(avgTract.vertices[0].z - v.z, 2));
-            for (auto w : avgTract.vertices) {
+            double min = sqrt(pow(avgTract.vertices[0].x - v.x, 2) + pow(avgTract.vertices[0].y - v.y, 2) +
+                              pow(avgTract.vertices[0].z - v.z, 2));
+            for (auto w: avgTract.vertices) {
                 double d = sqrt(pow(w.x - v.x, 2) + pow(w.y - v.y, 2) + pow(w.z - v.z, 2));
                 if (d < min) {
                     min = d;
@@ -186,7 +187,6 @@ void TractDataWrapper::generateTractClassification() {
     std::vector<glm::vec3> normalVecs;
     for (int i = 0; i < classificationFidelity; i++) {
         int random = std::rand() % data.size();
-        Info(random);
         normalVecs.push_back(data[random].vertices[0] - avg);
     }
 
@@ -203,7 +203,7 @@ void TractDataWrapper::generateTractClassification() {
 
     for (Tract& t: data) {
         float classification = 0.0f;
-        for (auto v : normalVecs) {
+        for (auto v: normalVecs) {
             if (glm::dot(v, t.vertices[0] - avg) >= 0) {
                 classification += 1.0f / classificationFidelity;
             }
@@ -224,7 +224,7 @@ void TractDataWrapper::computeExpandingView() {
     for (Tract t: data) {
         float approx = float(avgFidelity) / t.vertices.size();
         int count = 0;
-        for (auto v : t.vertices) {
+        for (auto v: t.vertices) {
             glm::vec3 value;
             if (settings.expansionFactor < 0) {
                 value = settings.expansionFactor * (v - avgTract.vertices[count * approx]);

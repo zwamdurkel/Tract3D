@@ -514,6 +514,11 @@ void ImGuiWrapper::draw() {
             ImGui::PushItemWidth(170);
             ImGui::SliderInt("Partice Density", &settings.particleDens, 2, 100);
             ImGui::PopItemWidth();
+
+            ImGui::PushItemWidth(170);
+            ImGui::SliderFloat("Partice Size", &settings.particleSize, 1, 200, "%.0f");
+            ImGui::PopItemWidth();
+
             HelpMarker(
                     "Determines the frequency of particles on the tracts, higher number equals more space between particles");
 

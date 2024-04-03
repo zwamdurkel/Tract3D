@@ -167,6 +167,7 @@ void run() {
         settings.shader.setFloat("time", currentFrameTime);
         settings.shader.setBool("blackSim", settings.blackSim);
         settings.shader.setInt("particleDens", settings.particleDens);
+        settings.shader.setFloat("particleSize", settings.particleSize / 1000.0f);
 
         glfw.draw();
         if (settings.renderer != rendererType::RAY_TRACING) {

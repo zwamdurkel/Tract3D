@@ -13,6 +13,7 @@ uniform bool neuronSim;
 uniform float time;
 uniform bool blackSim;
 uniform int particleDens;
+uniform float particleSize;
 void main()
 {
     if (uDrawTubes) {
@@ -46,7 +47,7 @@ void main()
     if (neuronSim){
         int t = int(floor(time)) / (particleDens - 1);
         float tmod10 = time - t*(particleDens - 1);
-        bool simCol = abs((tmod10) - simInt) < 0.05f;
+        bool simCol = abs((tmod10) - simInt) < particleSize;
         if (!simCol && blackSim){ discard; }
         if (simCol){
             FragColor = vec4(vec3(simCol), 1);
