@@ -360,7 +360,7 @@ void ImGuiWrapper::draw() {
 
             if (settings.expandingViewsEnabled) {
                 ImGui::PushItemWidth(170);
-                if(ImGui::SliderFloat("Expansion Factor", &settings.expansionFactor, -1.0f, 2.0f, "%.2f")){
+                if (ImGui::SliderFloat("Expansion Factor", &settings.expansionFactor, -1.0f, 2.0f, "%.2f")) {
                     for (auto& dataset: settings.datasets) {
                         if (settings.expandingViewsEnabled && dataset->enabled) {
                             dataset->bindDB();
@@ -486,45 +486,46 @@ void ImGuiWrapper::draw() {
         }
 
         if (IconCollapsingHeader("Effects", ICON_FA_WAND_MAGIC_SPARKLES)) {
-            if (ImGui::TreeNode("Camera Along Streamlines")) {
-                ImGui::Unindent();
-                ImGui::PushItemWidth(170);
-                if (ImGui::BeginCombo("Select Bundle", settings.CASBundle->name.c_str())) {
-                    for (auto& dataset: settings.datasets) {
-                        if (dataset->enabled) {
-                            ImGui::PushID(&dataset);
-                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
-                                settings.CASBundle = dataset;
-                            }
-                            ImGui::PopID();
+            IconSeparatorText("Camera Along Streamlines", ICON_FA_CAMERA);
+            ImGui::PushItemWidth(170);
+            if (ImGui::BeginCombo("Select Bundle", settings.CASBundle->name.c_str())) {
+                for (auto& dataset: settings.datasets) {
+                    if (dataset->enabled) {
+                        ImGui::PushID(&dataset);
+                        if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
+                            settings.CASBundle = dataset;
                         }
+                        ImGui::PopID();
                     }
-                    for (auto& dataset: settings.examples) {
-                        if (dataset->enabled) {
-                            ImGui::PushID(&dataset);
-                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
-                                settings.CASBundle = dataset;
-                            }
-                            ImGui::PopID();
+                }
+                for (auto& dataset: settings.examples) {
+                    if (dataset->enabled) {
+                        ImGui::PushID(&dataset);
+                        if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
+                            settings.CASBundle = dataset;
                         }
+                        ImGui::PopID();
                     }
-                    ImGui::EndCombo();
                 }
-                HelpMarker("Choose which bundle the camera should follow.");
-
-                if (settings.CASBundle->name != "none") {
-                    ImGui::SliderInt("Select Tract", &tractNr, 1, settings.CASBundle->tractCount);
-                    HelpMarker("Choose which tract from the bundle the camera should follow.");
-
-                    if (ImGui::Checkbox("Play", &settings.effectCASplaying)) {
-                        timeCAS = glfwGetTime();
-                    }
-                    HelpMarker("When enabled, the camera will follow the selected tract.");
-                }
-                ImGui::PopItemWidth();
-                ImGui::Indent();
-                ImGui::TreePop();
+                ImGui::EndCombo();
             }
+            HelpMarker("Choose which bundle the camera should follow.");
+
+            if (settings.CASBundle->name != "none") {
+                ImGui::SliderInt("Select Tract", &tractNr, 1, settings.CASBundle->tractCount);
+                HelpMarker("Choose which tract from the bundle the camera should follow.");
+
+                if (ImGui::Checkbox("Play", &settings.effectCASplaying)) {
+                    timeCAS = glfwGetTime();
+                }
+                HelpMarker("When enabled, the camera will follow the selected tract.");
+            }
+
+            IconSeparatorText("Effect2", ICON_FA_CAMERA);
+            // effect 2 here
+            IconSeparatorText("Effect3", ICON_FA_CAMERA);
+            // effect 3 here
+            ImGui::PopItemWidth();
         }
 
         if (IconCollapsingHeader("Camera Settings", ICON_FA_VIDEO)) {
