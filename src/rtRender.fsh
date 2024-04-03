@@ -19,7 +19,7 @@ vec4 applyBlur()
     // GAUSSIAN BLUR SETTINGS {{{
     float Directions = 16.0;// BLUR DIRECTIONS (Default 16.0 - More is better but slower)
     float Quality = 3.0;// BLUR QUALITY (Default 4.0 - More is better but slower)
-    float Size = 1.0;// BLUR SIZE (Radius)
+    float Size = 0.5;// BLUR SIZE (Radius)
     // GAUSSIAN BLUR SETTINGS }}}
 
     vec2 Radius = Size/resolution;

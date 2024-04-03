@@ -1,0 +1,250 @@
+#version 460 core
+layout(local_size_x = 32, local_size_y = 1) in;
+layout(rgba32f, location = 0, binding = 0) uniform image2D img_output;
+
+uniform vec3 eye;
+uniform vec3 up;
+uniform vec3 right;
+uniform vec3 lowerLeft;
+uniform float pixelDelta;
+uniform int pixelYoffset;
+uniform int frameCount;
+uniform int depth;
+
+#define minRayDist 0.01
+#define MAX_STACK_DEPTH 32
+
+struct CylinderGPU {
+    float cap[3];
+    float dir[3];
+    float col1[3];
+    float col2[3];
+    float r;
+    float length;
+};
+
+struct BVHNodeGPU {
+    float min[3];
+    float max[3];
+    int leftNodeIndex;
+    int rightNodeIndex;
+    int objectIndex;
+};
+
+struct Ray {
+    vec3 origin;
+    vec3 dir;
+    vec3 dir_inv;
+};
+
+struct HitRecord{
+    float t;
+    vec3 normal;
+    vec3 colour;
+};
+
+vec3 rayAt(Ray ray, float t){
+    return ray.origin + t * ray.dir;
+}
+
+bool solveHalfQuadratic(float a, float half_b, float c, out float t0, out float t1){
+    float D = half_b * half_b - a * c;
+    if (D < 0){ return false; }
+    float r1 = (-half_b - sqrt(D)) / a;
+    float r2 = (-half_b + sqrt(D)) / a;
+
+    t0 = min(r1, r2);
+    t1 = max(r1, r2);
+
+    return true;
+}
+
+layout(std430, binding = 3) buffer ObjectBuffer
+{
+    CylinderGPU objects[];
+};
+
+layout(std430, binding = 4) buffer BvhBuffer
+{
+    BVHNodeGPU bvh[];
+};
+
+const float INFINITY = 1.0 / 0.0;
+
+// PCG (permuted congruential generator). Thanks to:
+// www.pcg-random.org and www.shadertoy.com/view/XlGcRh
+uint NextRandom(inout uint state)
+{
+    state = state * 747796405 + 2891336453;
+    uint result = ((state >> ((state >> 28) + 4)) ^ state) * 277803737;
+    result = (result >> 22) ^ result;
+    return result;
+}
+
+float RandomValue(inout uint state)
+{
+    return NextRandom(state) / 4294967295.0;// 2^32 - 1
+}
+
+float RandomValueNormalDistribution(inout uint rngState)
+{
+    // Thanks to https://stackoverflow.com/a/6178290
+    float theta = 2 * 3.1415926 * RandomValue(rngState);
+    float rho = sqrt(-2 * log(RandomValue(rngState)));
+    return rho * cos(theta);
+}
+
+vec3 RandomDirection(inout uint rngState)
+{
+    // Thanks to https://math.stackexchange.com/a/1585996
+    float x = RandomValueNormalDistribution(rngState);
+    float y = RandomValueNormalDistribution(rngState);
+    float z = RandomValueNormalDistribution(rngState);
+    return normalize(vec3(x, y, z));
+}
+
+bool checkBounds(BVHNodeGPU b, Ray r, out double t) {
+    double tmin = -INFINITY, tmax = INFINITY;
+
+    for (int i = 0; i < 3; ++i) {
+        double t1 = (b.min[i] - r.origin[i])*r.dir_inv[i];
+        double t2 = (b.max[i] - r.origin[i])*r.dir_inv[i];
+
+        tmin = max(tmin, min(t1, t2));
+        tmax = min(tmax, max(t1, t2));
+    }
+    t = tmin < 0? tmax : tmin;
+    return tmax > max(tmin, 0.0);
+}
+
+bool intersectCylinder(Ray ray, CylinderGPU cylinder, out HitRecord hit, out float d){
+    vec3 cap = vec3(cylinder.cap[0], cylinder.cap[1], cylinder.cap[2]);
+    vec3 dir = vec3(cylinder.dir[0], cylinder.dir[1], cylinder.dir[2]);
+
+    vec3 oc = ray.origin - cap;
+
+    //variables to reuse for performance reasons
+    float ddotv = dot(ray.dir, dir);
+    float xdotv = dot(oc, dir);
+
+    float a = dot(ray.dir, ray.dir) - ddotv * ddotv;
+    float half_b = dot(ray.dir, oc) - ddotv * xdotv;
+    float c = dot(oc, oc) - xdotv * xdotv - cylinder.r * cylinder.r;
+
+    float t0, t1;
+    if (!solveHalfQuadratic(a, half_b, c, t0, t1)){
+        return false;
+    }
+
+    //distance along length of cyllinder
+    float d0 = ddotv * t0 + xdotv;
+    float d1 = ddotv * t1 + xdotv;
+
+    if (d0 < 0 || d0 > cylinder.length){
+        if (d1 < 0 || d1 > cylinder.length){ return false; }
+        hit.normal = -normalize(oc + ray.dir * t1 - dir * d1);
+        hit.t = t1;
+        d = d1;
+        return true;
+    }
+    hit.normal = normalize(oc + ray.dir * t0 - dir * d0);
+    hit.t = t0;
+    d = d0;
+    return true;
+}
+
+vec3 GetEnvLight(Ray ray){
+    return vec3(max(0, dot(ray.dir, vec3(0, 1, 0))));
+}
+
+bool intersect_bvh(Ray r, inout HitRecord hit){
+    float t_min = minRayDist;
+    float t_max = INFINITY;
+
+    bool didHit = false;
+    float bestT = t_max;
+
+    int nodeStack[MAX_STACK_DEPTH];//has index of bvh[]
+    int stackIndex = 0;
+
+    nodeStack[stackIndex] = 0;
+    stackIndex++;
+
+    while (stackIndex > 0 && stackIndex < MAX_STACK_DEPTH){
+        stackIndex--;
+        int curr = nodeStack[stackIndex];
+        if (curr == -1){ continue; }
+
+        double t;
+        if (!checkBounds(bvh[curr], r, t)){ continue; }
+
+        int objIndex = bvh[curr].objectIndex;
+        if (objIndex != -1){
+            HitRecord tmp;
+            float d;
+            CylinderGPU c = objects[objIndex];
+            if (intersectCylinder(r, c, tmp, d)){
+                if (tmp.t > bestT || tmp.t < minRayDist){ continue; }
+                didHit = true;
+                bestT = tmp.t;
+                hit = tmp;
+                hit.colour = mix(vec3(c.col1[0], c.col1[1], c.col1[2]), vec3(c.col2[0], c.col2[1], c.col2[2]), d / c.length);
+            }
+        }
+
+        nodeStack[stackIndex++] = bvh[curr].leftNodeIndex;
+        nodeStack[stackIndex++] = bvh[curr].rightNodeIndex;
+    }
+
+    return didHit;
+}
+
+vec3 rayColour(Ray ray, inout uint rngState){
+    vec3 pixelColour = vec3(0);
+    vec3 rayColour = vec3(1);
+
+    HitRecord hit;
+    for (int i = 0; i < depth + 1; i++){
+        if (intersect_bvh(ray, hit)){
+            vec3 hitPoint = rayAt(ray, hit.t);
+            ray.origin = hitPoint;
+            ray.dir = normalize(hit.normal + RandomDirection(rngState));
+            ray.dir_inv = 1 / ray.dir;
+            rayColour *= abs(hit.colour);
+        } else {
+            pixelColour = GetEnvLight(ray) * rayColour;
+            break;
+        }
+    }
+
+    return pixelColour;
+}
+
+void main() {
+    const vec3 lightDir = vec3(0, 1, 0);
+    ivec2 pixel_index = ivec2(gl_GlobalInvocationID.xy);
+    pixel_index.y += pixelYoffset;
+    vec2 scaled_index = pixel_index * pixelDelta * 2;
+    ivec2 img_dims = imageSize(img_output);
+
+    int imgWidth = img_dims.x;
+    int imgHeight = img_dims.y;
+
+    uint rngState = (imgWidth * pixel_index.y) + pixel_index.x + frameCount * 719393;//bro gotta think of something
+
+    //float colour = pixel_index.y / float(imgHeight);
+    vec3 screenPos = lowerLeft + scaled_index.x * right + scaled_index.y * up;
+    vec3 direction = normalize(screenPos  - eye);
+    vec3 inv_dir = 1 / direction;
+    Ray ray = Ray(eye, direction, inv_dir);
+
+    double t;
+    vec3 pixelColour = vec3(1);
+    pixelColour = rayColour(ray, rngState);
+    //pixelColour = vec3(checkBounds(bvh[0], ray, t));
+    //pixelColour = abs(pixelColour);
+    //pixelColour = RandomDirection(rngState);
+    vec4 c_old = imageLoad(img_output, pixel_index) * (frameCount - 1);
+    vec4 c_new = (vec4(pixelColour, 1) + c_old) / frameCount;
+    imageStore(img_output, pixel_index, c_new);
+}
