@@ -675,7 +675,9 @@ void ImGuiWrapper::draw() {
         if (std::isnan(b.pos.x)) {
             settings.effectCASplaying = false;
         } else {
-            auto rot = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+            auto rot = !settings.rotateData
+                       ? glm::mat4(1.0f)
+                       : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
             settings.camera.Position = glm::vec3(rot * glm::vec4(b.pos, 0));
             settings.camera.Front = glm::normalize(glm::vec3(rot * glm::vec4(b.dir, 0)));
             settings.camera.Right = glm::normalize(
