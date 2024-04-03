@@ -165,6 +165,10 @@ void ImGuiWrapper::draw() {
 
             IconSeparatorText("Tract Options", ICON_FA_DIAGRAM_PROJECT);
 
+            ImGui::Checkbox("Rotate Data", &settings.rotateData);
+            HelpMarker(
+                    "Rotates data around the x-axis by 90 degrees, may help looking at the data. Note that raytracing always uses non rotated data");
+
             const char* renderers[] = {"Unshaded Lines", "Shaded Lines", "Shaded Tubes", "Ray tracing"};
             ImGui::PushItemWidth(170);
             if (ImGui::Combo("Renderer", (int*) &settings.renderer, renderers, IM_ARRAYSIZE(renderers))) {
@@ -249,13 +253,18 @@ void ImGuiWrapper::draw() {
                 }
                 HelpMarker("When enabled, allows the user to select a tract bundle to highlight.");
             } else {
+                ImGui::SliderInt("Bounces", &settings.rtBounceNr, 1, 50);
+                HelpMarker("Determines the number of bounces a ray will perform after hitting an object");
+
                 ImGui::Checkbox("Enable Blur", &settings.blurEnabled);
                 HelpMarker("When enabled, blurs the image to attempt to remove noise");
 
                 if (ImGui::Button("Reset Image")) {
                     settings.rt->cleanup();
                     settings.rt->init();
+                    HelpMarker("When pressed, reloads the raytracer");
                 }
+
             }
             if (settings.highlightEnabled) {
                 ImGui::PushItemWidth(170);

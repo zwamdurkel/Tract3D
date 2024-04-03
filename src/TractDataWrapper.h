@@ -65,5 +65,7 @@ public:
 
     void bindSSBO();
 
+    std::vector<ssboUnit> getSSBOData() { return ssboData; }
+
     int getVertexNum() { return ssboData.size(); }
 };

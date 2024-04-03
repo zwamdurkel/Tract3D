@@ -5,11 +5,13 @@
 #include "RayTraceWrapper.h"
 #include "RenderSettings.h"
 
+
 void RayTraceWrapper::init() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenTextures(1, &texture);
-
+    glGenBuffers(1, &ObjSSBO);
+    glGenBuffers(1, &BvhSSBO);
     resetImg();
     rowsPerFrame = 1;
     pixelOffset = imgHeight - 1;
@@ -29,6 +31,15 @@ void RayTraceWrapper::init() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*) 0);
     glEnableVertexAttribArray(0);
+
+    //shader buffer objects
+    initBVH();
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ObjSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, obj.size() * sizeof(BVH::CylinderGPU), &obj[0], GL_STATIC_DRAW);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, BvhSSBO);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bvh.size() * sizeof(BVH::BVHNodeGPU), &bvh[0], GL_STATIC_DRAW);
 }
 
 void RayTraceWrapper::resetImg() {
@@ -57,8 +68,45 @@ void RayTraceWrapper::resetCamera() {
     pixelDelta = w / imgWidth;
     glm::vec3 screenCentre = settings.camera.Position + settings.camera.Front * settings.camera.NearPlane;
     lowerLeft = screenCentre - w * settings.camera.Right - h * settings.camera.Up;
-//    Info(lowerLeft.x << ", " << lowerLeft.y << ", " << lowerLeft.z);
-//    Info(settings.camera.Position.x << ", " << settings.camera.Position.y << ", " << settings.camera.Position.z);
+}
+
+void RayTraceWrapper::createCylinders() {
+    obj.clear();
+    if (settings.datasets.empty()) { return; }//if no dataset exists we cannot make any cylinders
+
+    //we always take the first in the list, we maybe increase later to all of them
+    auto ds = settings.datasets[0]->getSSBOData();
+    glm::vec3 min = glm::vec3(0);
+    glm::vec3 max = glm::vec3(0);
+
+    for (int i = 1; i < ds.size() - 1; i++) {
+        ssboUnit ss0 = ds[i];
+        ssboUnit ss1 = ds[i + 1];
+
+        glm::vec3 pos0(ss0.position[0], ss0.position[1], ss0.position[2]);
+        glm::vec3 pos1(ss1.position[0], ss1.position[1], ss1.position[2]);
+
+        min = glm::min(min, pos0);
+        min = glm::min(min, pos1);
+        max = glm::max(max, pos0);
+        max = glm::max(max, pos1);
+
+        glm::vec3 grad(ss0.gradient[0], ss0.gradient[1], ss0.gradient[2]);
+
+        glm::vec3 diff = pos1 - pos0;
+        float length = glm::length(diff);
+        diff /= length;//normalize it
+        if (dot(diff, grad) < 0.75) { continue; }
+
+        BVH::CylinderGPU c({pos0.x, pos0.y, pos0.z},
+                           {diff.x, diff.y, diff.z},
+                           {ss0.gradient[0], ss0.gradient[1], ss0.gradient[2]},
+                           {ss1.gradient[0], ss1.gradient[1], ss1.gradient[2]},
+                           0.1,
+                           length);
+
+        obj.push_back(c);
+    }
 }
 
 void RayTraceWrapper::draw() {
@@ -72,13 +120,17 @@ void RayTraceWrapper::draw() {
     settings.rtComputeShader.setFloat("pixelDelta", pixelDelta);
     settings.rtComputeShader.setInt("pixelYoffset", pixelOffset);
     settings.rtComputeShader.setInt("frameCount", imgNum);
+    settings.rtComputeShader.setInt("depth", settings.rtBounceNr);
     int size = 0;
     if (settings.datasets.empty()) { return; }
     auto& ds = settings.datasets[0];
-    ds->bindSSBO();
     size = ds->getVertexNum();
 
     settings.rtComputeShader.setInt("bufferSize", size);
+
+    //bind buffers
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ObjSSBO);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, BvhSSBO);
 
     glDispatchCompute(imgWidth, rowsPerFrame, 1);
 
@@ -96,7 +148,7 @@ void RayTraceWrapper::draw() {
     int newOffset = pixelOffset + rowsPerFrame;
     if (newOffset >= imgHeight) {
         imgNum++;
-        Info(imgNum);
+        Info("Frame: " << imgNum);
     }
     pixelOffset = (newOffset) % imgHeight;
 }
@@ -104,9 +156,27 @@ void RayTraceWrapper::draw() {
 void RayTraceWrapper::cleanup() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &ObjSSBO);
+    glDeleteBuffers(1, &BvhSSBO);
     glDeleteTextures(1, &texture);
 }
 
 RayTraceWrapper::RayTraceWrapper() {
     settings.rt = this;
 }
+
+void RayTraceWrapper::initBVH() {
+    bvh.clear();
+    createCylinders();
+    std::vector<BVH::Cylinder> cylinders;
+    for (int i = 0; i < obj.size(); i++) {
+        BVH::Cylinder c(i, obj[i]);
+        cylinders.push_back(c);
+    }
+
+    bvh = BVH::createBHV(cylinders);
+}
+
+//comparator functions for sorting
+
+

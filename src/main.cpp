@@ -125,14 +125,15 @@ void run() {
 
     settings.defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
     settings.lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
-    settings.rtComputeShader = Shader(path + "rtCompute.comp");
+    //settings.rtComputeShader = Shader(path + "rtCompute.comp");//is fine
+    settings.rtComputeShader = Shader(path + "rtBVHCompute.comp");
     settings.rtRenderShader = Shader(path + "rtRender.vsh", path + "rtRender.fsh");
 
     settings.shader = settings.defaultShader;//draw only lines
 
     Info("Starting render");
 
-    glm::mat4 modelMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    //
     glm::vec4 lightPos = glm::normalize(glm::vec4(1.0f, 1.0f, 0.0f, 0.0f));
 
     while (!glfwWindowShouldClose(window)) {
@@ -141,6 +142,11 @@ void run() {
         float currentFrameTime = glfwGetTime();
         float deltaTime = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
+
+        glm::mat4 modelMatrix = settings.rotateData ? glm::mat4(1.0f)
+                                                    : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f),
+                                                                  glm::vec3(1.0f, 0.0f, 0.0f));
+
 
         if (settings.rotatingLight) {
             glm::mat4 lightRotation = glm::rotate(glm::mat4(1.0f), glm::radians(float(90.0f * deltaTime)),
