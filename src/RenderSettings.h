@@ -37,6 +37,9 @@ public:
     bool drawPoints = false;
     bool rotateData = true;
     bool smoothCap = false;
+    bool neuronSim = false;
+    bool blackSim = false;
+    int particleDens = 10;
     bool effectCASplaying = false;
     std::shared_ptr<TractDataWrapper> CASBundle = std::make_shared<TractDataWrapper>("none");
     std::string highlightedBundle = "none";
