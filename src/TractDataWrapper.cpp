@@ -226,7 +226,7 @@ void TractDataWrapper::computeExpandingView() {
         int count = 0;
         for (auto v : t.vertices) {
             glm::vec3 value;
-            if (settings.expansionFactor < -0.98) {
+            if (settings.expansionFactor < 0) {
                 value = settings.expansionFactor * (v - avgTract.vertices[count * approx]);
             } else {
                 value = settings.expansionFactor * (v - avgTract.vertices[nearestavgVertex[counter]]);

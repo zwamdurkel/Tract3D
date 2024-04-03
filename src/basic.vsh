@@ -91,7 +91,7 @@ void main()
             } else {
                 normal = vec3(uModelMatrix * vec4(r, 1.0));
             }
-            modelPos = uModelMatrix * vec4(q + v, 1.0);
+            modelPos = uModelMatrix * vec4(q + v + vec3(disData[vi * 3], disData[vi * 3 + 1], disData[vi * 3 + 2]), 1.0);
             gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
             fColor = abs(vec3(uModelMatrix * vec4(r, 1.0)));
         } else {
@@ -108,7 +108,7 @@ void main()
             vec3 q = (1.0-fc[uNrOfSides][rotationMult]) * dot(perp, r) * r + fc[uNrOfSides][rotationMult] * perp + fs[uNrOfSides][rotationMult] * cross(r, perp);
 
             normal = vec3(uModelMatrix * vec4(q, 1.0));
-            modelPos = uModelMatrix * vec4(q + v, 1.0);
+            modelPos = uModelMatrix * vec4(q + v + vec3(disData[vi * 3], disData[vi * 3 + 1], disData[vi * 3 + 2]), 1.0);
             gl_Position = uProjectionMatrix * uViewMatrix * modelPos;
             fColor = abs(vec3(uModelMatrix * vec4(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz, 1.0)));
         }
