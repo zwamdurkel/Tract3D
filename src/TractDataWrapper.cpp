@@ -187,6 +187,7 @@ void TractDataWrapper::generateTractClassification() {
     std::vector<glm::vec3> normalVecs;
     for (int i = 0; i < classificationFidelity; i++) {
         int random = std::rand() % data.size();
+        //Info(random);
         normalVecs.push_back(data[random].vertices[0] - avg);
     }
 
