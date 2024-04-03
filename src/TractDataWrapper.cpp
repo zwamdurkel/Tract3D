@@ -190,6 +190,9 @@ void TractDataWrapper::generateTractClassification() {
         if (glm::dot(normalVec, t.vertices[0] - avg) >= 0) {
             std::reverse(t.vertices.begin(), t.vertices.end());
             std::reverse(t.gradient.begin(), t.gradient.end());
+            for (auto& g: t.gradient) {
+                g = -g;
+            }
         }
     }
 }
@@ -199,7 +202,7 @@ void TractDataWrapper::computeExpandingView() {
     for (Tract t: data) {
         float index = avgFidelity / t.vertices.size();
         int count = 0;
-        for (auto v : t.vertices) {
+        for (auto v: t.vertices) {
             auto value = settings.expansionFactor * (v - avgTract.vertices[std::floor(count * index)]);
             //Info("Vertex " << count/3 << " with x = " << value.x << " and y = " << value.y << " and z = " << value.z);
             displacements.push_back(value.x);
@@ -210,12 +213,39 @@ void TractDataWrapper::computeExpandingView() {
     }
 }
 
-glm::vec3 TractDataWrapper::getBezierPosition(int t) {
-    return {1, 0, 0};
-}
+bezierPoint TractDataWrapper::getBezierPosition(float time, int tractNr) {
+    // https://math.stackexchange.com/questions/2316499/interpolating-splines-with-3d-points
+    bezierPoint error = {glm::vec3(NAN, NAN, NAN), glm::vec3(NAN, NAN, NAN)};
 
-glm::vec3 TractDataWrapper::getBezierDirection(int t) {
-    return {1, 0, 0};
+    if (time > data[tractNr].vertices.size() - 2) {
+        return error;
+    }
+
+    if (tractNr > data.size() - 1) {
+        return error;
+    }
+
+    glm::vec3 c0 = data[tractNr].vertices[std::floor(time)];
+    glm::vec3 c3 = data[tractNr].vertices[std::floor(time + 1)];
+
+    glm::vec3 g0 = glm::distance(c0, c3) * data[tractNr].gradient[std::floor(time)];
+    glm::vec3 g1 = glm::distance(c0, c3) * data[tractNr].gradient[std::floor(time + 1)];
+
+    glm::vec3 c1 = c0 + g0 / 3.0f;
+    glm::vec3 c2 = c3 - g1 / 3.0f;
+
+    float t = std::modf(time, nullptr);
+
+    glm::vec3 p = (float) std::pow(1 - t, 3) * c0
+                  + 3 * t * (float) std::pow(1 - t, 2) * c1
+                  + 3 * (float) std::pow(t, 2) * (1 - t) * c2
+                  + (float) std::pow(t, 3) * c3;
+
+    glm::vec3 d = 3 * (float) std::pow(1 - t, 2) * (c1 - c0)
+                  + 6 * (1 - t) * t * (c2 - c1)
+                  + 3 * (float) std::pow(t, 2) * (c3 - c2);
+
+    return {p, d};
 }
 
 void TractDataWrapper::init() {
@@ -262,7 +292,7 @@ void TractDataWrapper::bindDB() {
 }
 
 void TractDataWrapper::clearDB() {
-    for (auto &v : displacements) {
+    for (auto& v: displacements) {
         v = 0.0f;
     }
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, DB);
@@ -301,6 +331,7 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
                                 tract.gradient[i].y, tract.gradient[i].z});
         }
     }
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
     glPointSize(5);

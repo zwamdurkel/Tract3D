@@ -93,7 +93,7 @@ bool getExamples() {
     for (const auto& entry: fs::directory_iterator(path + "examples")) {
         std::string filePath = entry.path().string();
         std::replace(filePath.begin(), filePath.end(), '\\', '/');
-        settings.examples.emplace_back(std::make_unique<TractDataWrapper>(entry.path().filename().string(), filePath));
+        settings.examples.emplace_back(std::make_shared<TractDataWrapper>(entry.path().filename().string(), filePath));
     }
 
     return true;
