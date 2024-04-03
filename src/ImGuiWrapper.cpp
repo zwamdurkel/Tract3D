@@ -197,7 +197,8 @@ void ImGuiWrapper::draw() {
             HelpMarker("Select The desired renderer.\n\n"
                        "- Unshaded Lines: (default)\nThe tracts are rendered as lines. All colors will have the same brightness.\n\n"
                        "- Shaded Lines:\nThe tracts are rendered as lines. Lighting will be applied to the colors.\n\n"
-                       "- Shaded Tubes:\nThe tracts are rendered as tubes. Tubes are heavier to render. The user can select how many sides the tubes have and how thick the tubes are. Lighting will be applied to the colors.");
+                       "- Shaded Tubes:\nThe tracts are rendered as tubes. Tubes are heavier to render. The user can select how many sides the tubes have and how thick the tubes are. Lighting will be applied to the colors.\n\n"
+                       "- Ray Tracing:\nThe tracts are rendered as tubes using ray tracing. Extremely heavy to render. User can select the number of bounces per ray and .");
 
             if (settings.renderer == UNSHADED_LINES || settings.renderer == SHADED_LINES) {
                 ImGui::Checkbox("Draw Points", &settings.drawPoints);
@@ -257,7 +258,10 @@ void ImGuiWrapper::draw() {
                 }
                 HelpMarker("When enabled, allows the user to select a tract bundle to highlight.");
             } else {
+                ImGui::PushItemWidth(170);
                 ImGui::SliderInt("Bounces", &settings.rtBounceNr, 1, 50);
+                ImGui::PopItemWidth();
+
                 HelpMarker("Determines the number of bounces a ray will perform after hitting an object");
 
                 ImGui::Checkbox("Enable Blur", &settings.blurEnabled);
@@ -266,8 +270,8 @@ void ImGuiWrapper::draw() {
                 if (ImGui::Button("Reset Image")) {
                     settings.rt->cleanup();
                     settings.rt->init();
-                    HelpMarker("When pressed, reloads the raytracer");
                 }
+                HelpMarker("When pressed, reloads the raytracer");
 
             }
             if (settings.highlightEnabled) {
