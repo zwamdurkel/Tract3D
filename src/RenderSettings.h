@@ -25,11 +25,13 @@ public:
     std::vector<std::shared_ptr<TractDataWrapper>> datasets;
     std::vector<std::shared_ptr<TractDataWrapper>> examples;
     rendererType renderer = UNSHADED_LINES;
+
     bool show_demo_window = false;
     bool MSAA = true;
     bool vsync = true;
     bool fullScreen = false;
     bool highlightEnabled = false;
+    float viewExpansionFactor = 0.0f;
     float expansionFactor = 0.0f;
     bool blurEnabled = false;
     bool rotatingLight = false;

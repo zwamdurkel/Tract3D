@@ -29,6 +29,7 @@ private:
     unsigned int VAO = 0, SSBO = 0, DB = 0;
     std::vector<ssboUnit> ssboData;
     Tract avgTract;
+    glm::vec3 avgPoint;
     std::vector<float> avgTractWidth;
     std::vector<int32_t> counts;
     std::vector<int32_t> firsts;
@@ -37,7 +38,6 @@ private:
     std::vector<float> displacements;
     std::vector<int> nearestavgVertex;
     int avgFidelity = 10;
-    int classificationFidelity = 1;
 
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);
@@ -47,6 +47,8 @@ private:
     void generateTractClassification();
 
     void computeExpandingView();
+
+    void calculateCenterPoint();
 
 public:
     std::string name;

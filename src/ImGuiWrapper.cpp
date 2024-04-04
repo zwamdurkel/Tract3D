@@ -524,7 +524,19 @@ void ImGuiWrapper::draw() {
 
             // effect 2 here
             IconSeparatorText("Expanding Views", ICON_FA_MAXIMIZE);
-            if (ImGui::Button("Reset")) {
+
+            if (ImGui::Button("Reset Center Expansion Factor")) {
+                settings.viewExpansionFactor = 0.0f;
+            }
+            ImGui::PushItemWidth(170);
+            if (ImGui::SliderFloat("Center Expansion Factor", &settings.viewExpansionFactor, -2.0f, 2.0f, "%.2f")) {}
+            HelpMarker("Choose the factor by which the tracts move away from the centerpoint");
+            ImGui::PopItemWidth();
+
+            // effect 2 here
+            IconSeparatorText("Expanding Datasets", ICON_FA_MAXIMIZE);
+
+            if (ImGui::Button("Reset Dataset Expansion Factor")) {
                 settings.expansionFactor = 0.0f;
                 for (auto& dataset: settings.datasets) {
                     if (dataset->enabled) {
@@ -538,7 +550,7 @@ void ImGuiWrapper::draw() {
                 }
             }
             ImGui::PushItemWidth(170);
-            if (ImGui::SliderFloat("Expansion Factor", &settings.expansionFactor, -1.0f, 1.0f, "%.2f")) {
+            if (ImGui::SliderFloat("Dataset Expansion Factor", &settings.expansionFactor, -1.0f, 1.0f, "%.2f")) {
                 for (auto& dataset: settings.datasets) {
                     if (dataset->enabled) {
                         dataset->bindDB();
@@ -550,7 +562,7 @@ void ImGuiWrapper::draw() {
                     }
                 }
             }
-            HelpMarker("Choose the factor by which the tracts explode if positive or collide if negative");
+            HelpMarker("Choose the factor by which the tracts move away from the dataset average tract");
             ImGui::PopItemWidth();
         }
 
