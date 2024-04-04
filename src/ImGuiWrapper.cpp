@@ -198,7 +198,7 @@ void ImGuiWrapper::draw() {
                        "- Unshaded Lines: (default)\nThe tracts are rendered as lines. All colors will have the same brightness.\n\n"
                        "- Shaded Lines:\nThe tracts are rendered as lines. Lighting will be applied to the colors.\n\n"
                        "- Shaded Tubes:\nThe tracts are rendered as tubes. Tubes are heavier to render. The user can select how many sides the tubes have and how thick the tubes are. Lighting will be applied to the colors.\n\n"
-                       "- Ray Tracing:\nThe tracts are rendered as tubes using ray tracing. Extremely heavy to render. User can select the number of bounces per ray and .");
+                       "- Ray Tracing:\nThe tracts are rendered as tubes using ray tracing. Extremely heavy to render. User can select the number of bounces per ray, apply a small amount of blur and reset the image to reload the data and restart the render .");
 
             if (settings.renderer == UNSHADED_LINES || settings.renderer == SHADED_LINES) {
                 ImGui::Checkbox("Draw Points", &settings.drawPoints);
@@ -515,12 +515,15 @@ void ImGuiWrapper::draw() {
             ImGui::SliderInt("Partice Density", &settings.particleDens, 2, 100);
             ImGui::PopItemWidth();
 
+            HelpMarker(
+                    "Determines the frequency of particles on the tracts, higher number equals more particles");
+
             ImGui::PushItemWidth(170);
             ImGui::SliderFloat("Partice Size", &settings.particleSize, 1, 200, "%.0f");
             ImGui::PopItemWidth();
 
             HelpMarker(
-                    "Determines the frequency of particles on the tracts, higher number equals more space between particles");
+                    "Determines the size of particles on the tracts, higher number equals longer particles");
 
             // effect 2 here
             IconSeparatorText("Expanding Views", ICON_FA_MAXIMIZE);
