@@ -1,6 +1,6 @@
-# Tract-based 3D animation tool
+# Tract3D - Tract-based 3D animation tool
 
-![img](https://imgur.com/zV7YIX9.png)
+![img](https://imgur.com/0K4xL5T.png)
 
 ## About
 
