@@ -17,13 +17,9 @@ void ImGuiWrapper::init() {
     auto path = getPath();
     iniFile = (path + "imgui.ini");
     io.IniFilename = iniFile.c_str();
-//    (void) io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
     io.Fonts->AddFontFromFileTTF((path + "Ruda-Regular.ttf").c_str(), 16);
-//    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 10);
-//    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 14);
-//    io.Fonts->AddFontFromFileTTF("Ruda-Bold.ttf", 18);
     ImFontConfig config;
     config.MergeMode = true;
     config.GlyphMinAdvanceX = 16.0f; // Use if you want to make the icon monospaced
@@ -89,7 +85,7 @@ void ImGuiWrapper::init() {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(350, 500));
 }
 
-static void HelpMarker(const char* desc, float offset = ImGui::GetColumnWidth() - 5) {
+static void HelpMarker(const char* desc, float offset = ImGui::GetContentRegionMax().x - 15) {
     ImGui::SameLine(offset);
     auto window = ImGui::GetCurrentWindow();
     window->DC.CurrLineTextBaseOffset += 1;
@@ -138,10 +134,11 @@ void ImGuiWrapper::draw() {
         ImGui::ShowDemoWindow(&settings.show_demo_window);
 
     {
-        ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(22, 22), ImGuiCond_FirstUseEver);
         ImGui::Begin("Tract 3D", nullptr, window_flags);
 
-        ImGui::Text("Version 1.0.0");
+        ImGuiIO& io = ImGui::GetIO();
+        ImGui::Text("Version 1.0.0 \t-\t %.1f FPS", io.Framerate);
 
         if (IconCollapsingHeader("Rendering Settings", ICON_FA_VECTOR_SQUARE, ImGuiTreeNodeFlags_DefaultOpen)) {
             IconSeparatorText("General Options", ICON_FA_SLIDERS);
@@ -169,7 +166,7 @@ void ImGuiWrapper::draw() {
 
             ImGui::Checkbox("Rotate Data", &settings.rotateData);
             HelpMarker(
-                    "Rotates data around the x-axis by 90 degrees, may help looking at the data. Note that raytracing always uses non rotated data");
+                    "Rotates data around the x-axis by 90 degrees, may help looking at the data. Note that raytracing always uses non rotated data.");
 
             const char* renderers[] = {"Unshaded Lines", "Shaded Lines", "Shaded Tubes", "Ray tracing"};
             ImGui::PushItemWidth(170);
@@ -198,7 +195,7 @@ void ImGuiWrapper::draw() {
                        "- Unshaded Lines: (default)\nThe tracts are rendered as lines. All colors will have the same brightness.\n\n"
                        "- Shaded Lines:\nThe tracts are rendered as lines. Lighting will be applied to the colors.\n\n"
                        "- Shaded Tubes:\nThe tracts are rendered as tubes. Tubes are heavier to render. The user can select how many sides the tubes have and how thick the tubes are. Lighting will be applied to the colors.\n\n"
-                       "- Ray Tracing:\nThe tracts are rendered as tubes using ray tracing. Extremely heavy to render. User can select the number of bounces per ray, apply a small amount of blur and reset the image to reload the data and restart the render .");
+                       "- Ray Tracing:\nThe tracts are rendered as tubes using ray tracing. Extremely heavy to render. User can select the number of bounces per ray, apply a small amount of blur and reset the image to reload the data and restart the render.");
 
             if (settings.renderer == UNSHADED_LINES || settings.renderer == SHADED_LINES) {
                 ImGui::Checkbox("Draw Points", &settings.drawPoints);
@@ -233,7 +230,7 @@ void ImGuiWrapper::draw() {
                         "Specify the diameter of the tubes. Tubes that are too thick may not work well with some effects.");
                 ImGui::PopItemWidth();
                 ImGui::Checkbox("Smooth End Caps", &settings.smoothCap);
-                HelpMarker("When enabled, the end caps of tubes are rendered to look smoother");
+                HelpMarker("When enabled, the end caps of tubes are rendered to look smoother.");
             }
             if (settings.renderer != RAY_TRACING) {
                 if (ImGui::Checkbox("Highlight", &settings.highlightEnabled)) {
@@ -262,16 +259,16 @@ void ImGuiWrapper::draw() {
                 ImGui::SliderInt("Bounces", &settings.rtBounceNr, 1, 50);
                 ImGui::PopItemWidth();
 
-                HelpMarker("Determines the number of bounces a ray will perform after hitting an object");
+                HelpMarker("Determines the number of bounces a ray will perform after hitting an object.");
 
                 ImGui::Checkbox("Enable Blur", &settings.blurEnabled);
-                HelpMarker("When enabled, blurs the image to attempt to remove noise");
+                HelpMarker("When enabled, blurs the image to attempt to remove noise.");
 
                 if (ImGui::Button("Reset Image")) {
                     settings.rt->cleanup();
                     settings.rt->init();
                 }
-                HelpMarker("When pressed, reloads the raytracer");
+                HelpMarker("When pressed, reloads the raytracer.");
 
             }
             if (settings.highlightEnabled) {
@@ -343,18 +340,7 @@ void ImGuiWrapper::draw() {
                 ImGui::PopItemWidth();
             }
 
-//            if (ImGui::SliderFloat("Alpha", &settings.generalAlpha, 0.0f, 1.0f, "%.2f")) {
-//                for (auto& dataset: settings.datasets) {
-//                    dataset->alpha = settings.generalAlpha;
-//                }
-//                for (auto& dataset: settings.examples) {
-//                    dataset->alpha = settings.generalAlpha;
-//                }
-//            }
-
             IconSeparatorText("Tract Count", ICON_FA_ARROW_UP_RIGHT_DOTS);
-            ImGui::NewLine();
-            HelpMarker("Specify the number of tracts to render for each tract bundle.", 0);
 
             for (auto& dataset: settings.datasets) {
                 ImGui::PushItemWidth(170);
@@ -366,6 +352,9 @@ void ImGuiWrapper::draw() {
             }
 
             if (ImGui::TreeNode("Examples Tract Count")) {
+                if (settings.datasets.size() == 0) {
+                    HelpMarker("Specify the number of tracts to render for each tract bundle.");
+                }
                 ImGui::PushItemWidth(170);
                 for (auto& dataset: settings.examples) {
                     if (dataset->enabled) {
@@ -376,6 +365,10 @@ void ImGuiWrapper::draw() {
                 ImGui::PopItemWidth();
 
                 ImGui::TreePop();
+            } else {
+                if (settings.datasets.size() == 0) {
+                    HelpMarker("Specify the number of tracts to render for each tract bundle.");
+                }
             }
         }
 
@@ -516,30 +509,41 @@ void ImGuiWrapper::draw() {
             ImGui::PopItemWidth();
 
             HelpMarker(
-                    "Determines the frequency of particles on the tracts, higher number equals more particles");
+                    "Determines the frequency of particles on the tracts, higher number equals more particles.");
 
             ImGui::PushItemWidth(170);
             ImGui::SliderFloat("Partice Size", &settings.particleSize, 1, 200, "%.0f");
             ImGui::PopItemWidth();
 
             HelpMarker(
-                    "Determines the size of particles on the tracts, higher number equals longer particles");
+                    "Determines the size of particles on the tracts, higher number equals longer particles.");
 
-            // effect 2 here
             IconSeparatorText("Expanding Views", ICON_FA_MAXIMIZE);
 
-            if (ImGui::Button("Reset Center Expansion Factor")) {
+            ImGui::PushItemWidth(170);
+            ImGui::Text("Center Expansion Factor");
+            ImGui::SliderFloat("##Center Expansion Factor", &settings.viewExpansionFactor, -2.0f, 2.0f, "%.2f");
+            ImGui::SameLine();
+            if (ImGui::Button("Reset##cexp")) {
                 settings.viewExpansionFactor = 0.0f;
             }
-            ImGui::PushItemWidth(170);
-            if (ImGui::SliderFloat("Center Expansion Factor", &settings.viewExpansionFactor, -2.0f, 2.0f, "%.2f")) {}
             HelpMarker("Choose the factor by which the tracts move away from the centerpoint");
-            ImGui::PopItemWidth();
 
-            // effect 2 here
-            IconSeparatorText("Expanding Datasets", ICON_FA_MAXIMIZE);
-
-            if (ImGui::Button("Reset Dataset Expansion Factor")) {
+            ImGui::Text("Dataset Expansion Factor");
+            if (ImGui::SliderFloat("##Dataset Expansion Factor", &settings.expansionFactor, -1.0f, 1.0f, "%.2f")) {
+                for (auto& dataset: settings.datasets) {
+                    if (dataset->enabled) {
+                        dataset->bindDB();
+                    }
+                }
+                for (auto& dataset: settings.examples) {
+                    if (dataset->enabled) {
+                        dataset->bindDB();
+                    }
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset##dexp")) {
                 settings.expansionFactor = 0.0f;
                 for (auto& dataset: settings.datasets) {
                     if (dataset->enabled) {
@@ -552,20 +556,7 @@ void ImGuiWrapper::draw() {
                     }
                 }
             }
-            ImGui::PushItemWidth(170);
-            if (ImGui::SliderFloat("Dataset Expansion Factor", &settings.expansionFactor, -1.0f, 1.0f, "%.2f")) {
-                for (auto& dataset: settings.datasets) {
-                    if (dataset->enabled) {
-                        dataset->bindDB();
-                    }
-                }
-                for (auto& dataset: settings.examples) {
-                    if (dataset->enabled) {
-                        dataset->bindDB();
-                    }
-                }
-            }
-            HelpMarker("Choose the factor by which the tracts move away from the dataset average tract");
+            HelpMarker("Choose the factor by which the tracts move away from the dataset average tract.");
             ImGui::PopItemWidth();
         }
 
@@ -577,13 +568,13 @@ void ImGuiWrapper::draw() {
             ImGui::PopItemWidth();
         }
 
-        if (IconCollapsingHeader("Development Settings", ICON_FA_CODE)) {
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("No Move", &no_move);
-            ImGui::TableNextColumn();
-            ImGui::Checkbox("No Resize", &no_resize);
-            ImGui::Checkbox("Demo Window", &settings.show_demo_window);
-        }
+//        if (IconCollapsingHeader("Development Settings", ICON_FA_CODE)) {
+//            ImGui::TableNextColumn();
+//            ImGui::Checkbox("No Move", &no_move);
+//            ImGui::TableNextColumn();
+//            ImGui::Checkbox("No Resize", &no_resize);
+//            ImGui::Checkbox("Demo Window", &settings.show_demo_window);
+//        }
 
         if (IconCollapsingHeader("Guide", ICON_FA_BOOK_OPEN)) {
             if (ImGui::TreeNode("Keyboard Shortcuts##1")) {
@@ -659,6 +650,16 @@ void ImGuiWrapper::draw() {
                         "Details on the effects of each option can be found by hovering over the info marker %s next to each option.",
                         ICON_FA_CIRCLE_INFO);
 
+                if (ImGui::TreeNode("Using Ray Tracing##1")) {
+                    ImGui::TextWrapped(
+                            "Ray Tracing will only work on the first enabled file, this also includes examples. So we recommend only enabling the file on which you wish to perform ray tracing.");
+                    ImGui::TextWrapped(
+                            "The Ray Tracer does not respect the \"Rotate\" option, The easiest way to line up a shot is to disable \"Rotate\" and position the camera using the Shaded Lines renderer.");
+                    ImGui::TextWrapped(
+                            "Once the camera is aligned, switch to the Ray Tracing renderer, select the desired number of bounces and press \"Reset Image\" to start rendering. This may take a while.");
+                    ImGui::TreePop();
+                }
+
                 ImGui::TreePop();
             }
             if (ImGui::TreeNode("Dataset Management##1")) {
@@ -681,8 +682,6 @@ void ImGuiWrapper::draw() {
             }
         }
 
-        ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("Application Framerate %.1f FPS", io.Framerate);
         ImGui::End();
     }
 
