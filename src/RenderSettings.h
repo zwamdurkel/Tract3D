@@ -38,7 +38,7 @@ public:
     bool smoothCap = false;
     bool neuronSim = false;
     bool blackSim = false;
-    int particleDens = 10;
+    int particleDens = 50;
     float particleSize = 50;
     bool effectCASplaying = false;
     std::shared_ptr<TractDataWrapper> CASBundle = std::make_shared<TractDataWrapper>("none");

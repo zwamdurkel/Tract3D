@@ -166,7 +166,7 @@ void run() {
         settings.shader.setBool("neuronSim", settings.neuronSim);
         settings.shader.setFloat("time", currentFrameTime);
         settings.shader.setBool("blackSim", settings.blackSim);
-        settings.shader.setInt("particleDens", settings.particleDens);
+        settings.shader.setInt("particleDens", (100 - settings.particleDens) + 2);
         settings.shader.setFloat("particleSize", settings.particleSize / 1000.0f);
 
         glfw.draw();

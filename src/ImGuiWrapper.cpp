@@ -515,12 +515,15 @@ void ImGuiWrapper::draw() {
             ImGui::SliderInt("Partice Density", &settings.particleDens, 2, 100);
             ImGui::PopItemWidth();
 
+            HelpMarker(
+                    "Determines the frequency of particles on the tracts, higher number equals more particles");
+
             ImGui::PushItemWidth(170);
             ImGui::SliderFloat("Partice Size", &settings.particleSize, 1, 200, "%.0f");
             ImGui::PopItemWidth();
 
             HelpMarker(
-                    "Determines the frequency of particles on the tracts, higher number equals more space between particles");
+                    "Determines the size of particles on the tracts, higher number equals longer particles");
 
             // effect 2 here
             IconSeparatorText("Expanding Views", ICON_FA_MAXIMIZE);
