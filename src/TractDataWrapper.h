@@ -30,24 +30,26 @@ private:
     std::vector<ssboUnit> ssboData;
     Tract avgTract;
     glm::vec3 avgPoint;
-    std::vector<float> avgTractWidth;
     std::vector<int32_t> counts;
     std::vector<int32_t> firsts;
-    std::vector<int32_t> endCapCounts;
-    std::vector<int32_t> endCapfirsts;
-    std::vector<float> displacements;
-    std::vector<int> nearestavgVertex;
+    std::vector<int32_t> capCounts;
+    std::vector<int32_t> capFirsts;
+    std::vector<glm::vec3> displacements;
     int avgFidelity = 10;
 
     //helper function that returns next line of file separated by spaces in vector of strings
     std::vector<std::string> readline(std::ifstream& file);
 
+    // Generates an average tract of length `nrOfPoints`. Tracts should be classified for best results
     void generateAverageTract(int nrOfPoints = 30);
 
+    // Makes sure all tracts have their starting points on the same side
     void generateTractClassification();
 
+    // Computes the displacement for each vertex based on the `avgTract`
     void computeExpandingView();
 
+    // Calculate the center point of this dataset and store it in `avgPoint`
     void calculateCenterPoint();
 
 public:
@@ -56,7 +58,7 @@ public:
     float alpha = 1.0f;
     std::vector<Tract> data;
     // How many out of `tractCount` tracts do we render?
-    int showTractCount = 1;
+    int showCount = 1;
     // Total number of tracts represented by this class.
     int tractCount = 1;
 
@@ -66,11 +68,11 @@ public:
 
     ~TractDataWrapper();
 
+    // Get a position and direction on a curve along a tract
     bezierPoint getBezierPosition(float time, int tractNr);
 
-    void bindDB();
-
-    void clearDB();
+    // Update the displacements and write to GPU buffer DB
+    void updateDB();
 
     bool parse(const std::string& filePath, bool tractStop);
 
@@ -83,6 +85,4 @@ public:
     void bindSSBO();
 
     std::vector<ssboUnit> getSSBOData() { return ssboData; }
-
-    int getVertexNum() { return ssboData.size(); }
 };

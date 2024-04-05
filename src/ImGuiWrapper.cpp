@@ -116,6 +116,16 @@ static void IconSeparatorText(const char* label, const char* icon) {
     ImGui::SeparatorText(label);
 }
 
+void ImGuiWrapper::forAllDatasets(void (* func)(const std::shared_ptr<TractDataWrapper>& ds)) {
+    static auto temp = std::vector{settings.EmptyTractData};
+    static auto dataList = {std::cref(temp), std::cref(settings.datasets), std::cref(settings.examples)};
+    for (auto datasets: dataList) {
+        for (const auto& dataset: datasets.get()) {
+            func(dataset);
+        }
+    }
+}
+
 void ImGuiWrapper::draw() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -183,12 +193,9 @@ void ImGuiWrapper::draw() {
                         break;
                 }
 
-                for (auto& dataset: settings.datasets) {
+                forAllDatasets([](auto dataset) {
                     dataset->init();
-                }
-                for (auto& dataset: settings.examples) {
-                    dataset->init();
-                }
+                });
             }
             ImGui::PopItemWidth();
             HelpMarker("Select The desired renderer.\n\n"
@@ -210,21 +217,15 @@ void ImGuiWrapper::draw() {
             if (settings.renderer == SHADED_TUBES) {
                 ImGui::PushItemWidth(170);
                 if (ImGui::SliderInt("Tube Sides", &settings.nrOfSides, 3, 8)) {
-                    for (auto& dataset: settings.datasets) {
+                    forAllDatasets([](auto dataset) {
                         dataset->init();
-                    }
-                    for (auto& dataset: settings.examples) {
-                        dataset->init();
-                    }
+                    });
                 }
                 HelpMarker("Specify the number of sides the tract tubes have. More sides means less performance.");
                 if (ImGui::SliderFloat("Tube Diameter", &settings.tubeDiameter, 0.01, 0.3, "%.2f")) {
-                    for (auto& dataset: settings.datasets) {
+                    forAllDatasets([](auto dataset) {
                         dataset->init();
-                    }
-                    for (auto& dataset: settings.examples) {
-                        dataset->init();
-                    }
+                    });
                 }
                 HelpMarker(
                         "Specify the diameter of the tubes. Tubes that are too thick may not work well with some effects.");
@@ -234,24 +235,15 @@ void ImGuiWrapper::draw() {
             }
             if (settings.renderer != RAY_TRACING) {
                 if (ImGui::Checkbox("Highlight", &settings.highlightEnabled)) {
-                    for (auto& dataset: settings.datasets) {
+                    forAllDatasets([](auto dataset) {
                         if (!settings.highlightEnabled) {
                             dataset->alpha = settings.generalAlpha;
                         } else {
-                            if (dataset->name != settings.highlightedBundle) {
+                            if (dataset->name != settings.highlightedBundle->name) {
                                 dataset->alpha = settings.highlightAlpha;
                             }
                         }
-                    }
-                    for (auto& dataset: settings.examples) {
-                        if (!settings.highlightEnabled) {
-                            dataset->alpha = settings.generalAlpha;
-                        } else {
-                            if (dataset->name != settings.highlightedBundle) {
-                                dataset->alpha = settings.highlightAlpha;
-                            }
-                        }
-                    }
+                    });
                 }
                 HelpMarker("When enabled, allows the user to select a tract bundle to highlight.");
             } else {
@@ -274,66 +266,32 @@ void ImGuiWrapper::draw() {
             if (settings.highlightEnabled) {
                 ImGui::PushItemWidth(170);
                 if (ImGui::SliderFloat("Highlight Alpha", &settings.highlightAlpha, 0.0f, 1.0f, "%.2f")) {
-                    for (auto& data: settings.datasets) {
-                        if (data->name != settings.highlightedBundle) {
-                            data->alpha = settings.highlightAlpha;
+                    forAllDatasets([](auto dataset) {
+                        if (dataset->name != settings.highlightedBundle->name) {
+                            dataset->alpha = settings.highlightAlpha;
                         }
-                    }
-                    for (auto& data: settings.examples) {
-                        if (data->name != settings.highlightedBundle) {
-                            data->alpha = settings.highlightAlpha;
-                        }
-                    }
+                    });
                 }
                 HelpMarker("Sets the transparency of all bundles that are not highlighted.");
 
-                if (ImGui::BeginCombo("Highlight Bundle", settings.highlightedBundle.c_str())) {
-                    for (auto& dataset: settings.datasets) {
+                if (ImGui::BeginCombo("Highlight Bundle", settings.highlightedBundle->name.c_str())) {
+                    forAllDatasets([](auto dataset) {
                         if (dataset->enabled) {
                             ImGui::PushID(&dataset);
-                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.highlightedBundle)) {
-                                settings.highlightedBundle = dataset->name;
-                                for (auto& data: settings.datasets) {
-                                    if (data->name != settings.highlightedBundle) {
-                                        data->alpha = settings.highlightAlpha;
+                            if (ImGui::Selectable(dataset->name.c_str(),
+                                                  dataset->name == settings.highlightedBundle->name)) {
+                                settings.highlightedBundle = dataset;
+                                forAllDatasets([](auto dataset) {
+                                    if (dataset->name != settings.highlightedBundle->name) {
+                                        dataset->alpha = settings.highlightAlpha;
                                     } else {
-                                        data->alpha = settings.generalAlpha;
+                                        dataset->alpha = settings.generalAlpha;
                                     }
-                                }
-                                for (auto& data: settings.examples) {
-                                    if (data->name != settings.highlightedBundle) {
-                                        data->alpha = settings.highlightAlpha;
-                                    } else {
-                                        data->alpha = settings.generalAlpha;
-                                    }
-                                }
+                                });
                             }
                             ImGui::PopID();
                         }
-                    }
-                    for (auto& dataset: settings.examples) {
-                        if (dataset->enabled) {
-                            ImGui::PushID(&dataset);
-                            if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.highlightedBundle)) {
-                                settings.highlightedBundle = dataset->name;
-                                for (auto& data: settings.datasets) {
-                                    if (data->name != settings.highlightedBundle) {
-                                        data->alpha = settings.highlightAlpha;
-                                    } else {
-                                        data->alpha = settings.generalAlpha;
-                                    }
-                                }
-                                for (auto& data: settings.examples) {
-                                    if (data->name != settings.highlightedBundle) {
-                                        data->alpha = settings.highlightAlpha;
-                                    } else {
-                                        data->alpha = settings.generalAlpha;
-                                    }
-                                }
-                            }
-                            ImGui::PopID();
-                        }
-                    }
+                    });
                     ImGui::EndCombo();
                 }
                 HelpMarker("Choose which bundle to highlight.");
@@ -346,7 +304,7 @@ void ImGuiWrapper::draw() {
                 ImGui::PushItemWidth(170);
                 if (dataset->enabled) {
                     std::string name = dataset->name;
-                    ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+                    ImGui::SliderInt((name + " ").c_str(), &dataset->showCount, 1, dataset->tractCount);
                 }
                 ImGui::PopItemWidth();
             }
@@ -359,7 +317,7 @@ void ImGuiWrapper::draw() {
                 for (auto& dataset: settings.examples) {
                     if (dataset->enabled) {
                         std::string name = dataset->name;
-                        ImGui::SliderInt((name + " ").c_str(), &dataset->showTractCount, 1, dataset->tractCount);
+                        ImGui::SliderInt((name + " ").c_str(), &dataset->showCount, 1, dataset->tractCount);
                     }
                 }
                 ImGui::PopItemWidth();
@@ -421,7 +379,7 @@ void ImGuiWrapper::draw() {
             for (auto it = settings.datasets.begin(); it != settings.datasets.end();) {
                 if (ImGui::Checkbox((*it)->name.c_str(), &(*it)->enabled)) {
                     (*it)->init();
-                    (*it)->bindDB();
+                    (*it)->updateDB();
                 }
                 ImGui::SameLine(ImGui::GetWindowContentRegionMax().x - 30);
                 ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4) ImColor(191, 78, 78));
@@ -440,7 +398,7 @@ void ImGuiWrapper::draw() {
                     for (auto& dataset: settings.examples) {
                         dataset->enabled = true;
                         dataset->init();
-                        dataset->bindDB();
+                        dataset->updateDB();
                     }
                 }
                 ImGui::SameLine();
@@ -453,7 +411,7 @@ void ImGuiWrapper::draw() {
                 for (auto& dataset: settings.examples) {
                     if (ImGui::Checkbox(dataset->name.c_str(), &dataset->enabled)) {
                         dataset->init();
-                        dataset->bindDB();
+                        dataset->updateDB();
                     }
                 }
                 ImGui::TreePop();
@@ -464,7 +422,7 @@ void ImGuiWrapper::draw() {
             IconSeparatorText("Camera Along Streamlines", ICON_FA_CAMERA);
             ImGui::PushItemWidth(170);
             if (ImGui::BeginCombo("Select Bundle", settings.CASBundle->name.c_str())) {
-                for (auto& dataset: settings.datasets) {
+                forAllDatasets([](auto dataset) {
                     if (dataset->enabled) {
                         ImGui::PushID(&dataset);
                         if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
@@ -472,16 +430,7 @@ void ImGuiWrapper::draw() {
                         }
                         ImGui::PopID();
                     }
-                }
-                for (auto& dataset: settings.examples) {
-                    if (dataset->enabled) {
-                        ImGui::PushID(&dataset);
-                        if (ImGui::Selectable(dataset->name.c_str(), dataset->name == settings.CASBundle->name)) {
-                            settings.CASBundle = dataset;
-                        }
-                        ImGui::PopID();
-                    }
-                }
+                });
                 ImGui::EndCombo();
             }
             HelpMarker("Choose which bundle the camera should follow.");
@@ -531,30 +480,20 @@ void ImGuiWrapper::draw() {
 
             ImGui::Text("Dataset Expansion Factor");
             if (ImGui::SliderFloat("##Dataset Expansion Factor", &settings.expansionFactor, -1.0f, 1.0f, "%.2f")) {
-                for (auto& dataset: settings.datasets) {
+                forAllDatasets([](auto dataset) {
                     if (dataset->enabled) {
-                        dataset->bindDB();
+                        dataset->updateDB();
                     }
-                }
-                for (auto& dataset: settings.examples) {
-                    if (dataset->enabled) {
-                        dataset->bindDB();
-                    }
-                }
+                });
             }
             ImGui::SameLine();
             if (ImGui::Button("Reset##dexp")) {
                 settings.expansionFactor = 0.0f;
-                for (auto& dataset: settings.datasets) {
+                forAllDatasets([](auto dataset) {
                     if (dataset->enabled) {
-                        dataset->bindDB();
+                        dataset->updateDB();
                     }
-                }
-                for (auto& dataset: settings.examples) {
-                    if (dataset->enabled) {
-                        dataset->bindDB();
-                    }
-                }
+                });
             }
             HelpMarker("Choose the factor by which the tracts move away from the dataset average tract.");
             ImGui::PopItemWidth();

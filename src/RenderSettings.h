@@ -43,8 +43,9 @@ public:
     int particleDens = 50;
     float particleSize = 50;
     bool effectCASplaying = false;
-    std::shared_ptr<TractDataWrapper> CASBundle = std::make_shared<TractDataWrapper>("none");
-    std::string highlightedBundle = "none";
+    std::shared_ptr<TractDataWrapper> EmptyTractData = std::make_shared<TractDataWrapper>("None");
+    std::shared_ptr<TractDataWrapper> CASBundle = EmptyTractData;
+    std::shared_ptr<TractDataWrapper> highlightedBundle = EmptyTractData;
     float highlightAlpha = 0.1f;
     float generalAlpha = 1.0f;
     int nrOfSides = 3;

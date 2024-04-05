@@ -1,7 +1,4 @@
 #version 460 core
-//layout (location = 0) in vec3 aPos;// the position variable has attribute position 0
-//layout (location = 1) in vec3 color;//vertex in list before current vertex
-//layout (location = 2) in vec3 n;//vertex in list before current vertex
 
 struct ssboUnit {
     float x;
@@ -12,7 +9,7 @@ struct ssboUnit {
     float gz;
 };
 
-layout(std430, binding = 3) readonly buffer colorBuffer
+layout(std430, binding = 3) readonly buffer vertexBuffer
 {
     ssboUnit ssboData[];
 };
@@ -30,15 +27,15 @@ out float simInt;
 uniform mat4 uModelMatrix;
 uniform mat4 uViewMatrix;
 uniform mat4 uProjectionMatrix;
-uniform vec3 displacementVector;
-uniform float displacementFactor;
+uniform vec3 uDisplacementVector;
 uniform bool uDrawTubes;
 uniform bool uDrawCaps;
 uniform bool uSmoothCap;
 uniform int uNrOfSides;
 uniform float uTubeDiameter;
-uniform bool neuronSim;
-uniform int particleDens;
+uniform bool uNeuronSim;
+uniform int uParticleDens;
+
 // fixed cos lookup table
 const float fc[9][8] = float[][](
 float[](1.0, 0, 0, 0, 0, 0, 0, 0), // 0
@@ -67,7 +64,7 @@ float[](0.0, -0.7071067811865476, -1.0, -0.7071067811865476, 0.0, 0.707106781186
 
 void main()
 {
-    vec3 displacer = displacementFactor * displacementVector;
+    vec3 displacer = uDisplacementVector;
     int ID = 0;
     if (uDrawTubes) {
         if (uDrawCaps) {
@@ -129,7 +126,7 @@ void main()
         ID = gl_VertexID;
 
     }
-    if (neuronSim){
-        simInt = ID % particleDens;
+    if (uNeuronSim){
+        simInt = ID % uParticleDens;
     }
 }

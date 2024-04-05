@@ -8,7 +8,6 @@
 #include "logger.h"
 #include <chrono>
 #include "RenderSettings.h"
-#include <glm/gtc/type_ptr.hpp>
 
 std::vector<std::string> TractDataWrapper::readline(std::ifstream& file) {
     std::string input;
@@ -133,7 +132,7 @@ bool TractDataWrapper::parse(const std::string& filePath, bool tractStop) {
     data = std::move(tracts);
 
     // Set the number of tracts we have
-    tractCount = showTractCount = (int) data.size();
+    tractCount = showCount = (int) data.size();
 
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
@@ -174,7 +173,7 @@ void TractDataWrapper::generateTractClassification() {
     glm::vec3 first;
     glm::vec3 last;
 
-    for (auto &t : data) {
+    for (auto& t: data) {
         first = t.vertices[0];
         last = t.vertices[t.vertices.size() - 1];
         double distFirstFirst = (sqrt(glm::dot(first - baseFirst, first - baseFirst)));
@@ -196,13 +195,9 @@ void TractDataWrapper::computeExpandingView() {
     displacements.clear();
     for (Tract t: data) {
         float approx = float(avgFidelity) / t.vertices.size();
-        int count = 0;
-        for (auto v: t.vertices) {
-            glm::vec3 value = settings.expansionFactor * (v - avgTract.vertices[count * approx]);
-            displacements.push_back(value.x);
-            displacements.push_back(value.y);
-            displacements.push_back(value.z);
-            count++;
+        for (int i = 0; i < t.vertices.size(); ++i) {
+            glm::vec3 value = settings.expansionFactor * (t.vertices[i] - avgTract.vertices[i * approx]);
+            displacements.push_back(value);
         }
     }
 }
@@ -211,30 +206,38 @@ bezierPoint TractDataWrapper::getBezierPosition(float time, int tractNr) {
     // https://math.stackexchange.com/questions/2316499/interpolating-splines-with-3d-points
     bezierPoint error = {glm::vec3(NAN, NAN, NAN), glm::vec3(NAN, NAN, NAN)};
 
+    if (tractNr > (int64_t) (data.size()) - 1) {
+        return error;
+    }
+
     if (time > data[tractNr].vertices.size() - 2) {
         return error;
     }
 
-    if (tractNr > data.size() - 1) {
-        return error;
-    }
+    // Vertex control points
+    int v0 = std::floor(time);
+    int v1 = std::floor(time + 1);
+    glm::vec3 c0 = data[tractNr].vertices[v0] + avgPoint * settings.viewExpansionFactor + displacements[v0];
+    glm::vec3 c3 = data[tractNr].vertices[v1] + avgPoint * settings.viewExpansionFactor + displacements[v1];
 
-    glm::vec3 c0 = data[tractNr].vertices[std::floor(time)];
-    glm::vec3 c3 = data[tractNr].vertices[std::floor(time + 1)];
+    // Gradients of vertices
+    glm::vec3 g0 = glm::distance(c0, c3) * data[tractNr].gradient[v0];
+    glm::vec3 g1 = glm::distance(c0, c3) * data[tractNr].gradient[v1];
 
-    glm::vec3 g0 = glm::distance(c0, c3) * data[tractNr].gradient[std::floor(time)];
-    glm::vec3 g1 = glm::distance(c0, c3) * data[tractNr].gradient[std::floor(time + 1)];
-
+    // Gradient control points
     glm::vec3 c1 = c0 + g0 / 3.0f;
     glm::vec3 c2 = c3 - g1 / 3.0f;
 
+    // t in range [0,1]
     float t = std::modf(time, nullptr);
 
+    // Position on curve
     glm::vec3 p = (float) std::pow(1 - t, 3) * c0
                   + 3 * t * (float) std::pow(1 - t, 2) * c1
                   + 3 * (float) std::pow(t, 2) * (1 - t) * c2
                   + (float) std::pow(t, 3) * c3;
 
+    // Direction on curve
     glm::vec3 d = 3 * (float) std::pow(1 - t, 2) * (c1 - c0)
                   + 6 * (1 - t) * t * (c2 - c1)
                   + 3 * (float) std::pow(t, 2) * (c3 - c2);
@@ -244,25 +247,30 @@ bezierPoint TractDataWrapper::getBezierPosition(float time, int tractNr) {
 
 void TractDataWrapper::init() {
     if (!enabled) return;
+
     counts.clear();
     firsts.clear();
-    endCapCounts.clear();
-    endCapfirsts.clear();
-    auto start = std::chrono::high_resolution_clock::now();
+    capCounts.clear();
+    capFirsts.clear();
     int firstOffset = 0;
     int endCapOffset = 0;
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Draw instructions for Lines & Tubes
     for (auto tract: data) {
         if (settings.renderer == SHADED_TUBES) {
             counts.insert(counts.end(), tract.vertices.size() - 1, settings.nrOfSides * 2 + 2);
-            endCapfirsts.push_back(endCapOffset * settings.nrOfSides);
+            capFirsts.push_back(endCapOffset * settings.nrOfSides);
             endCapOffset += tract.vertices.size();
-            endCapfirsts.push_back((endCapOffset - 1) * settings.nrOfSides);
-            endCapCounts.push_back(settings.nrOfSides);
-            endCapCounts.push_back(settings.nrOfSides);
+            capFirsts.push_back((endCapOffset - 1) * settings.nrOfSides);
+            capCounts.push_back(settings.nrOfSides);
+            capCounts.push_back(settings.nrOfSides);
+
             for (int i = 1; i < tract.vertices.size(); i++) {
                 firsts.push_back(firstOffset);
                 firstOffset += settings.nrOfSides * 2 + 2;
             }
+
             firstOffset += settings.nrOfSides * 2 + 2;
         } else {
             counts.emplace_back(tract.vertices.size());
@@ -270,6 +278,7 @@ void TractDataWrapper::init() {
             firstOffset += tract.vertices.size();
         }
     }
+
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     Info("Initialized draw parameters in " << duration.count() << "ms");
@@ -279,58 +288,59 @@ void TractDataWrapper::bindSSBO() {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
 }
 
-void TractDataWrapper::bindDB() {
+void TractDataWrapper::updateDB() {
     computeExpandingView();
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, DB);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, displacements.size() * sizeof(float), &displacements[0], GL_STATIC_DRAW);
-}
 
-void TractDataWrapper::clearDB() {
-    for (auto& v: displacements) {
-        v = 0.0f;
-    }
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, DB);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, displacements.size() * sizeof(float), &displacements[0], GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, displacements.size() * sizeof(glm::vec3), &displacements[0], GL_STATIC_DRAW);
 }
 
 void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
-    settings.shader.setFloat("alpha", alpha);
-    settings.shader.setFloat("displacementFactor", settings.viewExpansionFactor);
-    settings.shader.setVec3("displacementVector", avgPoint);
+    settings.shader.setFloat("uAlpha", alpha);
+    settings.shader.setVec3("uDisplacementVector", avgPoint * settings.viewExpansionFactor);
     bindSSBO();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, DB);
+
     if (settings.renderer == SHADED_TUBES) {
-        glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
+        // Tubes
+        glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showCount / tractCount);
+        // Caps
         settings.shader.setBool("uDrawCaps", true);
-        glMultiDrawArrays(GL_TRIANGLE_STRIP, &endCapfirsts[0], &endCapCounts[0],
-                          endCapCounts.size() * showTractCount / tractCount);
+        glMultiDrawArrays(GL_TRIANGLE_STRIP, &capFirsts[0], &capCounts[0], capCounts.size() * showCount / tractCount);
         settings.shader.setBool("uDrawCaps", false);
     } else {
-        glMultiDrawArrays(GL_LINE_STRIP, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
+        // Lines
+        glMultiDrawArrays(GL_LINE_STRIP, &firsts[0], &counts[0], counts.size() * showCount / tractCount);
+        // Points
         if (settings.drawPoints) {
-            glMultiDrawArrays(GL_POINTS, &firsts[0], &counts[0], counts.size() * showTractCount / tractCount);
+            glMultiDrawArrays(GL_POINTS, &firsts[0], &counts[0], counts.size() * showCount / tractCount);
         }
     }
 }
 
 TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath) : TractDataWrapper(std::move(name)) {
     parse(filePath, true);
+    // Displacement effect initialization
     generateTractClassification();
     generateAverageTract(avgFidelity);
     calculateCenterPoint();
-    glGenBuffers(1, &DB);
+    computeExpandingView();
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &SSBO);
+    glGenBuffers(1, &DB);
+
+    // Add all vertices to GPU storage
     for (auto tract: data) {
         for (int i = 0; i < tract.vertices.size(); ++i) {
             ssboData.push_back({tract.vertices[i].x, tract.vertices[i].y, tract.vertices[i].z, tract.gradient[i].x,
                                 tract.gradient[i].y, tract.gradient[i].z});
         }
     }
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
     glBufferData(GL_SHADER_STORAGE_BUFFER, ssboData.size() * sizeof(ssboUnit), &ssboData[0], GL_STATIC_DRAW);
-    glPointSize(5);
 
     TractDataWrapper::init();
 }
@@ -338,5 +348,6 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
 TractDataWrapper::~TractDataWrapper() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &SSBO);
+    glDeleteBuffers(1, &DB);
 }
 

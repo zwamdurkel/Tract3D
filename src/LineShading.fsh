@@ -6,24 +6,19 @@ in vec4 modelPos;
 in float simInt;
 
 uniform vec3 uViewPos;
-uniform bool uDrawTubes;
-uniform float alpha;
-uniform vec3 lightDir;
-
-uniform bool neuronSim;
-uniform float time;
-uniform bool blackSim;
-uniform int particleDens;
-uniform float particleSize;
+uniform float uAlpha;
+uniform vec3 uLightDir;
+uniform bool uNeuronSim;
+uniform float uTime;
+uniform bool uBlackSim;
+uniform int uParticleDens;
+uniform float uParticleSize;
 
 void main()
 {
-    //    const vec3 ambColor = vec3(0.7, 0.2, 0.2);
-    //    const vec3 diffColor = vec3(0.7, 0.2, 0.2);
     vec3 ambColor = fColor;
     vec3 diffColor = fColor;
     const vec3 specColor = vec3(1, 1, 1);
-    //const vec3 lightDir = vec3(0.702, 0.702, 0);
 
     //calculate normal
     vec3 g = normalize(normal);//gradient vector
@@ -43,25 +38,25 @@ void main()
     vec3 ambient = ambientFactor * ambColor;
 
     //diffuse colour
-    float diff = max(dot(n, lightDir), 0);
+    float diff = max(dot(n, uLightDir), 0);
     vec3 diffuse = diff * diffColor;
 
     //specular reflections
     const float specularStrength = 0.3;
     const float shininess = 2.3f;
-    vec3 reflectDir = reflect(-lightDir, n);
-    vec3 halfwayDir = normalize(lightDir + v);
+    vec3 reflectDir = reflect(-uLightDir, n);
+    vec3 halfwayDir = normalize(uLightDir + v);
     float spec = pow(max(dot(n, halfwayDir), 0.0), shininess);
     vec3 specular = specularStrength * spec * specColor;
 
     vec3 result = ambient + diffuse + specular;
-    FragColor = vec4(result, alpha);
+    FragColor = vec4(result, uAlpha);
 
-    if (neuronSim){
-        int t = int(floor(time)) / (particleDens - 1);
-        float tmod10 = time - t*(particleDens - 1);
-        bool simCol = abs((tmod10) - simInt) < particleSize;
-        if (!simCol && blackSim){ discard; }
+    if (uNeuronSim){
+        int t = int(floor(uTime)) / (uParticleDens - 1);
+        float tmod10 = uTime - t*(uParticleDens - 1);
+        bool simCol = abs((tmod10) - simInt) < uParticleSize;
+        if (!simCol && uBlackSim){ discard; }
         if (simCol){
             FragColor = vec4(vec3(simCol), 1);
         }

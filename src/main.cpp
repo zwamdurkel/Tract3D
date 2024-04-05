@@ -154,7 +154,7 @@ void run() {
         }
 
         settings.shader.use();
-        settings.shader.setVec3("lightDir", lightPos.x, lightPos.y, lightPos.z);
+        settings.shader.setVec3("uLightDir", lightPos.x, lightPos.y, lightPos.z);
         settings.shader.setMat4("uModelMatrix", modelMatrix);
         settings.shader.setMat4("uViewMatrix", settings.camera.GetViewMatrix());
         settings.shader.setMat4("uProjectionMatrix", settings.camera.GetProjectionMatrix());
@@ -163,28 +163,20 @@ void run() {
         settings.shader.setBool("uSmoothCap", settings.smoothCap);
         settings.shader.setInt("uNrOfSides", settings.nrOfSides);
         settings.shader.setFloat("uTubeDiameter", settings.tubeDiameter);
-        settings.shader.setBool("neuronSim", settings.neuronSim);
-        settings.shader.setFloat("time", currentFrameTime);
-        settings.shader.setBool("blackSim", settings.blackSim);
-        settings.shader.setInt("particleDens", (100 - settings.particleDens) + 2);
-        settings.shader.setFloat("particleSize", settings.particleSize / 1000.0f);
+        settings.shader.setBool("uNeuronSim", settings.neuronSim);
+        settings.shader.setFloat("uTime", currentFrameTime);
+        settings.shader.setBool("uBlackSim", settings.blackSim);
+        settings.shader.setInt("uParticleDens", (100 - settings.particleDens) + 2);
+        settings.shader.setFloat("uParticleSize", settings.particleSize / 1000.0f);
 
         glfw.draw();
         if (settings.renderer != rendererType::RAY_TRACING) {
+            settings.highlightedBundle->draw();
+
             auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
-            [&] {
-                for (const auto& datasets: dataList) {
-                    for (auto& d: datasets.get()) {
-                        if (d->name == settings.highlightedBundle && d->enabled) {
-                            d->draw();
-                            return;
-                        }
-                    }
-                }
-            }();
             for (const auto& datasets: dataList) {
                 for (auto& d: datasets.get()) {
-                    if (d->name != settings.highlightedBundle && d->enabled) {
+                    if (d->name != settings.highlightedBundle->name && d->enabled) {
                         d->draw();
                     }
                 }
