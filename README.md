@@ -1,8 +1,8 @@
-# Tract3D - Tract-based 3D animation tool
+# Tract 3D - Tract-based 3D animation tool
 
 [![DOI](https://zenodo.org/badge/759514608.svg)](https://zenodo.org/doi/10.5281/zenodo.10928272)
 
-![img](https://imgur.com/0K4xL5T.png)
+[<img src="https://imgur.com/0K4xL5T.png">](https://youtube.com/watch?v=c3KDAMpXADE)
 
 ## About
 
