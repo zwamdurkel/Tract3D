@@ -7,7 +7,9 @@ add_executable(${NAME})
 if (WIN32)
     target_link_options(${NAME} PRIVATE -mwindows -static -Wl,-allow-multiple-definition)
 endif (WIN32)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-O0")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O3")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 
 # ----------------
 # Set up our stuff

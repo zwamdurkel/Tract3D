@@ -1,10 +1,5 @@
-//
-// Created by wille on 27/03/2024.
-//
-
 #include "RayTraceWrapper.h"
 #include "RenderSettings.h"
-
 
 void RayTraceWrapper::init() {
     glGenVertexArrays(1, &VAO);
@@ -36,10 +31,10 @@ void RayTraceWrapper::init() {
     initBVH();
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, ObjSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, obj.size() * sizeof(BVH::CylinderGPU), &obj[0], GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, obj.size() * sizeof(BVH::CylinderGPU), obj.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, BvhSSBO);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bvh.size() * sizeof(BVH::BVHNodeGPU), &bvh[0], GL_STATIC_DRAW);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bvh.size() * sizeof(BVH::BVHNodeGPU), bvh.data(), GL_STATIC_DRAW);
 }
 
 void RayTraceWrapper::resetImg() {

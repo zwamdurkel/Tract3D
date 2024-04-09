@@ -304,17 +304,18 @@ void TractDataWrapper::draw() {
 
     if (settings.renderer == SHADED_TUBES) {
         // Tubes
-        glMultiDrawArrays(GL_TRIANGLE_STRIP, &firsts[0], &counts[0], counts.size() * showCount / tractCount);
+        glMultiDrawArrays(GL_TRIANGLE_STRIP, firsts.data(), counts.data(), counts.size() * showCount / tractCount);
         // Caps
         settings.shader.setBool("uDrawCaps", true);
-        glMultiDrawArrays(GL_TRIANGLE_STRIP, &capFirsts[0], &capCounts[0], capCounts.size() * showCount / tractCount);
+        glMultiDrawArrays(GL_TRIANGLE_STRIP, capFirsts.data(), capCounts.data(),
+                          capCounts.size() * showCount / tractCount);
         settings.shader.setBool("uDrawCaps", false);
     } else {
         // Lines
-        glMultiDrawArrays(GL_LINE_STRIP, &firsts[0], &counts[0], counts.size() * showCount / tractCount);
+        glMultiDrawArrays(GL_LINE_STRIP, firsts.data(), counts.data(), counts.size() * showCount / tractCount);
         // Points
         if (settings.drawPoints) {
-            glMultiDrawArrays(GL_POINTS, &firsts[0], &counts[0], counts.size() * showCount / tractCount);
+            glMultiDrawArrays(GL_POINTS, firsts.data(), counts.data(), counts.size() * showCount / tractCount);
         }
     }
 }
