@@ -144,7 +144,7 @@ void ImGuiWrapper::draw() {
         ImGui::ShowDemoWindow(&settings.show_demo_window);
 
     {
-        ImGui::SetNextWindowPos(ImVec2(22, 22), ImGuiCond_FirstUseEver);
+        ImGui::SetNextWindowPos(ImVec2(5, 5), ImGuiCond_FirstUseEver);
         ImGui::Begin("Tract 3D", nullptr, window_flags);
 
         ImGuiIO& io = ImGui::GetIO();
