@@ -171,7 +171,9 @@ void run() {
 
         glfw.draw();
         if (settings.renderer != rendererType::PATH_TRACING) {
-            settings.highlightedBundle->draw();
+            if (settings.highlightedBundle->enabled) {
+                settings.highlightedBundle->draw();
+            }
 
             auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
             for (const auto& datasets: dataList) {
