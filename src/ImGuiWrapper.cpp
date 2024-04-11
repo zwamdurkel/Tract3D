@@ -205,6 +205,12 @@ void ImGuiWrapper::draw() {
                        "- Ray Tracing:\nThe tracts are rendered as tubes using ray tracing. Extremely heavy to render. User can select the number of bounces per ray, apply a small amount of blur and reset the image to reload the data and restart the render.");
 
             if (settings.renderer == UNSHADED_LINES || settings.renderer == SHADED_LINES) {
+                ImGui::PushItemWidth(170);
+                if (ImGui::SliderFloat("Line Width", &settings.lineWidth, 0, 1, "%.1f")) {
+                    glLineWidth(settings.lineWidth);
+                }
+                ImGui::PopItemWidth();
+                HelpMarker("Slightly changes the width of lines. For a more pronounced effect, use Tube Rendering.");
                 ImGui::Checkbox("Draw Points", &settings.drawPoints);
                 HelpMarker("When enabled, draw a point on every vertex of a tract.");
             }
@@ -553,6 +559,12 @@ void ImGuiWrapper::draw() {
                     ImGui::Text("D");
                     ImGui::TableSetColumnIndex(1);
                     ImGui::TextWrapped("Move camera right");
+
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::Text("R-Click (Hold)");
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::TextWrapped("Pan camera");
 
                     ImGui::TableNextRow();
                     ImGui::TableSetColumnIndex(0);

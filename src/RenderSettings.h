@@ -33,6 +33,7 @@ public:
     bool highlightEnabled = false;
     float viewExpansionFactor = 0.0f;
     float expansionFactor = 0.0f;
+    float lineWidth = 1.0f;
     bool blurEnabled = false;
     bool rotatingLight = false;
     bool drawPoints = false;
