@@ -176,9 +176,9 @@ void ImGuiWrapper::draw() {
 
             ImGui::Checkbox("Rotate Data", &settings.rotateData);
             HelpMarker(
-                    "Rotates data around the x-axis by 90 degrees, may help looking at the data. Note that raytracing always uses non rotated data.");
+                    "Rotates data around the x-axis by 90 degrees, may help looking at the data. Note that path tracing always uses non rotated data.");
 
-            const char* renderers[] = {"Unshaded Lines", "Shaded Lines", "Shaded Tubes", "Ray tracing"};
+            const char* renderers[] = {"Unshaded Lines", "Shaded Lines", "Shaded Tubes", "Path tracing"};
             ImGui::PushItemWidth(170);
             if (ImGui::Combo("Renderer", (int*) &settings.renderer, renderers, IM_ARRAYSIZE(renderers))) {
                 switch (settings.renderer) {
@@ -202,7 +202,7 @@ void ImGuiWrapper::draw() {
                        "- Unshaded Lines: (default)\nThe tracts are rendered as lines. All colors will have the same brightness.\n\n"
                        "- Shaded Lines:\nThe tracts are rendered as lines. Lighting will be applied to the colors.\n\n"
                        "- Shaded Tubes:\nThe tracts are rendered as tubes. Tubes are heavier to render. The user can select how many sides the tubes have and how thick the tubes are. Lighting will be applied to the colors.\n\n"
-                       "- Ray Tracing:\nThe tracts are rendered as tubes using ray tracing. Extremely heavy to render. User can select the number of bounces per ray, apply a small amount of blur and reset the image to reload the data and restart the render.");
+                       "- Path Tracing:\nThe tracts are rendered as tubes using path tracing. Extremely heavy to render. User can select the number of bounces per ray, apply a small amount of blur and reset the image to reload the data and restart the render.");
 
             if (settings.renderer == UNSHADED_LINES || settings.renderer == SHADED_LINES) {
                 ImGui::Checkbox("Draw Points", &settings.drawPoints);
@@ -233,7 +233,7 @@ void ImGuiWrapper::draw() {
                 ImGui::Checkbox("Smooth End Caps", &settings.smoothCap);
                 HelpMarker("When enabled, the end caps of tubes are rendered to look smoother.");
             }
-            if (settings.renderer != RAY_TRACING) {
+            if (settings.renderer != PATH_TRACING) {
                 if (ImGui::Checkbox("Highlight", &settings.highlightEnabled)) {
                     forAllDatasets([](auto dataset) {
                         if (!settings.highlightEnabled) {
@@ -248,7 +248,7 @@ void ImGuiWrapper::draw() {
                 HelpMarker("When enabled, allows the user to select a tract bundle to highlight.");
             } else {
                 ImGui::PushItemWidth(170);
-                ImGui::SliderInt("Bounces", &settings.rtBounceNr, 1, 50);
+                ImGui::SliderInt("Bounces", &settings.ptBounceNr, 1, 50);
                 ImGui::PopItemWidth();
 
                 HelpMarker("Determines the number of bounces a ray will perform after hitting an object.");
@@ -256,11 +256,11 @@ void ImGuiWrapper::draw() {
                 ImGui::Checkbox("Enable Blur", &settings.blurEnabled);
                 HelpMarker("When enabled, blurs the image to attempt to remove noise.");
 
-                if (ImGui::Button("Reset Image")) {
-                    settings.rt->cleanup();
-                    settings.rt->init();
+                if (ImGui::Button("Reset Render")) {
+                    settings.pt->cleanup();
+                    settings.pt->init();
                 }
-                HelpMarker("When pressed, reloads the raytracer.");
+                HelpMarker("When pressed, reloads the path tracer.");
 
             }
             if (settings.highlightEnabled) {
@@ -589,13 +589,13 @@ void ImGuiWrapper::draw() {
                         "Details on the effects of each option can be found by hovering over the info marker %s next to each option.",
                         ICON_FA_CIRCLE_INFO);
 
-                if (ImGui::TreeNode("Using Ray Tracing##1")) {
+                if (ImGui::TreeNode("Using Path Tracing##1")) {
                     ImGui::TextWrapped(
-                            "Ray Tracing will only work on the first enabled file, this also includes examples. So we recommend only enabling the file on which you wish to perform ray tracing.");
+                            "Path Tracing will apply on all enabled files, this also includes examples. But for performance reasons we recommend only enabling one file on which you wish to perform path tracing.");
                     ImGui::TextWrapped(
-                            "The Ray Tracer does not respect the \"Rotate\" option, The easiest way to line up a shot is to disable \"Rotate\" and position the camera using the Shaded Lines renderer.");
+                            "The Path Tracer does not respect the \"Rotate\" option, The easiest way to line up a shot is to disable \"Rotate\" and position the camera using the Shaded Lines renderer.");
                     ImGui::TextWrapped(
-                            "Once the camera is aligned, switch to the Ray Tracing renderer, select the desired number of bounces and press \"Reset Image\" to start rendering. This may take a while.");
+                            "Once the camera is aligned, switch to the Path Tracing renderer, select the desired number of bounces and press \"Reset Image\" to start rendering. This may take a while.");
                     ImGui::TreePop();
                 }
 

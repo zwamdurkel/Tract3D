@@ -8,20 +8,20 @@
 #include "GLFWWrapper.h"
 #include "ImGuiWrapper.h"
 #include "TractDataWrapper.h"
-#include "RayTraceWrapper.h"
+#include "PathTraceWrapper.h"
 
 enum rendererType {
     UNSHADED_LINES,
     SHADED_LINES,
     SHADED_TUBES,
-    RAY_TRACING
+    PATH_TRACING
 };
 
 class RenderSettings {
 public:
     GLFWWrapper* glfw = nullptr;
     ImGuiWrapper* imgui = nullptr;
-    RayTraceWrapper* rt = nullptr;
+    PathTraceWrapper* pt = nullptr;
     std::vector<std::shared_ptr<TractDataWrapper>> datasets;
     std::vector<std::shared_ptr<TractDataWrapper>> examples;
     rendererType renderer = UNSHADED_LINES;
@@ -50,7 +50,7 @@ public:
     float generalAlpha = 1.0f;
     int nrOfSides = 3;
     float tubeDiameter = 0.1f;
-    int rtBounceNr = 10;
+    int ptBounceNr = 10;
     // vector that determines how many tracts to show per file
     std::vector<int> show_tract_count = {1};
     // vector that stores the total number of tracts per file
@@ -60,8 +60,8 @@ public:
     Shader shader;
     Shader defaultShader;
     Shader lineShadingShader;
-    Shader rtComputeShader;
-    Shader rtRenderShader;
+    Shader ptComputeShader;
+    Shader ptRenderShader;
 
     // Singleton logic
     static RenderSettings& getInstance() {
