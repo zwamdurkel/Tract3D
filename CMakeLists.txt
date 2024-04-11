@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 set(NAME main)
-project(${NAME} VERSION 1.0.0)
+project(${NAME} VERSION 1.0.1)
 set(CMAKE_CXX_STANDARD 23)
 add_executable(${NAME})
 # Run as GUI application

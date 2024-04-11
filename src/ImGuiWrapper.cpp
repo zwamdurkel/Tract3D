@@ -148,7 +148,7 @@ void ImGuiWrapper::draw() {
         ImGui::Begin("Tract 3D", nullptr, window_flags);
 
         ImGuiIO& io = ImGui::GetIO();
-        ImGui::Text("Version 1.0.0 \t-\t %.1f FPS", io.Framerate);
+        ImGui::Text("Version 1.0.1 \t-\t %.1f FPS", io.Framerate);
 
         if (IconCollapsingHeader("Rendering Settings", ICON_FA_VECTOR_SQUARE, ImGuiTreeNodeFlags_DefaultOpen)) {
             IconSeparatorText("General Options", ICON_FA_SLIDERS);
