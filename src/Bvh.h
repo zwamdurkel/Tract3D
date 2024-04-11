@@ -65,6 +65,7 @@ namespace BVH {
         }
     };
 
+    //AABB calculated using https://gdalgorithms-list.narkive.com/s2wbl3Cd/algorithms-axis-aligned-bounding-box-of-cylinder
     AABB aabbFromObject(CylinderGPU c);
 
     AABB aabbFromBoxes(AABB b0, AABB b1);
