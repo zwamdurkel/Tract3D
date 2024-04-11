@@ -1,7 +1,7 @@
-#include "RayTraceWrapper.h"
+#include "PathTraceWrapper.h"
 #include "RenderSettings.h"
 
-void RayTraceWrapper::init() {
+void PathTraceWrapper::init() {
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenTextures(1, &texture);
@@ -37,7 +37,7 @@ void RayTraceWrapper::init() {
     glBufferData(GL_SHADER_STORAGE_BUFFER, bvh.size() * sizeof(BVH::BVHNodeGPU), bvh.data(), GL_STATIC_DRAW);
 }
 
-void RayTraceWrapper::resetImg() {
+void PathTraceWrapper::resetImg() {
     pixelOffset = 0;
     imgNum = 0;
     glDeleteTextures(1, &texture);
@@ -57,7 +57,7 @@ void RayTraceWrapper::resetImg() {
     glBindTexture(GL_TEXTURE_2D, 0); // unbind
 }
 
-void RayTraceWrapper::resetCamera() {
+void PathTraceWrapper::resetCamera() {
     float w = glm::tan(glm::radians(settings.camera.FOV / 2.0f)) * settings.camera.NearPlane;
     float h = w * ((float) imgHeight / (float) imgWidth);
     pixelDelta = w / imgWidth;
@@ -66,72 +66,62 @@ void RayTraceWrapper::resetCamera() {
 }
 
 
-void RayTraceWrapper::createCylinders() {
+void PathTraceWrapper::createCylinders() {
     obj.clear();
     if (settings.datasets.empty() &&
         settings.examples.empty()) { return; }//if no dataset exists we cannot make any cylinders
 
     //we always take the first in the list, we maybe increase later to all of them
-    std::vector<ssboUnit> ds;
+    std::vector<Tract> data;
     //find first enabled dataset
     auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
     for (const auto& datasets: dataList) {
         for (auto& d: datasets.get()) {
             if (d->enabled) {
-                ds = d->getSSBOData();
-                break;
+                data.insert(data.end(), d->data.begin(), d->data.end());
             }
         }
-        if (!ds.empty()) { break; }
     }
 
-    glm::vec3 min = glm::vec3(0);
-    glm::vec3 max = glm::vec3(0);
+    for (Tract t: data) {
+        for (int i = 0; i < t.vertices.size() - 1; i++) {
+            glm::vec3 pos0 = t.vertices[i];
+            glm::vec3 pos1 = t.vertices[i + 1];
 
-    for (int i = 1; i < ds.size() - 1; i++) {
-        ssboUnit ss0 = ds[i];
-        ssboUnit ss1 = ds[i + 1];
+            glm::vec3 grad0 = t.gradient[i];
+            glm::vec3 grad1 = t.gradient[i + 1];
 
-        glm::vec3 pos0(ss0.position[0], ss0.position[1], ss0.position[2]);
-        glm::vec3 pos1(ss1.position[0], ss1.position[1], ss1.position[2]);
+            glm::vec3 diff = pos1 - pos0;
+            float length = glm::length(diff);
+            diff /= length;//normalize it
+            //if (dot(diff, grad) < 0.75) { continue; }
 
-        min = glm::min(min, pos0);
-        min = glm::min(min, pos1);
-        max = glm::max(max, pos0);
-        max = glm::max(max, pos1);
+            BVH::CylinderGPU c({pos0.x, pos0.y, pos0.z},
+                               {diff.x, diff.y, diff.z},
+                               {grad0[0], grad0[1], grad0[2]},
+                               {grad1[0], grad1[1], grad1[2]},
+                               0.1,
+                               length);
 
-        glm::vec3 grad(ss0.gradient[0], ss0.gradient[1], ss0.gradient[2]);
-
-        glm::vec3 diff = pos1 - pos0;
-        float length = glm::length(diff);
-        diff /= length;//normalize it
-        if (dot(diff, grad) < 0.75) { continue; }
-
-        BVH::CylinderGPU c({pos0.x, pos0.y, pos0.z},
-                           {diff.x, diff.y, diff.z},
-                           {ss0.gradient[0], ss0.gradient[1], ss0.gradient[2]},
-                           {ss1.gradient[0], ss1.gradient[1], ss1.gradient[2]},
-                           0.1,
-                           length);
-
-        obj.push_back(c);
+            obj.push_back(c);
+        }
     }
 }
 
-void RayTraceWrapper::draw() {
+void PathTraceWrapper::draw() {
     resetCamera();
 
-    settings.rtComputeShader.use();
-    settings.rtComputeShader.setVec3("eye", settings.camera.Position);
-    settings.rtComputeShader.setVec3("up", settings.camera.Up);
-    settings.rtComputeShader.setVec3("right", settings.camera.Right);
-    settings.rtComputeShader.setVec3("lowerLeft", lowerLeft);
-    settings.rtComputeShader.setFloat("pixelDelta", pixelDelta);
-    settings.rtComputeShader.setInt("pixelYoffset", pixelOffset);
-    settings.rtComputeShader.setInt("frameCount", imgNum);
-    settings.rtComputeShader.setInt("depth", settings.rtBounceNr);
+    settings.ptComputeShader.use();
+    settings.ptComputeShader.setVec3("eye", settings.camera.Position);
+    settings.ptComputeShader.setVec3("up", settings.camera.Up);
+    settings.ptComputeShader.setVec3("right", settings.camera.Right);
+    settings.ptComputeShader.setVec3("lowerLeft", lowerLeft);
+    settings.ptComputeShader.setFloat("pixelDelta", pixelDelta);
+    settings.ptComputeShader.setInt("pixelYoffset", pixelOffset);
+    settings.ptComputeShader.setInt("frameCount", imgNum);
+    settings.ptComputeShader.setInt("depth", settings.ptBounceNr);
     if (settings.datasets.empty() && settings.examples.empty()) { return; }
-
+//    Info("Computing shader...");
     //bind buffers
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ObjSSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, BvhSSBO);
@@ -139,12 +129,13 @@ void RayTraceWrapper::draw() {
     glDispatchCompute(imgWidth, rowsPerFrame, 1);
 
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+//    Info("Computed the shader");
 
-    settings.rtRenderShader.use();
-    settings.rtRenderShader.setInt("windowW", imgWidth);
-    settings.rtRenderShader.setInt("windowH", imgHeight);
-    settings.rtRenderShader.setInt("frameCount", imgNum);
-    settings.rtRenderShader.setInt("blurEnabled", settings.blurEnabled);
+    settings.ptRenderShader.use();
+    settings.ptRenderShader.setInt("windowW", imgWidth);
+    settings.ptRenderShader.setInt("windowH", imgHeight);
+    settings.ptRenderShader.setInt("frameCount", imgNum);
+    settings.ptRenderShader.setInt("blurEnabled", settings.blurEnabled);
     glBindVertexArray(VAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -157,7 +148,7 @@ void RayTraceWrapper::draw() {
     pixelOffset = (newOffset) % imgHeight;
 }
 
-void RayTraceWrapper::cleanup() {
+void PathTraceWrapper::cleanup() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &ObjSSBO);
@@ -165,11 +156,11 @@ void RayTraceWrapper::cleanup() {
     glDeleteTextures(1, &texture);
 }
 
-RayTraceWrapper::RayTraceWrapper() {
-    settings.rt = this;
+PathTraceWrapper::PathTraceWrapper() {
+    settings.pt = this;
 }
 
-void RayTraceWrapper::initBVH() {
+void PathTraceWrapper::initBVH() {
     bvh.clear();
     createCylinders();
     std::vector<BVH::Cylinder> cylinders;

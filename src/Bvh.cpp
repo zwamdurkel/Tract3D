@@ -52,6 +52,7 @@ bool BVH::nodeCompare(BVH::BVHNode a, BVH::BVHNode b) {
 
 //heavily inspired by https://github.com/grigoryoskin/vulkan-compute-ray-tracing/tree/master
 std::vector<BVH::BVHNodeGPU> BVH::createBHV(std::vector<BVH::Cylinder> objects) {
+    Info("Data size: " << objects.size());
     std::vector<BVHNode> intermediate;
     int nodeCounter = 0;
     std::stack<BVHNode> nodeStack;

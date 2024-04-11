@@ -213,6 +213,9 @@ vec3 rayColour(Ray ray, inout uint rngState){
             rayColour *= abs(hit.colour);
         } else {
             pixelColour = GetEnvLight(ray) * rayColour;
+            if (i == 0){
+                pixelColour = vec3(1);
+            }
             break;
         }
     }

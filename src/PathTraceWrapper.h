@@ -8,7 +8,7 @@
 #include "Bvh.h"
 //useful structs for creating datastructure
 
-class RayTraceWrapper : AbstractWrapper {
+class PathTraceWrapper : AbstractWrapper {
 private:
     unsigned int VAO, VBO, texture;
     unsigned int ObjSSBO, BvhSSBO;
@@ -25,7 +25,7 @@ private:
     void loadSSBO();
 
 public:
-    RayTraceWrapper();
+    PathTraceWrapper();
 
     void initBVH();
 

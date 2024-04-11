@@ -111,7 +111,7 @@ void run() {
     ImGuiWrapper imgui(glfw.getWindow());
     Info("Initializing ImGUI");
     imgui.init();
-    RayTraceWrapper rt;
+    PathTraceWrapper rt;
     rt.init();
     //computeInfo();
     Info("Successfully initialized window");
@@ -125,9 +125,9 @@ void run() {
 
     settings.defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
     settings.lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
-    //settings.rtComputeShader = Shader(path + "rtCompute.comp");//is fine
-    settings.rtComputeShader = Shader(path + "rtBVHCompute.comp");
-    settings.rtRenderShader = Shader(path + "rtRender.vsh", path + "rtRender.fsh");
+    //settings.ptComputeShader = Shader(path + "ptCompute.comp");//is fine
+    settings.ptComputeShader = Shader(path + "ptBVHCompute.comp");
+    settings.ptRenderShader = Shader(path + "ptRender.vsh", path + "ptRender.fsh");
 
     settings.shader = settings.defaultShader;//draw only lines
 
@@ -170,7 +170,7 @@ void run() {
         settings.shader.setFloat("uParticleSize", settings.particleSize / 1000.0f);
 
         glfw.draw();
-        if (settings.renderer != rendererType::RAY_TRACING) {
+        if (settings.renderer != rendererType::PATH_TRACING) {
             settings.highlightedBundle->draw();
 
             auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
@@ -182,7 +182,7 @@ void run() {
                 }
             }
         } else {
-            settings.rt->draw();
+            settings.pt->draw();
         }
 
         imgui.draw();
