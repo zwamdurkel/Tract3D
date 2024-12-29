@@ -41,6 +41,7 @@ public:
 
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
+        Info("Shader program created:\n\t" << vertexPath << "\n\t" << fragmentPath);
     }
 
     void build(const std::string& shaderPath, int shaderType, const std::string& typeString) {
@@ -59,8 +60,7 @@ public:
             shaderFile.close();
             // convert stream into string
             shaderCode = shaderStream.str();
-        }
-        catch (std::ifstream::failure& e) {
+        } catch (std::ifstream::failure& e) {
             Error("ERROR::" << typeString << "::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what());
         }
         const char* shaderCodeString = shaderCode.c_str();
@@ -152,14 +152,14 @@ private:
             if (!success) {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
                 Error("ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog
-                                                                  << "\n -- --------------------------------------------------- -- ");
+                    << "\n -- --------------------------------------------------- -- ");
             }
         } else {
             glGetProgramiv(shader, GL_LINK_STATUS, &success);
             if (!success) {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
                 Error("ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog
-                                                               << "\n -- --------------------------------------------------- -- ");
+                    << "\n -- --------------------------------------------------- -- ");
             }
         }
     }

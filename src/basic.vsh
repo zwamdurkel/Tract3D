@@ -62,14 +62,20 @@ float[](0.0, -0.7818314824680298, -0.9749279121818236, -0.43388373911755823, 0.4
 float[](0.0, -0.7071067811865476, -1.0, -0.7071067811865476, 0.0, 0.7071067811865475, 1.0, 0.7071067811865476)// 8
 );
 
+// Drawing tubes with only `gl_VertexID` using these 2 principles:
+// https://www.songho.ca/opengl/gl_cylinder.html
+// https://www.songho.ca/opengl/gl_rotate.html
 void main()
 {
     vec3 displacer = uDisplacementVector;
     int ID = 0;
     if (uDrawTubes) {
         if (uDrawCaps) {
+            // Vertex index in the buffer
             int vi = gl_VertexID / uNrOfSides;
+            // Tract segment start vertex
             vec3 v = vec3(ssboData[vi].x, ssboData[vi].y, ssboData[vi].z);
+            // Tract segment end vertex
             vec3 v2 = vec3(ssboData[vi + 1].x, ssboData[vi + 1].y, ssboData[vi + 1].z);
             vec3 r = vec3(ssboData[vi].gx, ssboData[vi].gy, ssboData[vi].gz);
             vec3 tmp = cross(v2 - v, r);

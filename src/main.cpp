@@ -85,6 +85,7 @@ void computeInfo() {
     // end of work group
 }
 
+// Loads all default tract bundle files into the program
 bool getExamples() {
     RenderSettings& settings = RenderSettings::getInstance();
     namespace fs = std::filesystem;
@@ -123,13 +124,14 @@ void run() {
 
     // Import vertex and fragment shaders
 
-    settings.defaultShader = Shader(path + "basic.vsh", path + "basic.fsh");//draw only lines
-    settings.lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh");//draw only lines
+    Info("Using Path: " << path);
+    settings.defaultShader = Shader(path + "basic.vsh", path + "basic.fsh"); //draw only lines
+    settings.lineShadingShader = Shader(path + "basic.vsh", path + "LineShading.fsh"); //draw only lines
     //settings.ptComputeShader = Shader(path + "ptCompute.comp");//is fine
     settings.ptComputeShader = Shader(path + "ptBVHCompute.comp");
     settings.ptRenderShader = Shader(path + "ptRender.vsh", path + "ptRender.fsh");
 
-    settings.shader = settings.defaultShader;//draw only lines
+    settings.shader = settings.defaultShader; //draw only lines
 
     Info("Starting render");
 
@@ -142,9 +144,10 @@ void run() {
         float currentFrameTime = glfwGetTime();
         float deltaTime = currentFrameTime - lastFrameTime;
         lastFrameTime = currentFrameTime;
-        glm::mat4 modelMatrix = !settings.rotateData ? glm::mat4(1.0f)
-                                                     : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f),
-                                                                   glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 modelMatrix = !settings.rotateData
+                                    ? glm::mat4(1.0f)
+                                    : glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f),
+                                                  glm::vec3(1.0f, 0.0f, 0.0f));
 
 
         if (settings.rotatingLight) {
@@ -171,10 +174,12 @@ void run() {
 
         glfw.draw();
         if (settings.renderer != rendererType::PATH_TRACING) {
+            // First draw highlighted bundle because we don't have proper transparency
             if (settings.highlightedBundle->enabled) {
                 settings.highlightedBundle->draw();
             }
 
+            // Draw all tract bundles
             auto dataList = {std::cref(settings.datasets), std::cref(settings.examples)};
             for (const auto& datasets: dataList) {
                 for (auto& d: datasets.get()) {
@@ -212,7 +217,6 @@ void processInput(GLFWwindow* window) {
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cam.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -225,6 +229,4 @@ void processInput(GLFWwindow* window) {
         cam.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         cam.ProcessKeyboard(DOWN, deltaTime);
-
-
 }

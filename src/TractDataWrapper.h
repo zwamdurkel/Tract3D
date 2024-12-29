@@ -7,6 +7,18 @@
 #include "AbstractWrapper.h"
 #include "glm/glm.hpp"
 
+// A tract is a "curve" consisting of joined line segments going through `n` vertices
+// A crude representation:
+//     v---v---v           v---v
+//     |        \         /
+// v---v         v---v---v
+//
+// If a corner is like this, then the gradient is drawn
+//   g (45 degrees, the average direction of two line segments)
+//  /
+// v---v
+// |
+// v
 struct Tract {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec3> gradient;
@@ -15,6 +27,7 @@ struct Tract {
 
 struct ssboUnit {
     float position[3];
+    // Average direction at tract point.
     float gradient[3];
 };
 
@@ -24,16 +37,19 @@ struct bezierPoint {
 };
 
 class TractDataWrapper : AbstractWrapper {
-
 private:
     unsigned int VAO = 0, SSBO = 0, DB = 0;
+    // We store all the tract vertices on the GPU
     std::vector<ssboUnit> ssboData;
+    // This tract represents a tract whose coords are the average of the bundle. i.e., it's in the middle of the tract
     Tract avgTract;
+    // Point in the middle of the bundle
     glm::vec3 avgPoint;
     std::vector<int32_t> counts;
     std::vector<int32_t> firsts;
     std::vector<int32_t> capCounts;
     std::vector<int32_t> capFirsts;
+    // By how much each vertex is displaced if the effect is enabled
     std::vector<glm::vec3> displacements;
     int avgFidelity = 10;
 
@@ -53,16 +69,29 @@ private:
     void calculateCenterPoint();
 
 public:
+    // Identifying name for this tract bundle
     std::string name;
+    // Whether the tract will be rendered
     bool enabled = true;
+    // Transparency of the tract bundle
     float alpha = 1.0f;
+    // Full tract data as read from file
+    //
+    // Structure:
+    // data [
+    //      tract [ vertices, gradients, indices ],
+    //      tract [ ... ],
+    //      tract [ ... ],
+    //      ...
+    // ]
     std::vector<Tract> data;
     // How many out of `tractCount` tracts do we render?
     int showCount = 1;
-    // Total number of tracts represented by this class.
+    // Total number of tracts represented by this class
     int tractCount = 1;
 
-    explicit TractDataWrapper(std::string name) : name(std::move(name)) {};
+    explicit TractDataWrapper(std::string name) : name(std::move(name)) {
+    };
 
     TractDataWrapper(std::string name, const std::string& filePath);
 
@@ -74,15 +103,16 @@ public:
     // Update the displacements and write to GPU buffer DB
     void updateDB();
 
+    // Read a .tck file and store the date in `data`
     bool parse(const std::string& filePath, bool tractStop);
 
-    void cleanup() override {}
+    void cleanup() override {
+    }
 
     void draw() override;
 
+    // Initialize the variables needed for rendering. May be called multiple times to apply new settings
     void init() override;
-
-    void bindSSBO();
 
     std::vector<ssboUnit> getSSBOData() { return ssboData; }
 };

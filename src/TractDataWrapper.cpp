@@ -40,7 +40,7 @@ bool TractDataWrapper::parse(const std::string& filePath, bool tractStop) {
     do {
         line = readline(file);
         for (const std::string& i: line)
-                Debug("reading: " << i << " ");
+            Debug("reading: " << i << " ");
 
         //find number of tracts
         if (line[0] == "count:") {
@@ -57,10 +57,9 @@ bool TractDataWrapper::parse(const std::string& filePath, bool tractStop) {
         //check datatype
         if (line[0] == "datatype:" && line[1] != "Float32LE") {
             Error("Unsupported datatype " << line[1]
-                                          << ", expected Float32LE, correct data interpretation not guaranteed");
+                << ", expected Float32LE, correct data interpretation not guaranteed");
             return false;
         }
-
     } while (line[0] != "END");
     // set filestream to required offset
     file.seekg(byteOffset);
@@ -78,12 +77,13 @@ bool TractDataWrapper::parse(const std::string& filePath, bool tractStop) {
     int vertCount = 0;
     int firstCount = 0;
 
-    glm::vec3 prev1(0.0f, 0.0f, 0.0f);//one before
-    glm::vec3 prev2(0.0f, 0.0f, 0.0f);//two before
+    glm::vec3 prev1(0.0f, 0.0f, 0.0f); //one before
+    glm::vec3 prev2(0.0f, 0.0f, 0.0f); //two before
     glm::vec3 gradient;
 
-    while (!std::isinf(f[0])) { // read all coordinates from binary data until we encounter (inf,inf,inf)
-        file.read((char*) &f, 12);//read float triplet (3*4 = 12 bytes)
+    while (!std::isinf(f[0])) {
+        // read all coordinates from binary data until we encounter (inf,inf,inf)
+        file.read((char*) &f, 12); //read float triplet (3*4 = 12 bytes)
         if (std::isnan(f[0])) {
             vertCount = 0;
 
@@ -141,11 +141,13 @@ bool TractDataWrapper::parse(const std::string& filePath, bool tractStop) {
 }
 
 void TractDataWrapper::generateAverageTract(int nrOfPoints) {
+    // We divide the tract into `nrOfPoints` equal bins of coords
     for (int i = 0; i < nrOfPoints; ++i) {
         glm::vec3 avg = {0, 0, 0};
         float count = 0;
 
         for (Tract t: data) {
+            // Calculate the average coords for all tract points in a `nrOfPoints` bin.
             for (int j = i * t.vertices.size() / nrOfPoints; j < (i + 1) * t.vertices.size() / nrOfPoints; j++) {
                 avg = (count * avg + t.vertices[j]) / (count + 1);
                 count++;
@@ -168,6 +170,7 @@ void TractDataWrapper::calculateCenterPoint() {
 }
 
 void TractDataWrapper::generateTractClassification() {
+    // Take the first tract and use its direction as the direction of the whole bundle (arbitrary)
     glm::vec3 baseFirst = data[0].vertices[0];
     glm::vec3 baseLast = data[0].vertices[data[0].vertices.size() - 1];
     glm::vec3 first;
@@ -181,6 +184,7 @@ void TractDataWrapper::generateTractClassification() {
         double distLastFirst = (sqrt(glm::dot(last - baseFirst, last - baseFirst)));
         double distLastLast = (sqrt(glm::dot(last - baseLast, last - baseLast)));
 
+        // Check if tract `t` is flipped, unflip it to align with the other tracts.
         if (distFirstFirst + distLastLast > distFirstLast + distLastFirst) {
             std::reverse(t.vertices.begin(), t.vertices.end());
             std::reverse(t.gradient.begin(), t.gradient.end());
@@ -195,6 +199,7 @@ void TractDataWrapper::computeExpandingView() {
     displacements.clear();
     for (Tract t: data) {
         float approx = float(avgFidelity) / t.vertices.size();
+        // Displace each vertex in a tract proportional to its distance from the `avgTract`.
         for (int i = 0; i < t.vertices.size(); ++i) {
             glm::vec3 value = settings.expansionFactor * (t.vertices[i] - avgTract.vertices[i * approx]);
             displacements.push_back(value);
@@ -257,21 +262,30 @@ void TractDataWrapper::init() {
     auto start = std::chrono::high_resolution_clock::now();
 
     // Draw instructions for Lines & Tubes
-    for (auto tract: data) {
+    for (auto& tract: data) {
         if (settings.renderer == SHADED_TUBES) {
-            counts.insert(counts.end(), tract.vertices.size() - 1, settings.nrOfSides * 2 + 2);
+            int nrOfTubeSegmentVertices = settings.nrOfSides * 2 + 2;
+
+            // We draw each tube segment, there are `tract.vertices.size() - 1` segments per tract
+            counts.insert(counts.end(), tract.vertices.size() - 1, nrOfTubeSegmentVertices);
+
+            // Index of the first vertex in the cap on the first segment of the tube
             capFirsts.push_back(endCapOffset * settings.nrOfSides);
+            capCounts.push_back(settings.nrOfSides);
+
+            // Index of the first vertex in the cap on the last segment of the tube
             endCapOffset += tract.vertices.size();
             capFirsts.push_back((endCapOffset - 1) * settings.nrOfSides);
             capCounts.push_back(settings.nrOfSides);
-            capCounts.push_back(settings.nrOfSides);
 
+            // Index of the first vertex of each tube segment
             for (int i = 1; i < tract.vertices.size(); i++) {
                 firsts.push_back(firstOffset);
-                firstOffset += settings.nrOfSides * 2 + 2;
+                firstOffset += nrOfTubeSegmentVertices;
             }
 
-            firstOffset += settings.nrOfSides * 2 + 2;
+            // On more to correctly set the start of the next tract
+            firstOffset += nrOfTubeSegmentVertices;
         } else {
             counts.emplace_back(tract.vertices.size());
             firsts.emplace_back(firstOffset);
@@ -282,10 +296,6 @@ void TractDataWrapper::init() {
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
     Info("Initialized draw parameters in " << duration.count() << "ms");
-}
-
-void TractDataWrapper::bindSSBO() {
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
 }
 
 void TractDataWrapper::updateDB() {
@@ -299,7 +309,7 @@ void TractDataWrapper::draw() {
     glBindVertexArray(VAO);
     settings.shader.setFloat("uAlpha", alpha);
     settings.shader.setVec3("uDisplacementVector", avgPoint * settings.viewExpansionFactor);
-    bindSSBO();
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, SSBO);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, DB);
 
     if (settings.renderer == SHADED_TUBES) {
@@ -335,8 +345,10 @@ TractDataWrapper::TractDataWrapper(std::string name, const std::string& filePath
     // Add all vertices to GPU storage
     for (auto tract: data) {
         for (int i = 0; i < tract.vertices.size(); ++i) {
-            ssboData.push_back({tract.vertices[i].x, tract.vertices[i].y, tract.vertices[i].z, tract.gradient[i].x,
-                                tract.gradient[i].y, tract.gradient[i].z});
+            ssboData.push_back({
+                tract.vertices[i].x, tract.vertices[i].y, tract.vertices[i].z, tract.gradient[i].x,
+                tract.gradient[i].y, tract.gradient[i].z
+            });
         }
     }
 
